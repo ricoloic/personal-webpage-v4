@@ -1,0 +1,144 @@
+---
+import { Image } from "astro:assets";
+import SlidingPanel from "../components/SlidingPanel.astro";
+import siteIcon from "../assets/r-icon.png";
+
+interface Props {
+    title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en" class="h-full">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="description" content="Astro description" />
+        <meta name="viewport" content="width=device-width" />
+        <link rel="icon" type="image/png" href="/r-icon.png" />
+        <link href="/assets/fontawesome/css/fontawesome.css" rel="stylesheet" />
+        <link href="/assets/fontawesome/css/brands.css" rel="stylesheet" />
+        <link href="/assets/fontawesome/css/solid.css" rel="stylesheet" />
+
+        <meta name="generator" content={Astro.generator} />
+        <title>{title}</title>
+    </head>
+    <body class="h-full flex flex-col">
+        <nav
+            class="relative flex flex-wrap row-auto items-center gap-5 shadow px-3"
+        >
+            <a href="/" class="p-3">
+                <Image
+                    id="icon-image"
+                    width="30"
+                    height="30"
+                    src={siteIcon}
+                    alt="Image of the site icon"
+                />
+            </a>
+
+            <h1 id="title">
+                {title}
+            </h1>
+
+            <div class="flex-1"></div>
+
+            <button
+                name="sketches-button"
+                class="flex items-center gap-1 px-3 cursor-pointer hover:bg-slate-200"
+            >
+                <span class="select-none">Sketches</span>
+                <i class="fa-solid fa-caret-down"></i>
+            </button>
+            <div
+                id="sketches-dopdown"
+                class="z-10 shadow hidden absolute right-4 font-normal bg-white divide-y divide-gray-100 rounded-lg shadow w-44 dark:bg-gray-700 dark:divide-gray-600"
+            >
+                <ul class="py-2 text-sm text-gray-700 dark:text-gray-400">
+                    <li>
+                        <a
+                            href="/sketches/mouse-follow"
+                            class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+                            >Mouse Follow</a
+                        >
+                    </li>
+                </ul>
+            </div>
+
+            <slot name="edit" />
+        </nav>
+
+        <slot />
+
+        <script is:inline>
+            function handleTitleDisplay() {
+                const eTitle = document.getElementById("title");
+                if (window.innerWidth < 500) {
+                    eTitle.className = "hidden";
+                } else {
+                    eTitle.className = "";
+                }
+            }
+
+            handleTitleDisplay();
+
+            window.addEventListener("resize", handleTitleDisplay);
+
+            function handleClickAwayCloseSketchesDropdown(event) {
+                const eDropdown = document.getElementById("sketches-dopdown");
+
+                let eTarget = event.target;
+                while (eTarget) {
+                    if (eTarget == eDropdown) {
+                        return;
+                    }
+
+                    eTarget = eTarget.parentNode;
+                }
+
+                const classes = eDropdown.className.split(" ");
+                const hiddenIndex = classes.findIndex(function (c) {
+                    return c === "hidden";
+                });
+
+                if (hiddenIndex === -1) {
+                    eDropdown.className = classes.join(" ") + " hidden";
+                }
+            }
+
+            document.addEventListener(
+                "click",
+                handleClickAwayCloseSketchesDropdown
+            );
+
+            function handleToggleSketchesDropdown(event) {
+                event.stopPropagation();
+                const eDropdown = document.getElementById("sketches-dopdown");
+
+                const classes = eDropdown.className.split(" ");
+                const hiddenIndex = classes.findIndex(function (c) {
+                    return c === "hidden";
+                });
+
+                if (hiddenIndex !== -1) {
+                    classes.splice(hiddenIndex, 1);
+                    eDropdown.className = classes.join(" ");
+                    const eSketchesButton = document.querySelector(
+                        'button[name="sketches-button"]'
+                    );
+                    eDropdown.setAttribute(
+                        "style",
+                        `top: ${eSketchesButton.offsetHeight * 2 + 10}px`
+                    );
+                } else {
+                    eDropdown.className = classes.join(" ") + " hidden";
+                }
+            }
+
+            document
+                .querySelector('button[name="sketches-button"]')
+                .addEventListener("click", handleToggleSketchesDropdown);
+        </script>
+    </body>
+</html>

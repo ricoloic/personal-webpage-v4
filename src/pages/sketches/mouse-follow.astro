@@ -1,0 +1,138 @@
+---
+import SlidingPanel from "../../components/SlidingPanel.astro";
+import Layout from "../../layouts/Layout.astro";
+import COLOR_PALETTES from "../../constants/colors.js";
+---
+
+<Layout title="Mouse Follow">
+    <div slot="edit">
+        <button
+            name="edit-button"
+            class="flex items-center gap-1 px-3 cursor-pointer hover:bg-slate-200"
+        >
+            <span class="select-none">Edit</span>
+            <i class="fa-solid fa-pen-to-square"></i>
+        </button>
+
+        <SlidingPanel
+            id="edit-panel"
+            data-open="false"
+            data-side="right"
+            width="300px"
+        />
+    </div>
+    <main id="canvas-wrapper" class="flex-1">
+        <canvas id="mouse-follow-canvas"></canvas>
+    </main>
+</Layout>
+
+<script is:inline>
+function handleOpenMenu() {
+    const eMenuPanel = document.getElementById("edit-panel");
+    eMenuPanel.setAttribute("data-open", "true");
+}
+
+document
+    .querySelector('button[name="edit-button"]')
+    .addEventListener("click", handleOpenMenu);
+</script>
+
+<script is:inline src="/js/classes/vector.js"></script>
+<script is:inline src="/js/utils/mouse.js"></script>
+<script is:inline src="/js/utils/core.js"></script>
+<script is:inline src="/js/utils/color.js"></script>
+<script is:inline src="/js/utils/draw.js"></script>
+
+<script is:inline>
+class Particle {
+    constructor(position, color) {
+        this.color = color;
+        this.lifespan = 255;
+        this.position = position.copy();
+        this.velocity = Vector.create(random(-1, 1), random(-1, 1));
+    }
+
+    reset(position, color) {
+        this.color = color;
+        this.lifespan = 255;
+        this.position.set(position);
+        this.velocity.set(random(-1, 1), random(-1, 1));
+        return this;
+    }
+
+    update() {
+        this.position.add(this.velocity);
+        this.lifespan -= random(10, 15);
+        return this;
+    }
+
+    show(ctx) {
+        ctx.fillStyle = colorToString(this.color);
+        fillCircle(ctx, this.position.x, this.position.y, 8);
+        return this;
+    }
+
+    isFinished() {
+        return this.lifespan < 0;
+    }
+
+    static create(...args) {
+        return new Particle(...args);
+    }
+}
+</script>
+
+<script is:inline define:vars={{ COLOR_PALETTES }}>
+const eMain = document.getElementById("canvas-wrapper");
+const eCanvas = document.getElementById("mouse-follow-canvas");
+eCanvas.width = eMain.offsetWidth;
+eCanvas.height = eMain.offsetHeight;
+
+window.addEventListener("resize", function () {
+    eCanvas.width = eMain.offsetWidth;
+    eCanvas.height = eMain.offsetHeight;
+});
+
+const ctx = eCanvas.getContext("2d");
+const mouse = mousePosition(eCanvas);
+
+const currentPalette = "deep";
+const particleAmount = 70;
+const particles = [];
+
+function draw() {
+    requestAnimationFrame(draw);
+
+    background(ctx, "#333333");
+
+    if (particles.length < particleAmount) {
+        particles.push(
+            Particle.create(
+                Vector.fromObject(mouse),
+                random(COLOR_PALETTES[currentPalette])
+            )
+        );
+    } else if (particles.length > particleAmount) {
+        particles.pop();
+    }
+
+    const averagePosition = Vector.create();
+
+    for (let i = 0; i < particles.length; i++) {
+        const particle = particles[i];
+        particle.update().show(ctx);
+        averagePosition.add(particle.position);
+        if (particle.isFinished())
+            particle.reset(
+                Vector.fromObject(mouse),
+                random(COLOR_PALETTES[currentPalette])
+            );
+    }
+    averagePosition.div(particles.length);
+
+    ctx.fillStyle = "#ffffff";
+    fillCircle(ctx, averagePosition.x, averagePosition.y, 25);
+}
+
+draw();
+</script>

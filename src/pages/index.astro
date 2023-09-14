@@ -1,0 +1,70 @@
+---
+import { Image } from "astro:assets";
+import selfImage from "../assets/photos/loic.webp";
+import Layout from "../layouts/Layout.astro";
+
+const age = (function () {
+    const ageDifMs = Date.now() - new Date("2002-09-23").getTime();
+    const ageDate = new Date(ageDifMs); // milliseconds from epoch
+    return Math.abs(ageDate.getUTCFullYear() - 1970);
+})();
+---
+
+<Layout title="Rico Generative Arts">
+    <main>
+        <div class="px-12 py-20 grid bg-slate-800 text-white">
+            <div
+                class="pt-6 pb-6 m-auto max-w-7xl grid grid-cols-1 gap-11 col-span-2 items-center md:grid-cols-3"
+            >
+                <Image
+                    id="self-image"
+                    class="w-full h-full object-cover select-none rounded-full aspect-square m-auto"
+                    width="500"
+                    height="500"
+                    src={selfImage}
+                    alt="Image of the page creator 'Loïc Rico'"
+                />
+                <div id="hero" class="md:col-span-2">
+                    <a href="https://github.com/ricoloic/">
+                        <h2 class="text-5xl hover:underline mb-5">Loïc Rico</h2>
+                    </a>
+                    <hr />
+                    <div id="hero-description" class="ml-5 mt-5 leading-5">
+                        Hi, I'm Loïc Rico, a {age} years old canadian web
+                        developer. I'm passionate about generative art and I
+                        love to learn new things. Great things are to come in
+                        the near and far future! Be prepared!
+                    </div>
+                </div>
+                <div id="about" class="md:col-span-3">
+                    <h2 class="text-2xl mb-3">About this site</h2>
+                    <hr />
+                    <div id="about-description" class="ml-5 mt-5 leading-5">
+                        This is a personal website of mine where I can display
+                        my creations. It was build with
+                        <a
+                            href="https://astro.build/"
+                            class="underline hover:decoration-double hover:font-bold"
+                            >Astro</a
+                        >. The source code is available on the
+                        <a
+                            href="https://github.com/ricoloic/personal-webpage-v2/"
+                            class="underline hover:decoration-double"
+                            >Github Repo</a
+                        >
+                         . I'm currently working on this site on my free time.
+                        If you would like to report a feature or a bug, feel
+                        free to leave an issue on the project repository. Before
+                        I decided to create this page, I was always finding my
+                        self searching for a particular project to show to
+                        someone. And more often than not I wasn't even able to
+                        start the project since the person I would be showing it
+                        to, were not setup to run it locally. So I decided to
+                        build this page to show my creations to people who are
+                        interested in my work. I hope you enjoy it.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</Layout>
