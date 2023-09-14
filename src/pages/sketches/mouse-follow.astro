@@ -27,6 +27,14 @@ import COLOR_PALETTES from "../../constants/colors.js";
 </Layout>
 
 <script is:inline>
+window.scrollTo(0, 1);
+const html = document.body.parentNode;
+if (html) {
+    html.className = "no-move";
+}
+</script>
+
+<script is:inline>
 function handleOpenMenu() {
     const eMenuPanel = document.getElementById("edit-panel");
     eMenuPanel.setAttribute("data-open", "true");
