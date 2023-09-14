@@ -1,6 +1,5 @@
 ---
 import { Image } from "astro:assets";
-import SlidingPanel from "../components/SlidingPanel.astro";
 import siteIcon from "../assets/r-icon.png";
 
 interface Props {
@@ -53,13 +52,13 @@ const { title } = Astro.props;
             </button>
             <div
                 id="sketches-dopdown"
-                class="z-10 shadow hidden absolute right-4 font-normal bg-white divide-y divide-gray-100 rounded-lg shadow w-44 dark:bg-gray-700 dark:divide-gray-600"
+                class="z-10 hidden absolute font-normal bg-white divide-y divide-gray-100 rounded-lg shadow w-44"
             >
-                <ul class="py-2 text-sm text-gray-700 dark:text-gray-400">
+                <ul class="py-2 text-sm text-gray-700">
                     <li>
                         <a
                             href="/sketches/mouse-follow"
-                            class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+                            class="block px-4 py-2 hover:bg-gray-100"
                             >Mouse Follow</a
                         >
                     </li>
@@ -129,7 +128,9 @@ const { title } = Astro.props;
                     );
                     eDropdown.setAttribute(
                         "style",
-                        `top: ${eSketchesButton.offsetHeight * 2 + 10}px`
+                        `top: ${
+                            eSketchesButton.offsetHeight * 2 + 10
+                        }px; right: ${eSketchesButton.offsetWidth}px`
                     );
                 } else {
                     eDropdown.className = classes.join(" ") + " hidden";
