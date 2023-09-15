@@ -25,10 +25,36 @@ class Vector {
         return this;
     }
 
+    limit(limiter = 1) {
+        const mag = Math.sqrt(this.x * this.x + this.y * this.y);
+        if (mag > limiter) this.mag(limiter);
+        return this;
+    }
+
+    mult(multiplier) {
+        this.x *= multiplier;
+        this.y *= multiplier;
+        return this;
+    }
+
     div(divider) {
         this.x /= divider;
         this.y /= divider;
         return this;
+    }
+
+    normalize() {
+        const mag = Math.sqrt(this.x * this.x + this.y * this.y);
+        if (mag > 0) this.div(mag);
+        return this;
+    }
+
+    mag(magnitude = 1) {
+        return this.normalize().mult(magnitude);
+    }
+
+    fromAngle(angle) {
+        return this.set(Math.cos(angle), Math.sin(angle));
     }
 
     static create(...args) {
@@ -37,5 +63,9 @@ class Vector {
 
     static fromObject({ x = 0, y = 0 }) {
         return Vector.create(x, y);
+    }
+
+    static fromAngle(angle) {
+        return Vector.create(Math.cos(angle), Math.sin(angle));
     }
 }

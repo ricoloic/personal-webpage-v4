@@ -1,0 +1,269 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="Flowfield">
+    <div slot="edit">
+        <button
+            name="edit-button"
+            class="flex items-center gap-1 px-3 cursor-pointer hover:bg-slate-200"
+        >
+            <span class="select-none">Edit</span>
+            <i class="fa-solid fa-pen-to-square"></i>
+        </button>
+        <div
+            id="edit-dopdown"
+            class="z-10 hidden absolute font-normal bg-white divide-y divide-gray-100 rounded-lg shadow"
+        >
+            <ul class="p-2 text-sm text-gray-700">
+                <li class="my-2"></li>
+            </ul>
+        </div>
+    </div>
+    <main id="canvas-wrapper" class="flex-1 overflow-hidden">
+        <canvas id="flowfield-canvas"></canvas>
+    </main>
+</Layout>
+
+<!-- SECTION: STATIC_IMPORTS -->
+<script is:inline src="/js/externals/noise.js"></script>
+<script is:inline src="/js/classes/vector.js"></script>
+<script is:inline src="/js/utils/mouse.js"></script>
+<script is:inline src="/js/utils/core.js"></script>
+<script is:inline src="/js/utils/color.js"></script>
+<script is:inline src="/js/utils/draw.js"></script>
+<!-- ENDSECTION: STATIC_IMPORTS -->
+
+<!-- SECTION: EDIT_DROPDOWN_EVENTS -->
+<script is:inline></script>
+<!-- ENDSECTION: EDIT_DROPDOWN_EVENTS -->
+
+<!-- SECTION: PARTICLE_CLASS -->
+<script is:inline>
+class Particle {
+    constructor(position) {
+        this.position = position.copy();
+        this.previousPosition = position.copy();
+        this.velocity = Vector.create(random(-1, 1), random(-1, 1));
+        this.acceleration = Vector.create();
+        this.limitVelocity = 0.08;
+    }
+
+    reset(position) {
+        this.position.set(position);
+        this.previousPosition.set(position);
+        return this;
+    }
+
+    update(ok = false) {
+        this.updatePreviousPosition();
+        this.velocity.add(this.acceleration).limit(this.limitVelocity);
+        // if (ok) console.log(this.velocity);
+        this.position.add(this.velocity);
+        // if (ok) console.log(this.position);
+        this.acceleration.mult(0);
+        return this;
+    }
+
+    applyForce(force) {
+        this.acceleration.add(force);
+        return this;
+    }
+
+    updatePreviousPosition() {
+        this.previousPosition.set(this.position);
+        return this;
+    }
+
+    wrap(minimum, maximum) {
+        if (this.position.x > maximum.x) {
+            this.position.x = minimum.x;
+            this.updatePreviousPosition();
+        } else if (this.position.x < minimum.x) {
+            this.position.x = maximum.x;
+            this.updatePreviousPosition();
+        }
+
+        if (this.position.y > maximum.y) {
+            this.position.y = minimum.y;
+            this.updatePreviousPosition();
+        } else if (this.position.y < minimum.y) {
+            this.position.y = maximum.y;
+            this.updatePreviousPosition();
+        }
+
+        return this;
+    }
+
+    follow(columns, flowfield) {
+        const flowIndex =
+            Math.floor(this.position.x) +
+            Math.floor(this.position.y) * columns;
+
+        const force = flowfield[flowIndex].vector;
+        return this.applyForce(force);
+    }
+
+    show(ctx, scale) {
+        ctx.fillRect(
+            this.position.x * scale,
+            this.position.y * scale,
+            1,
+            1
+        );
+    }
+
+    static create(...args) {
+        return new Particle(...args);
+    }
+}
+</script>
+<!-- ENDSECTION: PARTICLE_CLASS -->
+
+<!-- SECTION: FLOW_CLASS -->
+<script is:inline>
+class Flow {
+    constructor() {
+        this.vector = Vector.create();
+    }
+
+    update(xOff, yOff, zOff) {
+        const angle = noise(xOff, yOff, zOff) * TWO_PI;
+        this.vector.fromAngle(angle).mag(2);
+        return this;
+    }
+
+    show(ctx, scale, x, y) {
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        const v = this.vector.copy().mag(scale);
+        ctx.lineTo(x + v.x, y + v.y);
+        ctx.stroke();
+    }
+
+    static create() {
+        return new Flow();
+    }
+}
+</script>
+<!-- ENDSECTION: FLOW_CLASS -->
+
+<!-- SECTION: CONFIG -->
+<script is:inline>
+const COLOR_OPTIONS = {
+    original: () => [26, 51, 43, 0.1],
+    light: () => [26, 20, 100, 0.1],
+    dark: () => [0, 0, 0, 0.1],
+    colorful: (frameCount) => [frameCount % 255, 255, 255, 0.1],
+    blue: (frameCount) => [(frameCount % 75) + 180, 255, 255, 0.1],
+    turqouise: (frameCount) => [(frameCount % 60) + 150, 255, 255, 0.1],
+    fire: (frameCount) => [(frameCount % 70) + 10, 255, 255, 0.1],
+};
+
+const config = {
+    colorPalette: "light",
+    particleAmount: 2_000,
+    scale: 10,
+    increment: 0.1,
+    lod: 10,
+    fallOff: 0.6,
+    displayFlowfield: true,
+};
+</script>
+<!-- ENDSECTION: CONFIG -->
+
+<!-- SECTION: SKETCH -->
+<script is:inline>
+const eMain = document.getElementById("canvas-wrapper");
+const eCanvas = document.getElementById("flowfield-canvas");
+
+const maximumSize = Vector.create();
+const minimumSize = Vector.create();
+let columns, rows;
+const displayScale = config.scale * 1.5;
+const ctx = eCanvas.getContext("2d");
+const flowfield = [];
+const particles = [];
+let zOffset = 0;
+
+function initialize() {
+    eCanvas.width = eMain.offsetWidth;
+    eCanvas.height = eMain.offsetHeight;
+    columns = Math.floor(eCanvas.width / config.scale);
+    rows = Math.floor(eCanvas.height / config.scale);
+    maximumSize.set(columns, rows);
+    background(ctx, "#333333");
+    ctx.fillStyle = "hsla(26, 20%, 100%, 0.05)";
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = "white";
+}
+
+window.addEventListener("resize", initialize);
+
+initialize();
+
+noiseDetail(config.lod, config.fallOff);
+
+for (let y = 0; y <= rows + 1; y++) {
+    for (let x = 0; x <= columns + 1; x++) {
+        flowfield.push(Flow.create());
+    }
+}
+
+for (let i = 0; i < config.particleAmount; i++) {
+    const position = Vector.create(random(columns), random(rows));
+    const particle = Particle.create(position);
+    particles.push(particle);
+}
+
+let framerate = 0;
+
+function draw() {
+    framerate++;
+    requestAnimationFrame(draw);
+
+    if (config.displayFlowfield) {
+        background(ctx, "#333333");
+    }
+
+    let yOffset = 234423;
+    for (let y = 0; y <= rows; y++) {
+        let xOffset = 1000;
+        for (let x = 0; x <= columns; x++) {
+            const realX = x * config.scale,
+                realY = y * config.scale;
+            const flow = flowfield[x + y * columns];
+
+            if (!flow) return;
+
+            flow.update(xOffset, yOffset, zOffset);
+
+            if (config.displayFlowfield) {
+                flow.show(ctx, displayScale, realX, realY);
+            }
+
+            xOffset += config.increment;
+        }
+        yOffset += config.increment;
+    }
+    zOffset += 0.001;
+
+    if (config.displayFlowfield) return;
+
+    for (let i = 0; i < particles.length; i++) {
+        particles[i]
+            .update(i == 0)
+            .wrap(minimumSize, maximumSize)
+            .follow(columns, flowfield)
+            .show(ctx, config.scale);
+    }
+}
+
+setInterval(function () {
+    console.log(framerate);
+    framerate = 0;
+}, 1000);
+
+draw();
+</script>
+<!-- ENDSECTION: SKETCH -->
