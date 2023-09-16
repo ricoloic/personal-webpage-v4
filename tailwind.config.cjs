@@ -7,6 +7,9 @@ module.exports = {
             gridTemplateColumns: {
                 home: "1fr min(1280px, 100%) 1fr",
             },
+            screens: {
+                xs: "500px",
+            },
         },
     },
     plugins: [],

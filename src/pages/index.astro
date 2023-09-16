@@ -11,24 +11,31 @@ const age = (function () {
 ---
 
 <Layout title="Rico Generative Arts">
-    <main>
-        <div class="px-12 py-20 grid bg-slate-800 text-white">
+    <main class="overflow-y-auto">
+        <section class="px-12 py-20 grid bg-slate-800 text-white">
             <div
-                class="pt-6 pb-6 m-auto max-w-7xl grid grid-cols-1 gap-11 col-span-2 items-center md:grid-cols-3"
+                class="pt-6 pb-6 m-auto max-w-7xl grid grid-cols-1 gap-12 col-span-2 items-center md:grid-cols-3"
             >
                 <Image
                     id="self-image"
-                    class="w-full h-full object-cover select-none rounded-full aspect-square m-auto"
+                    class="w-full h-full object-cover select-none rounded md:rounded-full aspect-square m-auto outline-white outline-4 outline"
                     width="500"
                     height="500"
                     src={selfImage}
                     alt="Image of the page creator 'Loïc Rico'"
                 />
+
                 <div id="hero" class="md:col-span-2">
                     <a href="https://github.com/ricoloic/">
-                        <h2 class="text-5xl hover:underline mb-5">Loïc Rico</h2>
+                        <h2
+                            class="text-5xl underline hover:decoration-double mb-5"
+                        >
+                            Loïc Rico
+                        </h2>
                     </a>
+
                     <hr />
+
                     <div id="hero-description" class="ml-5 mt-5 leading-5">
                         Hi, I'm Loïc Rico, a {age} years old canadian web
                         developer. I'm passionate about generative art and I
@@ -36,6 +43,7 @@ const age = (function () {
                         the near and far future! Be prepared!
                     </div>
                 </div>
+
                 <div id="about" class="md:col-span-3">
                     <h2 class="text-2xl mb-3">About this site</h2>
                     <hr />
@@ -44,27 +52,105 @@ const age = (function () {
                         my creations. It was build with
                         <a
                             href="https://astro.build/"
-                            class="underline hover:decoration-double hover:font-bold"
-                            >Astro</a
-                        >. The source code is available on the
+                            class="underline hover:decoration-double">Astro</a
+                        >, <a
+                            href="https://tailwindcss.com/"
+                            class="underline hover:decoration-double"
+                            >Tailwind</a
+                        > and the <a
+                            href="https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/"
+                            class="underline hover:decoration-double"
+                        >
+                            Canvas Element with Javascipt</a
+                        > to render the different sketches. The source code is
+                        available on the
                         <a
-                            href="https://github.com/ricoloic/personal-webpage-v2/"
+                            href="https://github.com/ricoloic/personal-webpage-v4/"
                             class="underline hover:decoration-double"
                             >Github Repo</a
                         >
                          . I'm currently working on this site on my free time.
                         If you would like to report a feature or a bug, feel
-                        free to leave an issue on the project repository. Before
-                        I decided to create this page, I was always finding my
-                        self searching for a particular project to show to
-                        someone. And more often than not I wasn't even able to
-                        start the project since the person I would be showing it
-                        to, were not setup to run it locally. So I decided to
-                        build this page to show my creations to people who are
-                        interested in my work. I hope you enjoy it.
+                        free to leave an <a
+                            href="https://github.com/ricoloic/personal-webpage-v4/issues/new/"
+                            class="underline hover:decoration-double"
+                        >
+                            Issue</a
+                        > on the project repository. Before I decided to create
+                        this site, I was always finding my self searching for a
+                        particular project to show to someone. And more often
+                        than not I wasn't even able to start the project since
+                        the person I would be showing it to, would not be setup
+                        to run it locally. So I decided to build this page to
+                        show my creations to people who are interested in my
+                        work. I hope you enjoy it.
                     </div>
                 </div>
+
+                <div class="md:col-span-3 justify-center flex gap-3">
+                    <a target="_blank" href="https://github.com/ricoloic/">
+                        <i class="fa-brands fa-github fa-2xl"></i>
+                    </a>
+                    <a
+                        target="_blank"
+                        href="https://www.linkedin.com/in/rico-suave/"
+                    >
+                        <i class="fa-brands fa-linkedin fa-2xl"></i>
+                    </a>
+                    <button name="share-button">
+                        <i class="fa-solid fa-share-from-square fa-2xl"></i>
+                    </button>
+                </div>
             </div>
-        </div>
+        </section>
     </main>
+
+    <div
+        id="link-copied-alert"
+        class="bg-transparent flex flex-col items-center justify-center fixed w-full z-50 p-3 hidden"
+    >
+        <div
+            class="mx-auto leading-none h-min rounded-2xl flex items-center text-white bg-slate-800 p-2 border-white border-2"
+            role="alert"
+        >
+            <span class="font-semibold mx-2 text-left flex-auto"
+                >URL copied to clipboard!</span
+            >
+            <button name="link-copied-alert-close-button">
+                <i class="fa-regular fa-circle-xmark fa-lg"></i>
+            </button>
+        </div>
+    </div>
+
+    <script is:inline src="/js/utils/html.js"></script>
+
+    <script is:inline>
+        const eLinkAlert = document.getElementById("link-copied-alert");
+
+        function handleClickCloseLinkAlertButton() {
+            addClass(eLinkAlert, "hidden");
+        }
+
+        function handleClickShare() {
+            const data = window.location;
+            if (navigator.canShare(data)) {
+                navigator.share(data);
+            } else {
+                navigator.clipboard
+                    .writeText(window.location.href)
+                    .then(function () {
+                        removeClass(eLinkAlert, "hidden");
+                        setTimeout(handleClickCloseLinkAlertButton, 3000);
+                    });
+            }
+        }
+
+        document
+            .querySelector('button[name="share-button"]')
+            .addEventListener("click", handleClickShare);
+
+        document
+            .querySelector('button[name="link-copied-alert-close-button"]')
+            .addEventListener("click", handleClickCloseLinkAlertButton);
+    </script>
 </Layout>

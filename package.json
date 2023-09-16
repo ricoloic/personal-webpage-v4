@@ -1,20 +1,20 @@
 {
-  "name": "personal-webpage-v4",
-  "type": "module",
-  "version": "0.0.1",
-  "scripts": {
-    "dev": "astro dev",
-    "start": "astro dev",
-    "build": "astro build",
-    "preview": "astro preview",
-    "astro": "astro"
-  },
-  "dependencies": {
-    "@astrojs/tailwind": "^5.0.0",
-    "astro": "^3.0.7",
-    "tailwindcss": "^3.0.24"
-  },
-  "devDependencies": {
-    "prettier-plugin-astro": "^0.12.0"
-  }
+    "name": "personal-webpage-v4",
+    "type": "module",
+    "version": "0.0.1",
+    "scripts": {
+        "dev": "astro dev",
+        "start": "astro dev",
+        "build": "astro build",
+        "preview": "astro preview",
+        "astro": "astro"
+    },
+    "dependencies": {
+        "@astrojs/tailwind": "^5.0.0",
+        "astro": "^3.0.7",
+        "tailwindcss": "^3.0.24"
+    },
+    "devDependencies": {
+        "prettier-plugin-astro": "^0.12.0"
+    }
 }

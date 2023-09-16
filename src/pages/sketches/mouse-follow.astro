@@ -4,362 +4,347 @@ import COLOR_PALETTES from "../../constants/colors.js";
 ---
 
 <Layout title="Mouse Follow">
-    <div slot="edit">
-        <button
-            name="edit-button"
-            class="flex items-center gap-1 px-3 cursor-pointer hover:bg-slate-200"
-        >
-            <span class="select-none">Edit</span>
-            <i class="fa-solid fa-pen-to-square"></i>
-        </button>
-        <div
-            id="edit-dopdown"
-            class="z-10 hidden absolute font-normal bg-white divide-y divide-gray-100 rounded-lg shadow"
-        >
-            <ul class="p-2 text-sm text-gray-700">
-                <li class="flex items-center my-2">
-                    <input
-                        checked
-                        id="show-blob-checkbox"
-                        type="checkbox"
-                        value=""
-                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                    />
-                    <label
-                        for="show-blob-checkbox"
-                        class="ml-2 select-none text-sm text-gray-900"
-                        >Show Blob</label
-                    >
-                </li>
-                <hr />
-                <li class="flex items-center my-2">
-                    <input
-                        checked
-                        id="show-particles-checkbox"
-                        type="checkbox"
-                        value=""
-                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                    />
-                    <label
-                        for="show-particles-checkbox"
-                        class="ml-2 select-none text-sm text-gray-900"
-                        >Show Particles</label
-                    >
-                </li>
-                <hr />
-                <li class="flex items-center my-2">
-                    <input
-                        id="show-particle-border-checkbox"
-                        type="checkbox"
-                        value=""
-                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                    />
-                    <label
-                        for="show-particle-border-checkbox"
-                        class="ml-2 select-none text-sm text-gray-900"
-                        >Show Particle Border</label
-                    >
-                </li>
-                <hr />
-                <li class="flex items-center my-2">
-                    <input
-                        id="show-particle-alfa-checkbox"
-                        type="checkbox"
-                        value=""
-                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                    />
-                    <label
-                        for="show-particle-alfa-checkbox"
-                        class="ml-2 select-none text-sm text-gray-900"
-                        >Show Particle Alfa</label
-                    >
-                </li>
-                <hr />
-                <li class="my-2">
-                    <label
-                        for="particle-amount-range"
-                        class="block mb-2 text-sm text-gray-900"
-                        >Particle Amount: <span>70</span></label
-                    >
-                    <input
-                        id="particle-amount-range"
-                        type="range"
-                        min="10"
-                        max="250"
-                        value="70"
-                        step="5"
-                        class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                    />
-                </li>
-                <hr />
-                <li class="my-2">
-                    <label
-                        for="color-palette-select"
-                        class="block mb-2 text-sm text-gray-900"
-                        >Select a palette</label
-                    >
-                    <select
-                        id="color-palette-select"
-                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                    >
-                        {
-                            Object.keys(COLOR_PALETTES).map(function (palette) {
-                                return (
-                                    <option value={palette}>{palette}</option>
-                                );
-                            })
-                        }
-                    </select>
-                </li>
-            </ul>
-        </div>
-    </div>
-    <main id="canvas-wrapper" class="flex-1 overflow-hidden">
+    <li slot="edit">
+        <ul class="dropdown relative h-full hover:bg-slate-200">
+            <li
+                class="h-full flex items-center gap-1 px-3 cursor-pointer"
+                tabindex="0"
+            >
+                <span class="select-none">Edit</span>
+                <i class="fa-solid fa-pen-to-square"></i>
+            </li>
+            <li
+                class="dropdown-sub hidden absolute w-max right-0 font-normal bg-white divide-y divide-gray-100 shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] top-full z-10"
+            >
+                <ul class="text-sm text-gray-700">
+                    <li class="text-sm text-gray-700 border-b-2 px-4 py-2">
+                        <input
+                            checked
+                            id="log-framerate-checkbox"
+                            type="checkbox"
+                            value=""
+                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                        />
+                        <label
+                            for="log-framerate-checkbox"
+                            class="ml-2 select-none text-sm text-gray-900"
+                            >Log Framerate</label
+                        >
+                    </li>
+                    <li class="border-b-2 px-4 py-2 flex items-center">
+                        <input
+                            checked
+                            id="show-blob-checkbox"
+                            type="checkbox"
+                            value=""
+                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                        />
+                        <label
+                            for="show-blob-checkbox"
+                            class="ml-2 select-none text-sm text-gray-900"
+                            >Show Blob</label
+                        >
+                    </li>
+                    <li class="border-b-2 px-4 py-2 flex items-center">
+                        <input
+                            checked
+                            id="show-particles-checkbox"
+                            type="checkbox"
+                            value=""
+                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                        />
+                        <label
+                            for="show-particles-checkbox"
+                            class="ml-2 select-none text-sm text-gray-900"
+                            >Show Particles</label
+                        >
+                    </li>
+                    <li class="border-b-2 px-4 py-2 flex items-center">
+                        <input
+                            id="show-particle-border-checkbox"
+                            type="checkbox"
+                            value=""
+                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                        />
+                        <label
+                            for="show-particle-border-checkbox"
+                            class="ml-2 select-none text-sm text-gray-900"
+                            >Show Particle Border</label
+                        >
+                    </li>
+                    <li class="border-b-2 px-4 py-2 flex items-center">
+                        <input
+                            id="show-particle-alfa-checkbox"
+                            type="checkbox"
+                            value=""
+                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                        />
+                        <label
+                            for="show-particle-alfa-checkbox"
+                            class="ml-2 select-none text-sm text-gray-900"
+                            >Show Particle Alfa</label
+                        >
+                    </li>
+                    <li class="border-b-2 px-4 py-2">
+                        <label
+                            for="particle-amount-range"
+                            class="block text-sm text-gray-900"
+                            >Particle Amount: <span>70</span></label
+                        >
+                        <input
+                            id="particle-amount-range"
+                            type="range"
+                            min="10"
+                            max="250"
+                            value="70"
+                            step="5"
+                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        />
+                    </li>
+                    <li class="px-4 py-2">
+                        <label
+                            for="color-palette-select"
+                            class="block mb-2 text-sm text-gray-900"
+                            >Select a palette</label
+                        >
+                        <select
+                            id="color-palette-select"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                        >
+                            {
+                                Object.keys(COLOR_PALETTES).map(
+                                    function (palette) {
+                                        return (
+                                            <option value={palette}>
+                                                {palette}
+                                            </option>
+                                        );
+                                    }
+                                )
+                            }
+                        </select>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </li>
+
+    <main
+        id="canvas-wrapper"
+        class="overflow-y-auto relative flex-1 overflow-hidden h-full"
+    >
+        <span
+            id="framerate"
+            class="select-none px-1 absolute top-3 left-3 text-white bg-black"
+        ></span>
         <canvas id="mouse-follow-canvas"></canvas>
     </main>
+
+    <!-- SECTION: PARTICLE_CLASS -->
+    <script is:inline>
+        class Particle {
+            constructor(position, color) {
+                this.color = color;
+                this.lifespan = 1;
+                this.position = position.copy();
+                this.velocity = Vector.create(random(-1, 1), random(-1, 1));
+            }
+
+            reset(position, color) {
+                this.color = color;
+                this.lifespan = 1;
+                this.position.set(position);
+                this.velocity.set(random(-1, 1), random(-1, 1));
+                return this;
+            }
+
+            update() {
+                this.position.add(this.velocity);
+                this.lifespan -= random(0.035, 0.045);
+                return this;
+            }
+
+            show(ctx, border, alfa) {
+                if (border) {
+                    ctx.strokeStyle = "#ffffff";
+                    ctx.stroke();
+                }
+                ctx.fillStyle = colorToString(
+                    this.color,
+                    alfa ? this.lifespan : 1
+                );
+                fillCircle(ctx, this.position.x, this.position.y, 8);
+                return this;
+            }
+
+            isFinished() {
+                return this.lifespan < 0;
+            }
+
+            static create(...args) {
+                return new Particle(...args);
+            }
+        }
+    </script>
+    <!-- ENDSECTION: PARTICLE_CLASS -->
+
+    <!-- SECTION: CONFIG -->
+    <script is:inline>
+        const config = {
+            showBlob: true,
+            showParticles: true,
+            showParticleBorder: false,
+            showParticleAlfa: false,
+            particleAmount: 70,
+            colorPalette: "deep",
+            logFramerate: true,
+        };
+
+        const eFramerate = document.getElementById("framerate");
+
+        function handleToggleLogFramerate() {
+            config.logFramerate = !config.logFramerate;
+            if (!config.logFramerate) {
+                eFramerate.textContent = "";
+            }
+        }
+
+        document
+            .getElementById("log-framerate-checkbox")
+            .addEventListener("change", handleToggleLogFramerate);
+
+        function handleToggleShowBlob() {
+            config.showBlob = !config.showBlob;
+        }
+
+        document
+            .getElementById("show-blob-checkbox")
+            .addEventListener("change", handleToggleShowBlob);
+
+        function handleToggleShowParticles() {
+            config.showParticles = !config.showParticles;
+        }
+
+        document
+            .getElementById("show-particles-checkbox")
+            .addEventListener("change", handleToggleShowParticles);
+
+        function handleToggleShowParticleBorder() {
+            config.showParticleBorder = !config.showParticleBorder;
+        }
+
+        document
+            .getElementById("show-particle-border-checkbox")
+            .addEventListener("change", handleToggleShowParticleBorder);
+
+        function handleToggleShowParticleAlfa() {
+            config.showParticleAlfa = !config.showParticleAlfa;
+        }
+
+        document
+            .getElementById("show-particle-alfa-checkbox")
+            .addEventListener("change", handleToggleShowParticleAlfa);
+
+        function handleChangeParticleAmount(event) {
+            const value = event.target.value;
+            document.querySelector(
+                'label[for="particle-amount-range"]>span'
+            ).textContent = value;
+            config.particleAmount = parseFloat(value);
+        }
+
+        document
+            .getElementById("particle-amount-range")
+            .addEventListener("change", handleChangeParticleAmount);
+
+        function handleSelectColorPalette(event) {
+            config.colorPalette = event.target.value;
+        }
+
+        document
+            .querySelector('#color-palette-select>option[value="deep"]')
+            .setAttribute("selected", "");
+        document
+            .getElementById("color-palette-select")
+            .addEventListener("change", handleSelectColorPalette);
+    </script>
+    <!-- ENDSECTION: CONFIG -->
+
+    <!-- SECTION: SKETCH -->
+    <script is:inline define:vars={{ COLOR_PALETTES }}>
+        const eMain = document.getElementById("canvas-wrapper");
+        const eCanvas = document.getElementById("mouse-follow-canvas");
+        eCanvas.width = eMain.offsetWidth;
+        eCanvas.height = eMain.offsetHeight;
+
+        window.addEventListener("resize", function () {
+            eCanvas.width = eMain.offsetWidth;
+            eCanvas.height = eMain.offsetHeight;
+        });
+
+        const ctx = eCanvas.getContext("2d");
+        const mouse = mousePosition(eCanvas);
+        const particles = [];
+
+        ctx.lineWidth = 1;
+
+        let framerate = 0;
+
+        function draw() {
+            framerate++;
+            requestAnimationFrame(draw);
+
+            background(ctx, "#333333");
+
+            if (particles.length < config.particleAmount) {
+                particles.push(
+                    Particle.create(
+                        Vector.fromObject(mouse),
+                        random(COLOR_PALETTES[config.colorPalette])
+                    )
+                );
+            } else if (particles.length > config.particleAmount) {
+                particles.pop();
+            }
+
+            const averagePosition = Vector.create();
+
+            for (let i = 0; i < particles.length; i++) {
+                const particle = particles[i];
+                particle.update();
+                if (config.showParticles) {
+                    particle.show(
+                        ctx,
+                        config.showParticleBorder,
+                        config.showParticleAlfa
+                    );
+                }
+                averagePosition.add(particle.position);
+                if (particle.isFinished()) {
+                    particle.reset(
+                        Vector.fromObject(mouse),
+                        random(COLOR_PALETTES[config.colorPalette])
+                    );
+                }
+            }
+            averagePosition.div(particles.length);
+
+            if (config.showBlob) {
+                ctx.fillStyle = "#ffffff";
+                fillCircle(ctx, averagePosition.x, averagePosition.y, 25);
+            }
+        }
+
+        setInterval(function () {
+            if (config.logFramerate) {
+                const fps = `${framerate}fps`;
+                eFramerate.textContent = fps;
+                console.log(fps);
+            }
+            framerate = 0;
+        }, 1000);
+
+        draw();
+    </script>
+    <!-- ENDSECTION: SKETCH -->
 </Layout>
-
-<!-- SECTION: STATIC_IMPORTS -->
-<script is:inline src="/js/classes/vector.js"></script>
-<script is:inline src="/js/utils/mouse.js"></script>
-<script is:inline src="/js/utils/core.js"></script>
-<script is:inline src="/js/utils/color.js"></script>
-<script is:inline src="/js/utils/draw.js"></script>
-<!-- ENDSECTION: STATIC_IMPORTS -->
-
-<!-- SECTION: EDIT_DROPDOWN_EVENTS -->
-<script is:inline>
-function handleClickAwayCloseSketchesDropdown(event) {
-    const eDropdown = document.getElementById("edit-dopdown");
-
-    let eTarget = event.target;
-    while (eTarget) {
-        if (eTarget == eDropdown) {
-            return;
-        }
-
-        eTarget = eTarget.parentNode;
-    }
-
-    const classes = eDropdown.className.split(" ");
-    const hiddenIndex = classes.findIndex(function (c) {
-        return c === "hidden";
-    });
-
-    if (hiddenIndex === -1) {
-        eDropdown.className = classes.join(" ") + " hidden";
-    }
-}
-
-document.addEventListener("click", handleClickAwayCloseSketchesDropdown);
-
-function handleToggleSketchesDropdown(event) {
-    event.stopPropagation();
-    const eDropdown = document.getElementById("edit-dopdown");
-
-    const classes = eDropdown.className.split(" ");
-    const hiddenIndex = classes.findIndex(function (c) {
-        return c === "hidden";
-    });
-
-    if (hiddenIndex !== -1) {
-        classes.splice(hiddenIndex, 1);
-        eDropdown.className = classes.join(" ");
-        const eEditButton = document.querySelector(
-            'button[name="edit-button"]'
-        );
-        eDropdown.setAttribute(
-            "style",
-            `top: ${eEditButton.offsetHeight * 2 + 10}px; right: ${eEditButton.offsetWidth
-            }px`
-        );
-    } else {
-        eDropdown.className = classes.join(" ") + " hidden";
-    }
-}
-
-document
-    .querySelector('button[name="edit-button"]')
-    .addEventListener("click", handleToggleSketchesDropdown);
-</script>
-<!-- ENDSECTION: EDIT_DROPDOWN_EVENTS -->
-
-<!-- SECTION: PARTICLE_CLASS -->
-<script is:inline>
-class Particle {
-    constructor(position, color) {
-        this.color = color;
-        this.lifespan = 1;
-        this.position = position.copy();
-        this.velocity = Vector.create(random(-1, 1), random(-1, 1));
-    }
-
-    reset(position, color) {
-        this.color = color;
-        this.lifespan = 1;
-        this.position.set(position);
-        this.velocity.set(random(-1, 1), random(-1, 1));
-        return this;
-    }
-
-    update() {
-        this.position.add(this.velocity);
-        this.lifespan -= random(0.035, 0.045);
-        return this;
-    }
-
-    show(ctx, border, alfa) {
-        if (border) {
-            ctx.strokeStyle = "#ffffff";
-            ctx.stroke();
-        }
-        ctx.fillStyle = colorToString(this.color, alfa ? this.lifespan : 1);
-        fillCircle(ctx, this.position.x, this.position.y, 8);
-        return this;
-    }
-
-    isFinished() {
-        return this.lifespan < 0;
-    }
-
-    static create(...args) {
-        return new Particle(...args);
-    }
-}
-</script>
-<!-- ENDSECTION: PARTICLE_CLASS -->
-
-<!-- SECTION: CONFIG -->
-<script is:inline>
-const config = {
-    showBlob: true,
-    showParticles: true,
-    showParticleBorder: false,
-    showParticleAlfa: false,
-    particleAmount: 70,
-    colorPalette: "deep",
-};
-
-function handleToggleShowBlob() {
-    config.showBlob = !config.showBlob;
-}
-
-document
-    .getElementById("show-blob-checkbox")
-    .addEventListener("change", handleToggleShowBlob);
-
-function handleToggleShowParticles() {
-    config.showParticles = !config.showParticles;
-}
-
-document
-    .getElementById("show-particles-checkbox")
-    .addEventListener("change", handleToggleShowParticles);
-
-function handleToggleShowParticleBorder() {
-    config.showParticleBorder = !config.showParticleBorder;
-}
-
-document
-    .getElementById("show-particle-border-checkbox")
-    .addEventListener("change", handleToggleShowParticleBorder);
-
-function handleToggleShowParticleAlfa() {
-    config.showParticleAlfa = !config.showParticleAlfa;
-}
-
-document
-    .getElementById("show-particle-alfa-checkbox")
-    .addEventListener("change", handleToggleShowParticleAlfa);
-
-function handleChangeParticleAmount(event) {
-    const value = event.target.value;
-    console.log(value);
-    document.querySelector(
-        'label[for="particle-amount-range"]>span'
-    ).textContent = value;
-    config.particleAmount = parseFloat(value);
-}
-
-document
-    .getElementById("particle-amount-range")
-    .addEventListener("change", handleChangeParticleAmount);
-
-function handleSelectColorPalette(event) {
-    config.colorPalette = event.target.value;
-}
-
-document
-    .querySelector('#color-palette-select>option[value="deep"]')
-    .setAttribute("selected", "");
-document
-    .getElementById("color-palette-select")
-    .addEventListener("change", handleSelectColorPalette);
-</script>
-<!-- ENDSECTION: CONFIG -->
-
-<!-- SECTION: SKETCH -->
-<script is:inline define:vars={{ COLOR_PALETTES }}>
-const eMain = document.getElementById("canvas-wrapper");
-const eCanvas = document.getElementById("mouse-follow-canvas");
-eCanvas.width = eMain.offsetWidth;
-eCanvas.height = eMain.offsetHeight;
-
-window.addEventListener("resize", function () {
-    eCanvas.width = eMain.offsetWidth;
-    eCanvas.height = eMain.offsetHeight;
-});
-
-const ctx = eCanvas.getContext("2d");
-const mouse = mousePosition(eCanvas);
-const particles = [];
-
-ctx.lineWidth = 1;
-
-function draw() {
-    requestAnimationFrame(draw);
-
-    background(ctx, "#333333");
-
-    if (particles.length < config.particleAmount) {
-        particles.push(
-            Particle.create(
-                Vector.fromObject(mouse),
-                random(COLOR_PALETTES[config.colorPalette])
-            )
-        );
-    } else if (particles.length > config.particleAmount) {
-        particles.pop();
-    }
-
-    const averagePosition = Vector.create();
-
-    for (let i = 0; i < particles.length; i++) {
-        const particle = particles[i];
-        particle.update();
-        if (config.showParticles) {
-            particle.show(
-                ctx,
-                config.showParticleBorder,
-                config.showParticleAlfa
-            );
-        }
-        averagePosition.add(particle.position);
-        if (particle.isFinished()) {
-            particle.reset(
-                Vector.fromObject(mouse),
-                random(COLOR_PALETTES[config.colorPalette])
-            );
-        }
-    }
-    averagePosition.div(particles.length);
-
-    if (config.showBlob) {
-        ctx.fillStyle = "#ffffff";
-        fillCircle(ctx, averagePosition.x, averagePosition.y, 25);
-    }
-}
-
-draw();
-</script>
-<!-- ENDSECTION: SKETCH -->
