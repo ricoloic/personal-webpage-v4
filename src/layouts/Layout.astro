@@ -14,7 +14,7 @@ const { title } = Astro.props;
     <head>
         <meta charset="UTF-8" />
         <meta name="description" content="Astro description" />
-        <meta name="viewport" content="width=device-width" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="icon" type="image/png" href="/r-icon.png" />
         <link href="/assets/fontawesome/css/fontawesome.css" rel="stylesheet" />
         <link href="/assets/fontawesome/css/brands.css" rel="stylesheet" />
@@ -22,124 +22,106 @@ const { title } = Astro.props;
 
         <meta name="generator" content={Astro.generator} />
         <title>{title}</title>
+
+        <style is:global>
+            html,
+            body {
+                overscroll-behavior-y: none;
+            }
+
+            .dropdown:hover .dropdown-sub,
+            .dropdown:focus-within .dropdown-sub {
+                display: block;
+            }
+        </style>
     </head>
-    <body class="h-full flex flex-col">
-        <nav
-            class="relative flex flex-wrap row-auto items-center gap-5 shadow px-3"
-        >
-            <a href="/" class="p-3">
-                <Image
-                    id="icon-image"
-                    width="30"
-                    height="30"
-                    src={siteIcon}
-                    alt="Image of the site icon"
-                />
-            </a>
 
-            <h1 id="title">
-                {title}
-            </h1>
-
-            <div class="flex-1"></div>
-
-            <button
-                name="sketches-button"
-                class="flex items-center gap-1 px-3 cursor-pointer hover:bg-slate-200"
-            >
-                <span class="select-none">Sketches</span>
-                <i class="fa-solid fa-caret-down"></i>
-            </button>
-            <div
-                id="sketches-dopdown"
-                class="z-10 hidden absolute font-normal bg-white divide-y divide-gray-100 rounded-lg shadow w-44"
-            >
-                <ul class="py-2 text-sm text-gray-700">
-                    <li>
+    <body class="flex flex-col h-full">
+        <header id="primary-header" class="bg-white w-full">
+            <nav>
+                <ul class="flex shadow">
+                    <li class="mr-auto">
                         <a
-                            href="/sketches/mouse-follow"
-                            class="block px-4 py-2 hover:bg-gray-100"
-                            >Mouse Follow</a
+                            href="/"
+                            class="select-none flex gap-3 p-3 items-center hover:bg-slate-200"
                         >
-                    </li>
-                </ul>
-            </div>
+                            <Image
+                                id="icon-image"
+                                class="aspect-square"
+                                width="30"
+                                height="30"
+                                src={siteIcon}
+                                alt="Image of the site icon"
+                            />
 
-            <slot name="edit" />
-        </nav>
+                            <h1 class="hidden xs:block">
+                                {title}
+                            </h1>
+                        </a>
+                    </li>
+
+                    <li>
+                        <ul class="dropdown relative h-full hover:bg-slate-200">
+                            <li
+                                class="h-full flex items-center gap-1 px-3 cursor-pointer"
+                                tabindex="0"
+                            >
+                                <span class="select-none">Sketches</span>
+                                <i class="fa-solid fa-caret-down"></i>
+                            </li>
+                            <li
+                                class="dropdown-sub hidden absolute w-max right-0 font-normal bg-white divide-y divide-gray-100 shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] top-full z-10"
+                            >
+                                <ul class="text-sm text-gray-700">
+                                    <li class="border-b-2">
+                                        <a
+                                            href="/sketches/mouse-follow"
+                                            class="block px-4 py-2 hover:bg-gray-100"
+                                            >Mouse Follow</a
+                                        >
+                                    </li>
+                                    <li>
+                                        <a
+                                            href="/sketches/flowfield"
+                                            class="block px-4 py-2 hover:bg-gray-100"
+                                            >Flowfield</a
+                                        >
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <slot name="edit" />
+                </ul>
+            </nav>
+        </header>
 
         <slot />
 
-        <script is:inline>
-            function handleTitleDisplay() {
-                const eTitle = document.getElementById("title");
-                if (window.innerWidth < 500) {
-                    eTitle.className = "hidden";
+        <script is:inline src="/js/utils/html.js"></script>
+        <script>
+            const eHeader = document.getElementById("primary-header");
+
+            window.addEventListener("scroll", function () {
+                if (window.pageYOffset > eHeader.offsetTop) {
+                    addClasses(eHeader, ["sticky", "top-0"]);
                 } else {
-                    eTitle.className = "";
+                    removeClasses(eHeader, ["sticky", "top-0"]);
                 }
-            }
+            });
 
-            handleTitleDisplay();
-
-            window.addEventListener("resize", handleTitleDisplay);
-
-            function handleClickAwayCloseSketchesDropdown(event) {
-                const eDropdown = document.getElementById("sketches-dopdown");
-
-                let eTarget = event.target;
-                while (eTarget) {
-                    if (eTarget == eDropdown) {
-                        return;
+            function handleBlurDropdown(event) {
+                const eAllDropdown = document.querySelectorAll(".dropdown");
+                for (const elem of eAllDropdown) {
+                    if (isClickAway([elem], event.target)) {
+                        elem.blur();
                     }
-
-                    eTarget = eTarget.parentNode;
-                }
-
-                const classes = eDropdown.className.split(" ");
-                const hiddenIndex = classes.findIndex(function (c) {
-                    return c === "hidden";
-                });
-
-                if (hiddenIndex === -1) {
-                    eDropdown.className = classes.join(" ") + " hidden";
                 }
             }
 
-            document.addEventListener(
-                "click",
-                handleClickAwayCloseSketchesDropdown
-            );
-
-            function handleToggleSketchesDropdown(event) {
-                event.stopPropagation();
-                const eDropdown = document.getElementById("sketches-dopdown");
-
-                const classes = eDropdown.className.split(" ");
-                const hiddenIndex = classes.findIndex(function (c) {
-                    return c === "hidden";
-                });
-
-                if (hiddenIndex !== -1) {
-                    classes.splice(hiddenIndex, 1);
-                    eDropdown.className = classes.join(" ");
-                    const eSketchesButton = document.querySelector(
-                        'button[name="sketches-button"]'
-                    );
-                    eDropdown.setAttribute(
-                        "style",
-                        `top: ${
-                            eSketchesButton.offsetHeight * 2 + 10
-                        }px; right: ${eSketchesButton.offsetWidth}px`
-                    );
-                } else {
-                    eDropdown.className = classes.join(" ") + " hidden";
-                }
-            }
-
-            document
-                .querySelector('button[name="sketches-button"]')
-                .addEventListener("click", handleToggleSketchesDropdown);
+            window.addEventListener("click", handleBlurDropdown);
+            window.addEventListener("touchstart", handleBlurDropdown);
         </script>
     </body>
 </html>

@@ -1,5 +1,9 @@
 # Astro Starter Kit: Basics
 
+```powershell
+npx browser-sync start --server
+```
+
 ```
 npm create astro@latest -- --template basics
 ```

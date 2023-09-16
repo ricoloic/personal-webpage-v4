@@ -1,0 +1,391 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="Flowfield">
+    <li slot="edit">
+        <ul class="dropdown relative h-full hover:bg-slate-200">
+            <li
+                class="h-full flex items-center gap-1 px-3 cursor-pointer"
+                tabindex="0"
+            >
+                <span class="select-none">Edit</span>
+                <i class="fa-solid fa-pen-to-square"></i>
+            </li>
+            <li
+                class="dropdown-sub hidden absolute w-max right-0 font-normal bg-white divide-y divide-gray-100 shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] top-full z-10"
+            >
+                <ul class="text-sm text-gray-700">
+                    <li class="flex items-center border-b-2 px-4 py-2">
+                        <input
+                            checked
+                            id="log-framerate-checkbox"
+                            type="checkbox"
+                            value=""
+                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                        />
+                        <label
+                            for="log-framerate-checkbox"
+                            class="ml-2 select-none text-sm text-gray-900"
+                            >Log Framerate</label
+                        >
+                    </li>
+                    <li class="flex items-center border-b-2 px-4 py-2">
+                        <input
+                            checked
+                            id="show-flow-checkbox"
+                            type="checkbox"
+                            value=""
+                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                        />
+                        <label
+                            for="show-flow-checkbox"
+                            class="ml-2 select-none text-sm text-gray-900"
+                            >Show Flow</label
+                        >
+                    </li>
+                    <li class="border-b-2 px-4 py-2">
+                        <label
+                            for="particle-amount-range"
+                            class="block text-sm text-gray-900"
+                            >Particle Amount: <span>2000</span></label
+                        >
+                        <input
+                            id="particle-amount-range"
+                            type="range"
+                            min="100"
+                            max="5000"
+                            value="2000"
+                            step="100"
+                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        />
+                    </li>
+                    <li class="px-4 py-2">
+                        <label
+                            for="scale-range"
+                            class="block text-sm text-gray-900"
+                            >Scale: <span>10</span></label
+                        >
+                        <input
+                            id="scale-range"
+                            type="range"
+                            min="4"
+                            max="50"
+                            value="10"
+                            step="2"
+                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        />
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </li>
+
+    <main
+        id="canvas-wrapper"
+        class="overflow-y-auto relative flex-1 overflow-hidden h-full"
+    >
+        <span
+            id="framerate"
+            class="select-none px-1 text-white absolute top-3 left-3 bg-black"
+        ></span>
+        <canvas id="flowfield-canvas"></canvas>
+    </main>
+
+    <!-- SECTION: STATIC_IMPORTS -->
+    <script is:inline src="/js/externals/noise.js"></script>
+    <script is:inline src="/js/classes/vector.js"></script>
+    <script is:inline src="/js/utils/mouse.js"></script>
+    <script is:inline src="/js/utils/core.js"></script>
+    <script is:inline src="/js/utils/color.js"></script>
+    <script is:inline src="/js/utils/draw.js"></script>
+    <script is:inline src="/js/utils/html.js"></script>
+    <!-- ENDSECTION: STATIC_IMPORTS -->
+
+    <!-- SECTION: PARTICLE_CLASS -->
+    <script is:inline>
+        class Particle {
+            constructor(x, y) {
+                this.position = Vector.create(x, y);
+                this.velocity = Vector.create(random(-1, 1), random(-1, 1));
+                this.acceleration = Vector.create();
+                this.limitVelocity = 0.08;
+            }
+
+            reset(x, y) {
+                this.position.set(x, y);
+                return this;
+            }
+
+            update(ok = false) {
+                this.velocity.add(this.acceleration).limit(this.limitVelocity);
+                this.position.add(this.velocity);
+                this.acceleration.mult(0);
+                return this;
+            }
+
+            applyForce(force) {
+                this.acceleration.add(force);
+                return this;
+            }
+
+            wrap(minimum, maximum) {
+                if (this.position.x > maximum.x) {
+                    this.position.x = minimum.x;
+                } else if (this.position.x < minimum.x) {
+                    this.position.x = maximum.x;
+                }
+
+                if (this.position.y > maximum.y) {
+                    this.position.y = minimum.y;
+                } else if (this.position.y < minimum.y) {
+                    this.position.y = maximum.y;
+                }
+
+                return this;
+            }
+
+            follow(columns, flowfield) {
+                const flowIndex =
+                    Math.floor(this.position.x) +
+                    Math.floor(this.position.y) * columns;
+
+                const force = flowfield[flowIndex].vector;
+                return this.applyForce(force);
+            }
+
+            show(ctx, scale) {
+                ctx.fillRect(
+                    this.position.x * scale,
+                    this.position.y * scale,
+                    1,
+                    1
+                );
+            }
+
+            static create(...args) {
+                return new Particle(...args);
+            }
+        }
+    </script>
+    <!-- ENDSECTION: PARTICLE_CLASS -->
+
+    <!-- SECTION: FLOW_CLASS -->
+    <script is:inline>
+        class Flow {
+            constructor() {
+                this.vector = Vector.create();
+            }
+
+            update(xOff, yOff, zOff) {
+                const angle = noise(xOff, yOff, zOff) * TWO_PI;
+                this.vector.fromAngle(angle).mag(2);
+                return this;
+            }
+
+            show(ctx, scale, x, y) {
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                const v = this.vector.copy().mag(scale);
+                ctx.lineTo(x + v.x, y + v.y);
+                ctx.stroke();
+            }
+
+            static create() {
+                return new Flow();
+            }
+        }
+    </script>
+    <!-- ENDSECTION: FLOW_CLASS -->
+
+    <!-- SECTION: CONFIG -->
+    <script is:inline>
+        const COLOR_OPTIONS = {
+            original: () => [26, 51, 43, 0.1],
+            light: () => [26, 20, 100, 0.1],
+            dark: () => [0, 0, 0, 0.1],
+            colorful: (frameCount) => [frameCount % 255, 255, 255, 0.1],
+            blue: (frameCount) => [(frameCount % 75) + 180, 255, 255, 0.1],
+            turqouise: (frameCount) => [(frameCount % 60) + 150, 255, 255, 0.1],
+            fire: (frameCount) => [(frameCount % 70) + 10, 255, 255, 0.1],
+        };
+
+        const config = {
+            logFramerate: true,
+            colorPalette: "light",
+            particleAmount: 2_000,
+            scale: 10,
+            increment: 0.1,
+            lod: 3,
+            fallOff: 0.6,
+            showFlow: true,
+        };
+
+        const eFramerate = document.getElementById("framerate");
+
+        function handleToggleLogFramerate() {
+            config.logFramerate = !config.logFramerate;
+            if (!config.logFramerate) {
+                eFramerate.textContent = "";
+            }
+        }
+
+        document
+            .getElementById("log-framerate-checkbox")
+            .addEventListener("change", handleToggleLogFramerate);
+
+        function handleToggleShowFlow() {
+            config.showFlow = !config.showFlow;
+            initialize();
+        }
+
+        document
+            .getElementById("show-flow-checkbox")
+            .addEventListener("change", handleToggleShowFlow);
+
+        function handleChangeParticleAmount(event) {
+            const value = event.target.value;
+            document.querySelector(
+                'label[for="particle-amount-range"]>span'
+            ).textContent = value;
+            config.particleAmount = parseFloat(value);
+        }
+
+        document
+            .getElementById("particle-amount-range")
+            .addEventListener("change", handleChangeParticleAmount);
+
+        function handleChangeScale(event) {
+            const value = event.target.value;
+            document.querySelector(
+                'label[for="scale-range"]>span'
+            ).textContent = value;
+            config.scale = parseFloat(value);
+            initialize();
+        }
+
+        document
+            .getElementById("scale-range")
+            .addEventListener("change", handleChangeScale);
+    </script>
+    <!-- ENDSECTION: CONFIG -->
+
+    <!-- SECTION: SKETCH -->
+    <script is:inline>
+        const eMain = document.getElementById("canvas-wrapper");
+        const eCanvas = document.getElementById("flowfield-canvas");
+
+        const maximumSize = Vector.create();
+        const minimumSize = Vector.create();
+        const ctx = eCanvas.getContext("2d");
+        const flowfield = [];
+        const particles = [];
+        let columns,
+            rows,
+            displayScale,
+            zOffset = 0;
+
+        function initialize() {
+            displayScale = config.scale * 1.5;
+            eCanvas.width = eMain.offsetWidth;
+            eCanvas.height = eMain.offsetHeight;
+            columns = Math.ceil(eCanvas.width / config.scale);
+            rows = Math.ceil(eCanvas.height / config.scale);
+            maximumSize.set(columns, rows);
+            background(ctx, "#333333");
+            ctx.fillStyle = "hsla(26, 20%, 100%, 0.05)";
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = "white";
+
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].reset(random(columns), random(rows));
+            }
+
+            let iterations = 0;
+            for (let y = 0; y <= rows + 1; y++) {
+                for (let x = 0; x <= columns + 1; x++) {
+                    if (!flowfield[iterations]) flowfield.push(Flow.create());
+                    iterations++;
+                }
+            }
+        }
+
+        window.addEventListener("resize", initialize);
+
+        initialize();
+
+        noiseDetail(config.lod, config.fallOff);
+
+        for (let y = 0; y <= rows + 1; y++) {
+            for (let x = 0; x <= columns + 1; x++) {
+                flowfield.push(Flow.create());
+            }
+        }
+
+        for (let i = 0; i < config.particleAmount; i++) {
+            const particle = Particle.create(random(columns), random(rows));
+            particles.push(particle);
+        }
+
+        let framerate = 0;
+        function draw() {
+            framerate++;
+            requestAnimationFrame(draw);
+
+            if (config.showFlow) {
+                background(ctx, "#333333");
+            }
+
+            let yOffset = 234423;
+            for (let y = 0; y <= rows; y++) {
+                let xOffset = 1000;
+                for (let x = 0; x <= columns; x++) {
+                    const realX = x * config.scale,
+                        realY = y * config.scale;
+                    const flow = flowfield[x + y * columns];
+
+                    if (!flow) return;
+
+                    flow.update(xOffset, yOffset, zOffset);
+
+                    if (config.showFlow) {
+                        flow.show(ctx, displayScale, realX, realY);
+                    }
+
+                    xOffset += config.increment;
+                }
+                yOffset += config.increment;
+            }
+            zOffset += 0.001;
+
+            if (config.showFlow) return;
+
+            for (let i = 0; i < config.particleAmount; i++) {
+                if (!particles[i]) {
+                    particles[i] = Particle.create(
+                        random(columns),
+                        random(rows)
+                    );
+                }
+
+                particles[i]
+                    .update(i == 0)
+                    .wrap(minimumSize, maximumSize)
+                    .follow(columns, flowfield)
+                    .show(ctx, config.scale);
+            }
+        }
+
+        setInterval(function () {
+            if (config.logFramerate) {
+                const fps = `${framerate}fps`;
+                eFramerate.textContent = fps;
+                console.log(fps);
+            }
+            framerate = 0;
+        }, 1000);
+
+        draw();
+    </script>
+    <!-- ENDSECTION: SKETCH -->
+</Layout>
