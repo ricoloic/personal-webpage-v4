@@ -1,0 +1,28 @@
+---
+interface Option {
+    value: string;
+    label: string;
+}
+
+interface Props {
+    id: string;
+    title: string;
+    options: Option[];
+}
+
+const { id, title, options } = Astro.props;
+const labelId = `${id}-label`;
+---
+
+<label id={labelId} for={id} class="block mb-2 text-sm text-gray-900">{title}</label>
+<select
+    id={id}
+    aria-labelledby={labelId}
+    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+>
+    {
+        options.map(function (option) {
+            return <option value={option.value}>{option.label}</option>;
+        })
+    }
+</select>

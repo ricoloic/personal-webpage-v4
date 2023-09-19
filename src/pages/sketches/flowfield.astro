@@ -1,67 +1,35 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import EditDropdown from "../../components/EditDropdown.astro";
+import Checkbox from "../../components/inputs/Checkbox.astro";
+import Range from "../../components/inputs/Range.astro";
 ---
 
 <Layout title="Flowfield">
     <EditDropdown slot="edit">
         <ul slot="options" class="text-sm text-gray-700">
             <li class="flex items-center border-b-2 px-4 py-2">
-                <input
-                    checked
-                    id="log-framerate-checkbox"
-                    type="checkbox"
-                    value=""
-                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                />
-                <label
-                    for="log-framerate-checkbox"
-                    class="ml-2 select-none text-sm text-gray-900"
-                    >Log Framerate</label
-                >
+                <Checkbox id="log-framerate-checkbox" title="Log Framerate" />
             </li>
             <li class="flex items-center border-b-2 px-4 py-2">
-                <input
-                    checked
-                    id="show-flow-checkbox"
-                    type="checkbox"
-                    value=""
-                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                />
-                <label
-                    for="show-flow-checkbox"
-                    class="ml-2 select-none text-sm text-gray-900"
-                    >Show Flow</label
-                >
+                <Checkbox id="show-flow-checkbox" title="Show Flow" />
             </li>
             <li class="border-b-2 px-4 py-2">
-                <label
-                    for="particle-amount-range"
-                    class="block text-sm text-gray-900"
-                    >Particle Amount: <span>2000</span></label
-                >
-                <input
+                <Range
                     id="particle-amount-range"
-                    type="range"
-                    min="100"
-                    max="5000"
-                    value="2000"
-                    step="100"
-                    class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                    title="Particle Amount"
+                    min={100}
+                    max={5000}
+                    step={100}
                 />
             </li>
             <li class="px-4 py-2">
-                <label for="scale-range" class="block text-sm text-gray-900"
-                    >Scale: <span>10</span></label
-                >
-                <input
+                <Range
                     id="scale-range"
-                    type="range"
-                    min="4"
-                    max="50"
-                    value="10"
-                    step="2"
-                    class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                    title="Scale"
+                    min={4}
+                    max={50}
+                    step={2}
                 />
             </li>
         </ul>
@@ -81,14 +49,71 @@ import EditDropdown from "../../components/EditDropdown.astro";
     </main>
 
     <!-- SECTION: STATIC_IMPORTS -->
+    <script is:inline src="/js/utils/html.js"></script>
     <script is:inline src="/js/externals/noise.js"></script>
     <script is:inline src="/js/classes/vector.js"></script>
     <script is:inline src="/js/utils/mouse.js"></script>
     <script is:inline src="/js/utils/core.js"></script>
     <script is:inline src="/js/utils/color.js"></script>
     <script is:inline src="/js/utils/draw.js"></script>
-    <script is:inline src="/js/utils/html.js"></script>
     <!-- ENDSECTION: STATIC_IMPORTS -->
+
+    <!-- SECTION: CONFIG -->
+    <script is:inline>
+        const config = {
+            logFramerate: true,
+            particleAmount: 2_000,
+            scale: 10,
+            increment: 0.1,
+            lod: 3,
+            fallOff: 0.6,
+            showFlow: true,
+        };
+
+        const eLogFramerateCheckbox = document.getElementById(
+            "log-framerate-checkbox"
+        );
+        const eFramerate = document.getElementById("framerate");
+        const eShowFlowCheckbox = document.getElementById("show-flow-checkbox");
+        const eParticleAmountRange = document.getElementById(
+            "particle-amount-range"
+        );
+        const eParticleAmountLabel = document.querySelector(
+            'label[for="particle-amount-range"]>span'
+        );
+        const eScaleRange = document.getElementById("scale-range");
+        const eScaleLabel = document.querySelector(
+            'label[for="scale-range"]>span'
+        );
+
+        if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
+        eLogFramerateCheckbox.addEventListener("change", function () {
+            config.logFramerate = !config.logFramerate;
+            if (!config.logFramerate) eFramerate.textContent = "";
+        });
+
+        if (config.showFlow) toggleCheckbox(eShowFlowCheckbox);
+        eShowFlowCheckbox.addEventListener("change", function () {
+            config.showFlow = !config.showFlow;
+            initialize();
+        });
+
+        eParticleAmountRange.setAttribute("value", config.particleAmount);
+        eParticleAmountLabel.textContent = config.particleAmount;
+        eParticleAmountRange.addEventListener("change", function (event) {
+            eParticleAmountLabel.textContent = event.target.value;
+            config.particleAmount = parseFloat(event.target.value);
+        });
+
+        eScaleRange.setAttribute("value", config.scale);
+        eScaleLabel.textContent = config.scale;
+        eScaleRange.addEventListener("change", function (event) {
+            eScaleLabel.textContent = event.target.value;
+            config.scale = parseFloat(event.target.value);
+            initialize();
+        });
+    </script>
+    <!-- ENDSECTION: CONFIG -->
 
     <!-- SECTION: PARTICLE_CLASS -->
     <script is:inline>
@@ -185,78 +210,6 @@ import EditDropdown from "../../components/EditDropdown.astro";
         }
     </script>
     <!-- ENDSECTION: FLOW_CLASS -->
-
-    <!-- SECTION: CONFIG -->
-    <script is:inline>
-        const COLOR_OPTIONS = {
-            original: () => [26, 51, 43, 0.1],
-            light: () => [26, 20, 100, 0.1],
-            dark: () => [0, 0, 0, 0.1],
-            colorful: (frameCount) => [frameCount % 255, 255, 255, 0.1],
-            blue: (frameCount) => [(frameCount % 75) + 180, 255, 255, 0.1],
-            turqouise: (frameCount) => [(frameCount % 60) + 150, 255, 255, 0.1],
-            fire: (frameCount) => [(frameCount % 70) + 10, 255, 255, 0.1],
-        };
-
-        const config = {
-            logFramerate: true,
-            colorPalette: "light",
-            particleAmount: 2_000,
-            scale: 10,
-            increment: 0.1,
-            lod: 3,
-            fallOff: 0.6,
-            showFlow: true,
-        };
-
-        const eFramerate = document.getElementById("framerate");
-
-        function handleToggleLogFramerate() {
-            config.logFramerate = !config.logFramerate;
-            if (!config.logFramerate) {
-                eFramerate.textContent = "";
-            }
-        }
-
-        document
-            .getElementById("log-framerate-checkbox")
-            .addEventListener("change", handleToggleLogFramerate);
-
-        function handleToggleShowFlow() {
-            config.showFlow = !config.showFlow;
-            initialize();
-        }
-
-        document
-            .getElementById("show-flow-checkbox")
-            .addEventListener("change", handleToggleShowFlow);
-
-        function handleChangeParticleAmount(event) {
-            const value = event.target.value;
-            document.querySelector(
-                'label[for="particle-amount-range"]>span'
-            ).textContent = value;
-            config.particleAmount = parseFloat(value);
-        }
-
-        document
-            .getElementById("particle-amount-range")
-            .addEventListener("change", handleChangeParticleAmount);
-
-        function handleChangeScale(event) {
-            const value = event.target.value;
-            document.querySelector(
-                'label[for="scale-range"]>span'
-            ).textContent = value;
-            config.scale = parseFloat(value);
-            initialize();
-        }
-
-        document
-            .getElementById("scale-range")
-            .addEventListener("change", handleChangeScale);
-    </script>
-    <!-- ENDSECTION: CONFIG -->
 
     <!-- SECTION: SKETCH -->
     <script is:inline>
@@ -365,11 +318,7 @@ import EditDropdown from "../../components/EditDropdown.astro";
         }
 
         setInterval(function () {
-            if (config.logFramerate) {
-                const fps = `${framerate}fps`;
-                eFramerate.textContent = fps;
-                console.log(fps);
-            }
+            if (config.logFramerate) eFramerate.textContent = `${framerate}fps`;
             framerate = 0;
         }, 1000);
 

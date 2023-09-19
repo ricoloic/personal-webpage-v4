@@ -39,3 +39,11 @@ function addClass(elem, classToAdd) {
 function addClasses(elem, classesToAdd) {
     for (const c of classesToAdd) addClass(elem, c);
 }
+
+function toggleCheckbox(checkbox) {
+    if (checkbox.hasAttribute("checked")) {
+        checkbox.removeAttribute("checked");
+    } else {
+        checkbox.setAttribute("checked", "");
+    }
+}

@@ -1,0 +1,25 @@
+---
+interface Props {
+    id: string;
+    title: string;
+    min: number;
+    max: number;
+    step: number;
+}
+
+const { id, title, min, max, step } = Astro.props;
+const labelId = `${id}-label`;
+---
+
+<label id={labelId} for={id} class="block text-sm text-gray-900"
+    >{title}: <span></span></label
+>
+<input
+    id={id}
+    aria-labelledby={labelId}
+    type="range"
+    min={min}
+    max={max}
+    step={step}
+    class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+/>

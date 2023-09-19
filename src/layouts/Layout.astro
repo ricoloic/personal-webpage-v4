@@ -44,6 +44,7 @@ const { title } = Astro.props;
                         <a
                             id="home-link"
                             href="/"
+                            aria-label="Home Page"
                             class="select-none flex gap-3 p-3 items-center hover:bg-slate-200"
                         >
                             <Image
@@ -65,7 +66,8 @@ const { title } = Astro.props;
                         <ul class="relative h-full">
                             <li class="h-full hover:bg-slate-200">
                                 <button
-                                    aria-controls="sketch-dropdown"
+                                    type="button"
+                                    aria-controls="sketches-dropdown"
                                     name="sketches-button"
                                     class="h-full flex items-center gap-1 px-3"
                                 >
@@ -116,9 +118,10 @@ const { title } = Astro.props;
 
             const eSketchDropdown =
                 document.getElementById("sketches-dropdown");
-            const eSketchesLinks = document.getElementById("sketches-links");
 
             function handleCloseSketchDropdown(event) {
+                const eSketchesLinks =
+                    document.getElementById("sketches-links");
                 let target = event.target;
                 while (target) {
                     if (target == eSketchesLinks) return;

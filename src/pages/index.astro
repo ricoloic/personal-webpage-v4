@@ -1,8 +1,9 @@
 ---
 import { Image } from "astro:assets";
 import selfImage from "../assets/photos/loic.webp";
-import flowfieldPreview from "../assets/previews/flow-field-preview.png";
-import mouseFollowPreview from "../assets/previews/mouse-follow-preview.png";
+import flowfieldImage from "../assets/previews/flow-field-preview.png";
+import mouseFollowImage from "../assets/previews/mouse-follow-preview.png";
+import SketchCard from "../components/SketchCard.astro";
 import Layout from "../layouts/Layout.astro";
 
 const age = (function () {
@@ -97,62 +98,16 @@ const age = (function () {
             <div
                 class="mt-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 mx-auto"
             >
-                <a
-                    href="/sketches/flowfield"
-                    class="relative rounded h-60 group"
-                >
-                    <Image
-                        id="flowfield-preview-image"
-                        class="object-cover w-full h-full"
-                        src={flowfieldPreview}
-                        alt="The flowfield sketch"
-                    />
-                    <p
-                        class="absolute bottom-0 left-0 right-0 p-4 bg-black bg-opacity-80"
-                    >
-                        Flowfield
-                    </p>
-                    <span
-                        class="ease absolute left-0 top-0 h-0 w-0 border-t-2 border-white transition-all duration-200 group-hover:w-full"
-                    ></span>
-                    <span
-                        class="ease absolute right-0 top-0 h-0 w-0 border-r-2 border-white transition-all duration-200 group-hover:h-full"
-                    ></span>
-                    <span
-                        class="ease absolute bottom-0 right-0 h-0 w-0 border-b-2 border-white transition-all duration-200 group-hover:w-full"
-                    ></span>
-                    <span
-                        class="ease absolute bottom-0 left-0 h-0 w-0 border-l-2 border-white transition-all duration-200 group-hover:h-full"
-                    ></span>
-                </a>
-                <a
-                    href="/sketches/mouse-follow"
-                    class="relative rounded h-60 group"
-                >
-                    <Image
-                        id="mouse-follow-preview-image"
-                        class="object-cover w-full h-full"
-                        src={mouseFollowPreview}
-                        alt="The mouse-follow sketch"
-                    />
-                    <p
-                        class="absolute bottom-0 left-0 right-0 p-4 bg-black bg-opacity-80"
-                    >
-                        Mouse Follow
-                    </p>
-                    <span
-                        class="ease absolute left-0 top-0 h-0 w-0 border-t-2 border-white transition-all duration-200 group-hover:w-full"
-                    ></span>
-                    <span
-                        class="ease absolute right-0 top-0 h-0 w-0 border-r-2 border-white transition-all duration-200 group-hover:h-full"
-                    ></span>
-                    <span
-                        class="ease absolute bottom-0 right-0 h-0 w-0 border-b-2 border-white transition-all duration-200 group-hover:w-full"
-                    ></span>
-                    <span
-                        class="ease absolute bottom-0 left-0 h-0 w-0 border-l-2 border-white transition-all duration-200 group-hover:h-full"
-                    ></span>
-                </a>
+                <SketchCard
+                    image={flowfieldImage}
+                    route="/sketches/flowfield"
+                    title="Flowfield"
+                />
+                <SketchCard
+                    image={mouseFollowImage}
+                    route="/sketches/mouse-follow"
+                    title="Mouse Follow"
+                />
             </div>
         </section>
     </main>
