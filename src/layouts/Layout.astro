@@ -20,11 +20,46 @@ const { title } = Astro.props;
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="theme-color" content="#ffffff" />
 
+        <!-- SECTION: OpenGraph -->
+        <meta property="og:url" content="https://rico.studio" />
+        <meta property="og:title" content="Rico Generative Art" />
+        <meta
+            property="og:description"
+            content="Generative art creation by Loïc Rico. Using the html canvas and js for drawing awesome animation and visual effects."
+        />
+        <meta
+            property="og:image"
+            content="https://rico.studio/assets/website-card.png"
+        />
+        <meta
+            property="og:image:alt"
+            content="Display of the flowfield sketch"
+        />
+        <meta property="og:type" content="website" />
+        <!-- ENDSECTION: OpenGraph -->
+
+        <!-- SECTION: Twitter -->
+        <meta property="twitter:card" content="website" />
+        <meta property="twitter:title" content="Rico Generative Art" />
+        <meta
+            property="twitter:description"
+            content="Generative art creation by Loïc Rico. Using the html canvas and js for drawing awesome animation and visual effects."
+        />
+        <meta
+            property="twitter:image"
+            content="https://rico.studio/assets/website-card.png"
+        />
+        <meta
+            property="twitter:image:alt"
+            content="Display of the flowfield sketch"
+        />
+        <!-- ENDSECTION: Twitter -->
+
         <link rel="icon" type="image/png" href="/r-icon.png" />
         <link href="/assets/fontawesome/css/fontawesome.css" rel="stylesheet" />
         <link href="/assets/fontawesome/css/brands.css" rel="stylesheet" />
         <link href="/assets/fontawesome/css/solid.css" rel="stylesheet" />
-        <link rel="canonical" href="http://rico.studio" />
+        <link rel="canonical" href="https://rico.studio" />
 
         <title>{title}</title>
 
