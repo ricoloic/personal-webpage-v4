@@ -1,85 +1,71 @@
 ---
 import Layout from "../../layouts/Layout.astro";
+import EditDropdown from "../../components/EditDropdown.astro";
 ---
 
 <Layout title="Flowfield">
-    <li slot="edit">
-        <ul class="dropdown relative h-full hover:bg-slate-200">
-            <li
-                class="h-full flex items-center gap-1 px-3 cursor-pointer"
-                tabindex="0"
-            >
-                <span class="select-none">Edit</span>
-                <i class="fa-solid fa-pen-to-square"></i>
+    <EditDropdown slot="edit">
+        <ul slot="options" class="text-sm text-gray-700">
+            <li class="flex items-center border-b-2 px-4 py-2">
+                <input
+                    checked
+                    id="log-framerate-checkbox"
+                    type="checkbox"
+                    value=""
+                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                />
+                <label
+                    for="log-framerate-checkbox"
+                    class="ml-2 select-none text-sm text-gray-900"
+                    >Log Framerate</label
+                >
             </li>
-            <li
-                class="dropdown-sub hidden absolute w-max right-0 font-normal bg-white divide-y divide-gray-100 shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] top-full z-10"
-            >
-                <ul class="text-sm text-gray-700">
-                    <li class="flex items-center border-b-2 px-4 py-2">
-                        <input
-                            checked
-                            id="log-framerate-checkbox"
-                            type="checkbox"
-                            value=""
-                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                        />
-                        <label
-                            for="log-framerate-checkbox"
-                            class="ml-2 select-none text-sm text-gray-900"
-                            >Log Framerate</label
-                        >
-                    </li>
-                    <li class="flex items-center border-b-2 px-4 py-2">
-                        <input
-                            checked
-                            id="show-flow-checkbox"
-                            type="checkbox"
-                            value=""
-                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                        />
-                        <label
-                            for="show-flow-checkbox"
-                            class="ml-2 select-none text-sm text-gray-900"
-                            >Show Flow</label
-                        >
-                    </li>
-                    <li class="border-b-2 px-4 py-2">
-                        <label
-                            for="particle-amount-range"
-                            class="block text-sm text-gray-900"
-                            >Particle Amount: <span>2000</span></label
-                        >
-                        <input
-                            id="particle-amount-range"
-                            type="range"
-                            min="100"
-                            max="5000"
-                            value="2000"
-                            step="100"
-                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                        />
-                    </li>
-                    <li class="px-4 py-2">
-                        <label
-                            for="scale-range"
-                            class="block text-sm text-gray-900"
-                            >Scale: <span>10</span></label
-                        >
-                        <input
-                            id="scale-range"
-                            type="range"
-                            min="4"
-                            max="50"
-                            value="10"
-                            step="2"
-                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                        />
-                    </li>
-                </ul>
+            <li class="flex items-center border-b-2 px-4 py-2">
+                <input
+                    checked
+                    id="show-flow-checkbox"
+                    type="checkbox"
+                    value=""
+                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                />
+                <label
+                    for="show-flow-checkbox"
+                    class="ml-2 select-none text-sm text-gray-900"
+                    >Show Flow</label
+                >
+            </li>
+            <li class="border-b-2 px-4 py-2">
+                <label
+                    for="particle-amount-range"
+                    class="block text-sm text-gray-900"
+                    >Particle Amount: <span>2000</span></label
+                >
+                <input
+                    id="particle-amount-range"
+                    type="range"
+                    min="100"
+                    max="5000"
+                    value="2000"
+                    step="100"
+                    class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                />
+            </li>
+            <li class="px-4 py-2">
+                <label for="scale-range" class="block text-sm text-gray-900"
+                    >Scale: <span>10</span></label
+                >
+                <input
+                    id="scale-range"
+                    type="range"
+                    min="4"
+                    max="50"
+                    value="10"
+                    step="2"
+                    class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                />
             </li>
         </ul>
-    </li>
+    </EditDropdown>
 
     <main
         id="canvas-wrapper"
@@ -87,9 +73,11 @@ import Layout from "../../layouts/Layout.astro";
     >
         <span
             id="framerate"
-            class="select-none px-1 text-white absolute top-3 left-3 bg-black"
+            class="z-10 select-none px-1 text-white absolute top-3 left-3 bg-black"
         ></span>
-        <canvas id="flowfield-canvas"></canvas>
+        <canvas
+            id="flowfield-canvas"
+            class="block absolute top-0 right-0 bottom-0 left-0"></canvas>
     </main>
 
     <!-- SECTION: STATIC_IMPORTS -->

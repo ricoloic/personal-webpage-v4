@@ -13,36 +13,36 @@ const { title } = Astro.props;
 <html lang="en" class="h-full">
     <head>
         <meta charset="UTF-8" />
-        <meta name="description" content="Astro description" />
+        <meta
+            name="description"
+            content="Generative art creation by Loïc Rico. Using the html canvas and js for drawing awesome animation and visual effects."
+        />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="theme-color" content="#ffffff" />
+
         <link rel="icon" type="image/png" href="/r-icon.png" />
         <link href="/assets/fontawesome/css/fontawesome.css" rel="stylesheet" />
         <link href="/assets/fontawesome/css/brands.css" rel="stylesheet" />
         <link href="/assets/fontawesome/css/solid.css" rel="stylesheet" />
+        <link rel="canonical" href="http://rico.studio" />
 
-        <meta name="generator" content={Astro.generator} />
         <title>{title}</title>
 
         <style is:global>
-            html,
-            body {
+            html {
                 overscroll-behavior-y: none;
                 overflow-y: hidden;
-            }
-
-            .dropdown:hover .dropdown-sub,
-            .dropdown:focus-within .dropdown-sub {
-                display: block;
             }
         </style>
     </head>
 
-    <body class="flex flex-col h-full">
-        <header id="primary-header" class="bg-white w-full">
+    <body class="flex flex-col h-full bg-slate-800 text-white overflow-y-auto">
+        <header class="bg-white text-black w-full sticky top-0 z-10">
             <nav>
                 <ul class="flex shadow">
                     <li class="mr-auto">
                         <a
+                            id="home-link"
                             href="/"
                             class="select-none flex gap-3 p-3 items-center hover:bg-slate-200"
                         >
@@ -52,7 +52,7 @@ const { title } = Astro.props;
                                 width="30"
                                 height="30"
                                 src={siteIcon}
-                                alt="Image of the site icon"
+                                alt="The site icon"
                             />
 
                             <h1 class="hidden xs:block">
@@ -61,17 +61,21 @@ const { title } = Astro.props;
                         </a>
                     </li>
 
-                    <li>
-                        <ul class="dropdown relative h-full hover:bg-slate-200">
-                            <li
-                                class="h-full flex items-center gap-1 px-3 cursor-pointer"
-                                tabindex="0"
-                            >
-                                <span class="select-none">Sketches</span>
-                                <i class="fa-solid fa-caret-down"></i>
+                    <li id="sketches-links">
+                        <ul class="relative h-full">
+                            <li class="h-full hover:bg-slate-200">
+                                <button
+                                    aria-controls="sketch-dropdown"
+                                    name="sketches-button"
+                                    class="h-full flex items-center gap-1 px-3"
+                                >
+                                    <span class="select-none">Sketches</span>
+                                    <i class="fa-solid fa-caret-down"></i>
+                                </button>
                             </li>
                             <li
-                                class="dropdown-sub hidden absolute w-max right-0 font-normal bg-white divide-y divide-gray-100 shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] top-full z-10"
+                                id="sketches-dropdown"
+                                class="hidden absolute w-max right-0 font-normal bg-white divide-y divide-gray-100 shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] top-full"
                             >
                                 <ul class="text-sm text-gray-700">
                                     <li class="border-b-2">
@@ -102,27 +106,41 @@ const { title } = Astro.props;
 
         <script is:inline src="/js/utils/html.js"></script>
         <script>
-            const eHeader = document.getElementById("primary-header");
+            const eHomeLink = document.getElementById("home-link");
 
-            window.addEventListener("scroll", function () {
-                if (window.pageYOffset > eHeader.offsetTop) {
-                    addClasses(eHeader, ["sticky", "top-0"]);
-                } else {
-                    removeClasses(eHeader, ["sticky", "top-0"]);
+            if (window.location.pathname === "/") {
+                eHomeLink.setAttribute("aria-current", "page");
+            } else {
+                eHomeLink.setAttribute("aria-current", "");
+            }
+
+            const eSketchDropdown =
+                document.getElementById("sketches-dropdown");
+            const eSketchesLinks = document.getElementById("sketches-links");
+
+            function handleCloseSketchDropdown(event) {
+                let target = event.target;
+                while (target) {
+                    if (target == eSketchesLinks) return;
+                    target = target.parentNode;
                 }
-            });
 
-            function handleBlurDropdown(event) {
-                const eAllDropdown = document.querySelectorAll(".dropdown");
-                for (const elem of eAllDropdown) {
-                    if (isClickAway([elem], event.target)) {
-                        elem.blur();
-                    }
+                addClass(eSketchDropdown, "hidden");
+            }
+
+            function handleToggleSketchDropdown() {
+                if (findClassIndex(eSketchDropdown, "hidden") === -1) {
+                    addClass(eSketchDropdown, "hidden");
+                } else {
+                    removeClass(eSketchDropdown, "hidden");
                 }
             }
 
-            window.addEventListener("click", handleBlurDropdown);
-            window.addEventListener("touchstart", handleBlurDropdown);
+            document
+                .querySelector('button[name="sketches-button"]')
+                .addEventListener("click", handleToggleSketchDropdown);
+
+            document.addEventListener("click", handleCloseSketchDropdown);
         </script>
     </body>
 </html>
