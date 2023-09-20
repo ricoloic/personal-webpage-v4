@@ -6,9 +6,10 @@ interface Props {
     image: ImageMetadata;
     route: string;
     title: string;
+    alt: string;
 }
 
-const { image, route, title } = Astro.props;
+const { image, route, title, alt } = Astro.props;
 ---
 
 <a href={route} class="relative rounded h-60 group">
@@ -16,7 +17,7 @@ const { image, route, title } = Astro.props;
         id={route}
         class="object-cover w-full h-full"
         src={image}
-        alt="The flowfield sketch"
+        alt={alt}
     />
     <p class="absolute bottom-0 left-0 right-0 p-4 bg-black bg-opacity-80">
         {title}
