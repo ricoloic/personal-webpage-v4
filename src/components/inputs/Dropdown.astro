@@ -14,7 +14,9 @@ const { id, title, options } = Astro.props;
 const labelId = `${id}-label`;
 ---
 
-<label id={labelId} for={id} class="block mb-2 text-sm text-gray-900">{title}</label>
+<label id={labelId} for={id} class="block mb-2 text-sm text-gray-900"
+    >{title}</label
+>
 <select
     id={id}
     aria-labelledby={labelId}

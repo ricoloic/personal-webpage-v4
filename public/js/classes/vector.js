@@ -43,6 +43,12 @@ class Vector {
         return this;
     }
 
+    sub(subtracter) {
+        this.x -= subtracter.x;
+        this.y -= subtracter.y;
+        return this;
+    }
+
     normalize() {
         const mag = Math.sqrt(this.x * this.x + this.y * this.y);
         if (mag > 0) this.div(mag);
@@ -51,6 +57,10 @@ class Vector {
 
     mag(magnitude = 1) {
         return this.normalize().mult(magnitude);
+    }
+
+    heading() {
+        return Math.atan2(this.y, this.x);
     }
 
     fromAngle(angle) {
@@ -67,5 +77,15 @@ class Vector {
 
     static fromAngle(angle) {
         return Vector.create(Math.cos(angle), Math.sin(angle));
+    }
+
+    static dist(vec1, vec2) {
+        return Math.sqrt(
+            Math.pow(vec1.x - vec2.x, 2) + Math.pow(vec1.y - vec2.y, 2)
+        );
+    }
+
+    static sub(vec1, vec2) {
+        return vec1.copy().sub(vec2);
     }
 }
