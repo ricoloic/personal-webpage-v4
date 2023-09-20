@@ -15,7 +15,7 @@ const age = (function () {
 ---
 
 <Layout title="Rico Generative Arts">
-    <main class="px-12 py-20 flex flex-col gap-12">
+    <main class="px-12 py-20 flex flex-col gap-12 overflow-y-auto">
         <section
             id="intro"
             aria-label="Site Introduction"
@@ -30,7 +30,8 @@ const age = (function () {
             />
 
             <div id="hero" class="md:col-span-6 lg:col-span-8">
-                <h2 class="text-5xl break-words mb-5 tracking-wider">
+                <h2
+                    class="text-3xl xs:text-5xl break-words mb-5 tracking-wider">
                     Rico Generative Art
                 </h2>
 
@@ -115,28 +116,31 @@ const age = (function () {
                 />
             </div>
         </section>
-    </main>
 
-    <footer
-        id="links"
-        aria-label="Social Links"
-        class="w-full justify-center flex gap-3 my-10">
-        <a rel="noopener" target="_blank" href="https://github.com/ricoloic/">
-            <span class="sr-only">Github Button</span>
-            <i class="fa-brands fa-github fa-2xl"></i>
-        </a>
-        <a
-            rel="noopener"
-            target="_blank"
-            href="https://www.linkedin.com/in/rico-suave/">
-            <span class="sr-only">Linkedin Button</span>
-            <i class="fa-brands fa-linkedin fa-2xl"></i>
-        </a>
-        <button type="button" name="share-button">
-            <span class="sr-only">Share Button</span>
-            <i class="fa-solid fa-share-from-square fa-2xl"></i>
-        </button>
-    </footer>
+        <section
+            id="links"
+            aria-label="Social Links"
+            class="w-full justify-center flex gap-3 my-10">
+            <a
+                rel="noopener"
+                target="_blank"
+                href="https://github.com/ricoloic/">
+                <span class="sr-only">Github Button</span>
+                <i class="fa-brands fa-github fa-2xl"></i>
+            </a>
+            <a
+                rel="noopener"
+                target="_blank"
+                href="https://www.linkedin.com/in/rico-suave/">
+                <span class="sr-only">Linkedin Button</span>
+                <i class="fa-brands fa-linkedin fa-2xl"></i>
+            </a>
+            <button type="button" name="share-button">
+                <span class="sr-only">Share Button</span>
+                <i class="fa-solid fa-share-from-square fa-2xl"></i>
+            </button>
+        </section>
+    </main>
 
     <div
         id="link-copied-alert"
