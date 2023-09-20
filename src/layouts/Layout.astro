@@ -80,8 +80,7 @@ const { title } = Astro.props;
                             id="home-link"
                             href="/"
                             aria-label="Home Page"
-                            class="select-none flex gap-3 p-3 items-center hover:bg-slate-200"
-                        >
+                            class="select-none flex gap-3 p-3 items-center hover:bg-slate-200">
                             <Image
                                 id="icon-image"
                                 class="aspect-square"
@@ -91,7 +90,7 @@ const { title } = Astro.props;
                                 alt="The site icon"
                             />
 
-                            <h1 class="hidden xs:block">
+                            <h1 class="hidden xs:block tracking-wider">
                                 {title}
                             </h1>
                         </a>
@@ -104,16 +103,14 @@ const { title } = Astro.props;
                                     type="button"
                                     aria-controls="sketches-dropdown"
                                     name="sketches-button"
-                                    class="h-full flex items-center gap-1 px-3"
-                                >
+                                    class="h-full flex items-center gap-1 px-3">
                                     <span class="select-none">Sketches</span>
                                     <i class="fa-solid fa-caret-down"></i>
                                 </button>
                             </li>
                             <li
                                 id="sketches-dropdown"
-                                class="hidden absolute w-max right-0 font-normal bg-white divide-y divide-gray-100 shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] top-full"
-                            >
+                                class="hidden absolute w-max right-0 font-normal bg-white divide-y divide-gray-100 shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] top-full">
                                 <ul class="text-sm text-gray-700">
                                     <li class="border-b-2">
                                         <a
@@ -122,11 +119,18 @@ const { title } = Astro.props;
                                             >Mouse Follow</a
                                         >
                                     </li>
-                                    <li>
+                                    <li class="border-b-2">
                                         <a
                                             href="/sketches/flowfield"
                                             class="block px-4 py-2 hover:bg-gray-100"
                                             >Flowfield</a
+                                        >
+                                    </li>
+                                    <li>
+                                        <a
+                                            href="/sketches/flocking"
+                                            class="block px-4 py-2 hover:bg-gray-100"
+                                            >Flocking</a
                                         >
                                     </li>
                                 </ul>
