@@ -6,12 +6,11 @@ import selfImage from "../assets/photos/loic.webp";
 import flowfieldImage from "../assets/previews/flow-field-preview.png";
 import mouseFollowImage from "../assets/previews/mouse-follow-preview.png";
 import flockingImage from "../assets/previews/flocking-preview.png";
+import blackHoleImage from "../assets/previews/black-hole-preview.jpg";
 
-const age = (function () {
-    const ageDifMs = Date.now() - new Date("2002-09-23").getTime();
-    const ageDate = new Date(ageDifMs); // milliseconds from epoch
-    return Math.abs(ageDate.getUTCFullYear() - 1970);
-})();
+const ageDifMs = Date.now() - new Date("2002-09-23").getTime();
+const ageDate = new Date(ageDifMs); // milliseconds from epoch
+const age = Math.abs(ageDate.getUTCFullYear() - 1970);
 ---
 
 <Layout title="Rico Generative Arts">
@@ -116,6 +115,12 @@ const age = (function () {
                     route="/sketches/flocking"
                     title="Flocking"
                     alt="The flocking sketch"
+                />
+                <SketchCard
+                    image={blackHoleImage}
+                    route="/sketches/black-hole"
+                    title="Black Hole"
+                    alt="The black hole sketch"
                 />
             </div>
         </section>

@@ -1,0 +1,197 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import EditDropdown from "../../components/EditDropdown.astro";
+import Checkbox from "../../components/inputs/Checkbox.astro";
+---
+
+<Layout title="Flocking">
+    <EditDropdown slot="edit">
+        <ul slot="options" class="text-sm text-gray-700">
+            <li class="flex items-center border-b-2 px-4 py-2">
+                <Checkbox id="log-framerate-checkbox" title="Log Framerate" />
+            </li>
+            <li class="border-b-2 px-4 py-2">
+                <button
+                    name="clear-button"
+                    type="button"
+                    class="hover:bg-slate-200 py-1 px-2 w-full text-start border-2"
+                    >Clear</button
+                >
+            </li>
+        </ul>
+    </EditDropdown>
+
+    <main
+        id="canvas-wrapper"
+        class="overflow-y-auto relative flex-1 overflow-hidden h-full">
+        <span
+            id="framerate"
+            class="z-10 select-none px-1 text-white absolute top-3 left-3 bg-black"
+        ></span>
+        <canvas
+            id="black-hole-canvas"
+            class="block absolute top-0 right-0 bottom-0 left-0"></canvas>
+    </main>
+
+    <!-- SECTION: STATIC_IMPORTS -->
+    <script is:inline src="/js/utils/html.js"></script>
+    <script is:inline src="/js/externals/noise.js"></script>
+    <script is:inline src="/js/classes/vector.js"></script>
+    <script is:inline src="/js/utils/mouse.js"></script>
+    <script is:inline src="/js/utils/core.js"></script>
+    <script is:inline src="/js/utils/color.js"></script>
+    <script is:inline src="/js/utils/draw.js"></script>
+    <!-- ENDSECTION: STATIC_IMPORTS -->
+
+    <!-- SECTION: CONFIG -->
+    <script is:inline>
+        const config = {
+            logFramerate: true,
+            trailLife: 25,
+        };
+
+        const eLogFramerateCheckbox = document.getElementById(
+            "log-framerate-checkbox"
+        );
+        const eFramerate = document.getElementById("framerate");
+        const eClearButton = document.querySelector(
+            'button[name="clear-button"]'
+        );
+
+        if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
+        eLogFramerateCheckbox.addEventListener("change", function () {
+            config.logFramerate = !config.logFramerate;
+            if (!config.logFramerate) eFramerate.textContent = "";
+        });
+
+        eClearButton.addEventListener("click", function () {
+            particles.splice(0, particles.length);
+        });
+    </script>
+    <!-- ENDSECTION: CONFIG -->
+
+    <script is:inline>
+        class Particle {
+            constructor(
+                position = Vector.create(),
+                radius = 5,
+                velocity = Vector.create(0, 1)
+            ) {
+                this.position = position;
+                this.velocity = velocity.mag(3);
+                this.acceleration = Vector.create();
+                this.radius = radius;
+                this.trail = [];
+            }
+
+            applyForce(force) {
+                this.acceleration.add(force);
+                return this;
+            }
+
+            update() {
+                this.velocity.add(this.acceleration);
+                this.position.add(this.velocity);
+                this.acceleration.mult(0);
+                return this;
+            }
+
+            show(ctx) {
+                fillCircle(ctx, this.position.x, this.position.y, this.radius);
+                return this;
+            }
+
+            showTrail(ctx, trailLength = 300) {
+                if (this.trail.length > trailLength) this.trail.splice(0, 1);
+                this.trail.push(this.position.copy());
+
+                if (this.trail.length === 0) return this;
+                ctx.beginPath();
+                ctx.moveTo(this.trail[0].x, this.trail[0].y);
+                for (let i = 1; i < this.trail.length; i++)
+                    ctx.lineTo(this.trail[i].x, this.trail[i].y);
+                ctx.stroke();
+                return this;
+            }
+        }
+    </script>
+
+    <!-- SECTION: SKETCH -->
+    <script is:inline>
+        const eMain = document.getElementById("canvas-wrapper");
+        const eCanvas = document.getElementById("black-hole-canvas");
+        const ctx = eCanvas.getContext("2d");
+
+        const particles = [];
+        const blackHole = Vector.create();
+        let halfWidth, halfHeight, halfMinimum;
+
+        function initialize() {
+            eCanvas.width = eMain.offsetWidth;
+            eCanvas.height = eMain.offsetHeight;
+
+            halfWidth = eCanvas.width / 2;
+            halfHeight = eCanvas.height / 2;
+            halfMinimum = min(halfWidth, halfHeight);
+
+            blackHole.set(halfWidth, halfHeight);
+        }
+
+        window.addEventListener("resize", initialize);
+
+        initialize();
+
+        for (let i = 0; i <= 5; i += 1) {
+            const a = map(i, 0, 5, 0, TWO_PI);
+            const x = Math.cos(a) * halfMinimum + halfWidth;
+            const y = Math.sin(a) * halfMinimum + halfHeight;
+            particles.push(new Particle(Vector.create(x, y), 10));
+        }
+
+        eCanvas.addEventListener("click", function (event) {
+            const rect = eCanvas.getBoundingClientRect();
+            particles.push(
+                new Particle(
+                    Vector.create(
+                        event.clientX - rect.left,
+                        event.clientY - rect.top
+                    ),
+                    10
+                )
+            );
+        });
+
+        let framerate = 0;
+        function draw() {
+            framerate++;
+            requestAnimationFrame(draw);
+
+            background(ctx, "#333333");
+
+            ctx.fillStyle = "#ffffff";
+            ctx.strokeStyle = "#ffffff";
+            ctx.strokeWidth = 1;
+            for (let i = 0; i < particles.length; i += 1) {
+                const force = Vector.sub(blackHole, particles[i].position).mag(
+                    0.7
+                );
+                particles[i]
+                    .applyForce(force)
+                    .update()
+                    .show(ctx)
+                    .showTrail(ctx, config.trailLife);
+            }
+
+            ctx.fillStyle = "#ff6347";
+            fillCircle(ctx, blackHole.x, blackHole.y, 25);
+        }
+
+        setInterval(function () {
+            if (config.logFramerate) eFramerate.textContent = `${framerate}fps`;
+            framerate = 0;
+        }, 1000);
+
+        draw();
+    </script>
+    <!-- ENDSECTION: SKETCH -->
+</Layout>

@@ -10,7 +10,7 @@ const { title } = Astro.props;
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
     <head>
         <meta charset="UTF-8" />
         <meta
@@ -74,6 +74,25 @@ const { title } = Astro.props;
                 height: 100vh;
                 height: 100dvh;
             }
+
+            ::-webkit-scrollbar {
+                width: 10px;
+            }
+
+            /* Track */
+            ::-webkit-scrollbar-track {
+                background-color: transparent;
+            }
+
+            /* Handle */
+            ::-webkit-scrollbar-thumb {
+                background-color: white;
+            }
+
+            /* Handle on hover */
+            ::-webkit-scrollbar-thumb:hover {
+                background-color: lightgray;
+            }
         </style>
     </head>
 
@@ -132,11 +151,18 @@ const { title } = Astro.props;
                                             >Flowfield</a
                                         >
                                     </li>
-                                    <li>
+                                    <li class="border-b-2">
                                         <a
                                             href="/sketches/flocking"
                                             class="block px-4 py-2 hover:bg-gray-100"
                                             >Flocking</a
+                                        >
+                                    </li>
+                                    <li>
+                                        <a
+                                            href="/sketches/black-hole"
+                                            class="block px-4 py-2 hover:bg-gray-100"
+                                            >Black Hole</a
                                         >
                                     </li>
                                 </ul>

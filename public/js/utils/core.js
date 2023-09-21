@@ -16,3 +16,7 @@ function map(value, oldMin, oldMax, newMin, newMax) {
         ((value - oldMin) * (newMax - newMin)) / (oldMax - oldMin) + newMin;
     return Math.min(Math.max(newValue, newMin), newMax);
 }
+
+function min(num1, num2) {
+    return num1 < num2 ? num1 : num2;
+}

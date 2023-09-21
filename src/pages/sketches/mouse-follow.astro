@@ -57,8 +57,7 @@ const colorPaletteOptions = paletteNames.map(function (paletteName) {
 
     <main
         id="canvas-wrapper"
-        class="overflow-y-auto relative flex-1 overflow-hidden h-full"
-    >
+        class="overflow-y-auto relative flex-1 overflow-hidden h-full">
         <span
             id="framerate"
             class="z-10 select-none px-1 absolute top-3 left-3 text-white bg-black"
@@ -188,15 +187,15 @@ const colorPaletteOptions = paletteNames.map(function (paletteName) {
             }
 
             show(ctx, border, alfa) {
-                if (border) {
-                    ctx.strokeStyle = "#ffffff";
-                    ctx.stroke();
-                }
                 ctx.fillStyle = colorToString(
                     this.color,
                     alfa ? this.lifespan : 1
                 );
                 fillCircle(ctx, this.position.x, this.position.y, 8);
+                if (border) {
+                    ctx.strokeStyle = "#ffffff";
+                    ctx.stroke();
+                }
                 return this;
             }
 
@@ -271,6 +270,7 @@ const colorPaletteOptions = paletteNames.map(function (paletteName) {
             averagePosition.div(particles.length);
 
             if (config.showBlob) {
+                ctx.stroke;
                 ctx.fillStyle = "#ffffff";
                 fillCircle(ctx, averagePosition.x, averagePosition.y, 25);
             }
