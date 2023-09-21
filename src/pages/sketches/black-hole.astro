@@ -10,13 +10,16 @@ import Checkbox from "../../components/inputs/Checkbox.astro";
             <li class="flex items-center border-b-2 px-4 py-2">
                 <Checkbox id="log-framerate-checkbox" title="Log Framerate" />
             </li>
+            <li class="flex items-center border-b-2 px-4 py-2">
+                <Checkbox id="show-trail-checkbox" title="Show Trail" />
+            </li>
             <li class="border-b-2 px-4 py-2">
                 <button
                     name="clear-button"
                     type="button"
-                    class="hover:bg-slate-200 py-1 px-2 w-full text-start border-2"
-                    >Clear</button
-                >
+                    class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium text-sm py-1 px-2 focus:outline-none w-full">
+                    Clear
+                </button>
             </li>
         </ul>
     </EditDropdown>
@@ -48,12 +51,16 @@ import Checkbox from "../../components/inputs/Checkbox.astro";
         const config = {
             logFramerate: true,
             trailLife: 25,
+            showTrail: true,
         };
 
         const eLogFramerateCheckbox = document.getElementById(
             "log-framerate-checkbox"
         );
         const eFramerate = document.getElementById("framerate");
+        const eShowTrailCheckbox = document.getElementById(
+            "show-trail-checkbox"
+        );
         const eClearButton = document.querySelector(
             'button[name="clear-button"]'
         );
@@ -62,6 +69,11 @@ import Checkbox from "../../components/inputs/Checkbox.astro";
         eLogFramerateCheckbox.addEventListener("change", function () {
             config.logFramerate = !config.logFramerate;
             if (!config.logFramerate) eFramerate.textContent = "";
+        });
+
+        if (config.showTrail) toggleCheckbox(eShowTrailCheckbox);
+        eShowTrailCheckbox.addEventListener("change", function () {
+            config.showTrail = !config.showTrail;
         });
 
         eClearButton.addEventListener("click", function () {
@@ -175,11 +187,9 @@ import Checkbox from "../../components/inputs/Checkbox.astro";
                 const force = Vector.sub(blackHole, particles[i].position).mag(
                     0.7
                 );
-                particles[i]
-                    .applyForce(force)
-                    .update()
-                    .show(ctx)
-                    .showTrail(ctx, config.trailLife);
+                particles[i].applyForce(force).update().show(ctx);
+                if (config.showTrail)
+                    particles[i].showTrail(ctx, config.trailLife);
             }
 
             ctx.fillStyle = "#ff6347";
