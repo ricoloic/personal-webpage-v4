@@ -59,12 +59,20 @@ class Vector {
         return this.normalize().mult(magnitude);
     }
 
+    magnitute() {
+        return Math.sqrt(this.x * this.x + this.y * this.y);
+    }
+
     heading() {
         return Math.atan2(this.y, this.x);
     }
 
     fromAngle(angle) {
         return this.set(Math.cos(angle), Math.sin(angle));
+    }
+
+    dist(vec) {
+        return vec.copy().sub(this).magnitute();
     }
 
     static create(...args) {

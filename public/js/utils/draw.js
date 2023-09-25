@@ -17,3 +17,10 @@ function fillTriangle(ctx, x1, y1, x2, y2, x3, y3) {
     ctx.closePath();
     ctx.fill();
 }
+
+function strokeLine(ctx, x1, y1, x2, y2) {
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+}

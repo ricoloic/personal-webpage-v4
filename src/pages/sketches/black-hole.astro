@@ -4,7 +4,7 @@ import EditDropdown from "../../components/EditDropdown.astro";
 import Checkbox from "../../components/inputs/Checkbox.astro";
 ---
 
-<Layout title="Flocking">
+<Layout title="Black Hole">
     <EditDropdown slot="edit">
         <ul slot="options" class="text-sm text-gray-700">
             <li class="flex items-center border-b-2 px-4 py-2">
@@ -38,11 +38,8 @@ import Checkbox from "../../components/inputs/Checkbox.astro";
 
     <!-- SECTION: STATIC_IMPORTS -->
     <script is:inline src="/js/utils/html.js"></script>
-    <script is:inline src="/js/externals/noise.js"></script>
     <script is:inline src="/js/classes/vector.js"></script>
-    <script is:inline src="/js/utils/mouse.js"></script>
     <script is:inline src="/js/utils/core.js"></script>
-    <script is:inline src="/js/utils/color.js"></script>
     <script is:inline src="/js/utils/draw.js"></script>
     <!-- ENDSECTION: STATIC_IMPORTS -->
 
@@ -58,26 +55,11 @@ import Checkbox from "../../components/inputs/Checkbox.astro";
             "log-framerate-checkbox"
         );
         const eFramerate = document.getElementById("framerate");
-        const eShowTrailCheckbox = document.getElementById(
-            "show-trail-checkbox"
-        );
-        const eClearButton = document.querySelector(
-            'button[name="clear-button"]'
-        );
 
         if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
         eLogFramerateCheckbox.addEventListener("change", function () {
             config.logFramerate = !config.logFramerate;
             if (!config.logFramerate) eFramerate.textContent = "";
-        });
-
-        if (config.showTrail) toggleCheckbox(eShowTrailCheckbox);
-        eShowTrailCheckbox.addEventListener("change", function () {
-            config.showTrail = !config.showTrail;
-        });
-
-        eClearButton.addEventListener("click", function () {
-            particles.splice(0, particles.length);
         });
     </script>
     <!-- ENDSECTION: CONFIG -->

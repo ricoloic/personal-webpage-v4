@@ -20,3 +20,7 @@ function map(value, oldMin, oldMax, newMin, newMax) {
 function min(num1, num2) {
     return num1 < num2 ? num1 : num2;
 }
+
+function dist(x1, y1, x2, y2) {
+    return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
+}
