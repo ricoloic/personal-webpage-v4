@@ -551,12 +551,7 @@ import Checkbox from "../../components/inputs/Checkbox.astro";
         }
 
         eCanvas.addEventListener("mousedown", startClick);
-        eCanvas.addEventListener("touchstart", function (event) {
-            const rect = canvas.getBoundingClientRect();
-            mouse.x = event.touches[0].pageX - rect.left;
-            mouse.y = event.touches[0].pageY - rect.top;
-            startClick();
-        });
+        eCanvas.addEventListener("touchstart", startClick);
 
         eCanvas.addEventListener("mouseup", endClick);
         eCanvas.addEventListener("touchend", endClick);
