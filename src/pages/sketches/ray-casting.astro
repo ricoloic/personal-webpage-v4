@@ -531,7 +531,7 @@ import Checkbox from "../../components/inputs/Checkbox.astro";
 
         draw();
 
-        eCanvas.addEventListener("mousedown", function () {
+        function startClick() {
             for (let i = boundaries.length; i > 0; i--) {
                 for (let j = boundaries[i - 1].points.length; j > 0; j--) {
                     if (boundaries[i - 1].points[j - 1].hovering(mouse)) {
@@ -540,15 +540,21 @@ import Checkbox from "../../components/inputs/Checkbox.astro";
                     }
                 }
             }
-        });
+        }
 
-        eCanvas.addEventListener("mouseup", function () {
+        function endClick() {
             for (let i = boundaries.length; i > 0; i--) {
                 for (let j = boundaries[i - 1].points.length; j > 0; j--) {
                     boundaries[i - 1].points[j - 1].moving = false;
                 }
             }
-        });
+        }
+
+        eCanvas.addEventListener("mousedown", startClick);
+        eCanvas.addEventListener("touchstart", startClick);
+
+        eCanvas.addEventListener("mouseup", endClick);
+        eCanvas.addEventListener("touchend", endClick);
     </script>
     <!-- ENDSECTION: SKETCH -->
 </Layout>
