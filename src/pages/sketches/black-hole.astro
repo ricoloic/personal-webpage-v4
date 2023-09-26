@@ -61,6 +61,12 @@ import Checkbox from "../../components/inputs/Checkbox.astro";
             config.logFramerate = !config.logFramerate;
             if (!config.logFramerate) eFramerate.textContent = "";
         });
+
+        document
+            .querySelector('button[name="clear-button"]')
+            .addEventListener("click", function () {
+                particles.splice(0, particles.length);
+            });
     </script>
     <!-- ENDSECTION: CONFIG -->
 
