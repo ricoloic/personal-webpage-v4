@@ -10,6 +10,8 @@ import blackHoleImage from "../assets/previews/black-hole-preview.jpg";
 import rayCastingImage from "../assets/previews/ray-casting-preview.png";
 import timesTableImage from "../assets/previews/times-table-preview.png";
 import metaBallsImage from "../assets/previews/meta-balls-preview.png";
+import quadraticBesierCurveImage from "../assets/previews/quadratic-besier-curve-preview.png";
+import cubicBesierCurveImage from "../assets/previews/cubic-besier-curve-preview.png";
 
 const ageDifMs = Date.now() - new Date("2002-09-23").getTime();
 const ageDate = new Date(ageDifMs); // milliseconds from epoch
@@ -142,6 +144,18 @@ const age = Math.abs(ageDate.getUTCFullYear() - 1970);
                     route="/sketches/meta-balls"
                     title="Meta Balls"
                     alt="The meta balls sketch"
+                />
+                <SketchCard
+                    image={quadraticBesierCurveImage}
+                    route="/sketches/quadratic-besier-curve"
+                    title="Quadratic Besier Curve"
+                    alt="The quadratic besier curve sketch"
+                />
+                <SketchCard
+                    image={cubicBesierCurveImage}
+                    route="/sketches/cubic-besier-curve"
+                    title="Cubic Besier Curve"
+                    alt="The cubic besier curve sketch"
                 />
             </div>
         </section>

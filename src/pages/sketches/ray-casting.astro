@@ -531,30 +531,25 @@ import Checkbox from "../../components/inputs/Checkbox.astro";
 
         draw();
 
-        function startClick() {
-            for (let i = boundaries.length; i > 0; i--) {
-                for (let j = boundaries[i - 1].points.length; j > 0; j--) {
-                    if (boundaries[i - 1].points[j - 1].hovering(mouse)) {
+        function startEdit(position) {
+            mouse.x = position.x;
+            mouse.y = position.y;
+            for (let i = boundaries.length; i > 0; i--)
+                for (let j = boundaries[i - 1].points.length; j > 0; j--)
+                    if (boundaries[i - 1].points[j - 1].hovering(position)) {
                         boundaries[i - 1].points[j - 1].moving = true;
                         if (!config.snapNode) return;
                     }
-                }
-            }
         }
 
-        function endClick() {
-            for (let i = boundaries.length; i > 0; i--) {
-                for (let j = boundaries[i - 1].points.length; j > 0; j--) {
+        function stopEdit() {
+            for (let i = boundaries.length; i > 0; i--)
+                for (let j = boundaries[i - 1].points.length; j > 0; j--)
                     boundaries[i - 1].points[j - 1].moving = false;
-                }
-            }
         }
 
-        eCanvas.addEventListener("mousedown", startClick);
-        eCanvas.addEventListener("touchstart", startClick);
-
-        eCanvas.addEventListener("mouseup", endClick);
-        eCanvas.addEventListener("touchend", endClick);
+        startClick(eCanvas, startEdit);
+        stopClick(eCanvas, stopEdit);
     </script>
     <!-- ENDSECTION: SKETCH -->
 </Layout>

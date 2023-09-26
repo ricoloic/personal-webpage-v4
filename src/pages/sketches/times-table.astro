@@ -154,6 +154,8 @@ import Range from "../../components/inputs/Range.astro";
         window.addEventListener("resize", function () {
             eCanvas.width = eMain.offsetWidth;
             eCanvas.height = eMain.offsetHeight;
+            halfWidth = eCanvas.width / 2;
+            halfHeight = eCanvas.height / 2;
             radius = min(halfWidth, halfHeight) - 50;
         });
 

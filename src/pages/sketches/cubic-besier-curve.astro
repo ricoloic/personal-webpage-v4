@@ -1,0 +1,292 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import EditDropdown from "../../components/EditDropdown.astro";
+import Checkbox from "../../components/inputs/Checkbox.astro";
+import Range from "../../components/inputs/Range.astro";
+---
+
+<Layout title="Cubic Besier Curve">
+    <EditDropdown slot="edit">
+        <ul slot="options" class="text-sm text-gray-700">
+            <li class="text-sm text-gray-700 border-b-2 px-4 py-2">
+                <Checkbox id="log-framerate-checkbox" title="Log Framerate" />
+            </li>
+            <li class="text-sm text-gray-700 border-b-2 px-4 py-2">
+                <Checkbox
+                    id="show-control-lines-checkbox"
+                    title="Show Control Lines"
+                />
+            </li>
+        </ul>
+    </EditDropdown>
+
+    <main
+        id="canvas-wrapper"
+        class="overflow-y-auto relative flex-1 overflow-hidden h-full">
+        <span
+            id="framerate"
+            class="z-10 select-none px-1 absolute top-3 left-3 text-white bg-black"
+        ></span>
+        <canvas
+            id="cubic-besier-curve-canvas"
+            class="block absolute top-0 right-0 bottom-0 left-0"></canvas>
+    </main>
+
+    <!-- SECTION: STATIC_IMPORTS -->
+    <script is:inline src="/js/utils/html.js"></script>
+    <script is:inline src="/js/utils/draw.js"></script>
+    <script is:inline src="/js/utils/mouse.js"></script>
+    <script is:inline src="/js/utils/core.js"></script>
+    <script is:inline src="/js/utils/color.js"></script>
+    <script is:inline src="/js/classes/vector.js"></script>
+    <!-- ENDSECTION: STATIC_IMPORTS -->
+
+    <!-- SECTION: CONFIG -->
+    <script is:inline>
+        const config = {
+            pointRadius: 10,
+            displayControlLines: true,
+            logFramerate: true,
+        };
+
+        const eLogFramerateCheckbox = document.getElementById(
+            "log-framerate-checkbox"
+        );
+        const eFramerate = document.getElementById("framerate");
+        const eShowControlLinesCheckbox = document.getElementById(
+            "show-control-lines-checkbox"
+        );
+
+        if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
+        eLogFramerateCheckbox.addEventListener("change", function () {
+            config.logFramerate = !config.logFramerate;
+            if (!config.logFramerate) eFramerate.textContent = "";
+        });
+
+        if (config.displayControlLines)
+            toggleCheckbox(eShowControlLinesCheckbox);
+        eShowControlLinesCheckbox.addEventListener("change", function () {
+            config.displayControlLines = !config.displayControlLines;
+        });
+    </script>
+    <!-- ENDSECTION: CONFIG -->
+
+    <script is:inline>
+        class Point {
+            constructor(vector, radius = 5, text = "") {
+                this.radius = radius;
+                this.text = text;
+                this.vector = vector;
+                this.selected = false;
+            }
+
+            hover(mouse) {
+                return (
+                    dist(mouse.x, mouse.y, this.vector.x, this.vector.y) <=
+                    this.radius
+                );
+            }
+
+            update(mouse) {
+                if (this.selected) {
+                    this.vector.set(mouse.x, mouse.y);
+                }
+            }
+
+            show(ctx) {
+                ctx.fillStyle = "white";
+                fillCircle(ctx, this.vector.x, this.vector.y, this.radius);
+                ctx.strokeStyle = "white";
+                ctx.fillText(this.text, this.vector.x + 15, this.vector.y + 15);
+            }
+
+            lineToPoint(ctx, point) {
+                ctx.lineWidth = 1;
+                ctx.strokeStyle = "tomato";
+                strokeLine(
+                    ctx,
+                    this.vector.x,
+                    this.vector.y,
+                    point.vector.x,
+                    point.vector.y
+                );
+            }
+        }
+    </script>
+
+    <!-- SECTION: SKETCH -->
+    <script is:inline>
+        const eMain = document.getElementById("canvas-wrapper");
+        const eCanvas = document.getElementById("cubic-besier-curve-canvas");
+        eCanvas.width = eMain.offsetWidth;
+        eCanvas.height = eMain.offsetHeight;
+        const mouse = mousePosition(eCanvas);
+        let halfWidth = eCanvas.width / 2,
+            halfHeight = eCanvas.height / 2;
+        const points = [];
+        let initiated = false;
+
+        function assignPoints() {
+            const minMult = 150;
+            const v1 = [halfWidth - minMult, halfHeight - minMult];
+            const v2 = [halfWidth + minMult, halfHeight];
+            const v3 = [halfWidth - minMult, halfHeight];
+            const v4 = [halfWidth + minMult, halfHeight + minMult];
+            if (initiated) {
+                points[0].vector.set(v1[0], v1[1]);
+                points[1].vector.set(v2[0], v2[1]);
+                points[2].vector.set(v3[0], v3[1]);
+                points[3].vector.set(v4[0], v4[1]);
+            } else {
+                points.push(
+                    new Point(
+                        Vector.create(v1[0], v1[1]),
+                        config.pointRadius,
+                        "P1"
+                    )
+                );
+                points.push(
+                    new Point(
+                        Vector.create(v2[0], v2[1]),
+                        config.pointRadius,
+                        "P2"
+                    )
+                );
+                points.push(
+                    new Point(
+                        Vector.create(v3[0], v3[1]),
+                        config.pointRadius,
+                        "P3"
+                    )
+                );
+                points.push(
+                    new Point(
+                        Vector.create(v4[0], v4[1]),
+                        config.pointRadius,
+                        "P4"
+                    )
+                );
+                initiated = true;
+            }
+        }
+
+        window.addEventListener("resize", function () {
+            eCanvas.width = eMain.offsetWidth;
+            eCanvas.height = eMain.offsetHeight;
+            halfWidth = eCanvas.width / 2;
+            halfHeight = eCanvas.height / 2;
+            assignPoints();
+        });
+
+        const ctx = eCanvas.getContext("2d");
+
+        const curvePoint = { x: 0, y: 0 };
+        function calculateCurve(t, pt1, pt2, pt3, pt4) {
+            function calc(axis) {
+                return (
+                    (1 - t) * (1 - t) * (1 - t) * pt1.vector[axis] +
+                    3 * (1 - t) * (1 - t) * t * pt2.vector[axis] +
+                    3 * (1 - t) * t * t * pt3.vector[axis] +
+                    t * t * t * pt4.vector[axis]
+                );
+            }
+
+            curvePoint.x = calc("x");
+            curvePoint.y = calc("y");
+        }
+
+        let framerate = 0;
+        let t = 0;
+
+        assignPoints();
+
+        function draw() {
+            framerate++;
+            requestAnimationFrame(draw);
+
+            background(ctx, "#333333");
+
+            ctx.fillStyle = "white";
+            ctx.font = "20px serif";
+
+            if (t >= 1) t = 0;
+            t += 0.001;
+
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = "white";
+            ctx.beginPath();
+            calculateCurve(0, points[0], points[1], points[2], points[3]);
+            ctx.moveTo(curvePoint.x, curvePoint.y);
+            for (let i = 0.01; i <= 1.0000001; i += 0.01) {
+                calculateCurve(i, points[0], points[1], points[2], points[3]);
+                ctx.lineTo(curvePoint.x, curvePoint.y);
+            }
+            ctx.stroke();
+
+            if (config.displayControlLines) {
+                points[0].lineToPoint(ctx, points[1]);
+                points[1].lineToPoint(ctx, points[2]);
+                points[2].lineToPoint(ctx, points[3]);
+
+                ctx.lineWidth = 1;
+                ctx.strokeStyle = "#f9c846"; // yellow-ish
+                const a1 = [
+                    lerp(points[0].vector.x, points[1].vector.x, t),
+                    lerp(points[0].vector.y, points[1].vector.y, t),
+                ];
+                const a2 = [
+                    lerp(points[1].vector.x, points[2].vector.x, t),
+                    lerp(points[1].vector.y, points[2].vector.y, t),
+                ];
+                const a3 = [
+                    lerp(points[2].vector.x, points[3].vector.x, t),
+                    lerp(points[2].vector.y, points[3].vector.y, t),
+                ];
+                strokeLine(ctx, a1[0], a1[1], a2[0], a2[1]);
+                strokeLine(ctx, a2[0], a2[1], a3[0], a3[1]);
+                const b1 = [lerp(a1[0], a2[0], t), lerp(a1[1], a2[1], t)];
+                const b2 = [lerp(a2[0], a3[0], t), lerp(a2[1], a3[1], t)];
+                ctx.strokeStyle = "#94bfbe";
+                strokeLine(ctx, b1[0], b1[1], b2[0], b2[1]);
+
+                calculateCurve(t, points[0], points[1], points[2], points[3]);
+
+                ctx.fillText(
+                    t.toString().slice(0, 4),
+                    curvePoint.x - 15,
+                    curvePoint.y + 15
+                );
+            }
+
+            for (let i = 0; i < points.length; i++) {
+                points[i].update(mouse);
+                points[i].show(ctx);
+            }
+        }
+
+        setInterval(function () {
+            if (config.logFramerate) eFramerate.textContent = `${framerate}fps`;
+            framerate = 0;
+        }, 1000);
+
+        draw();
+
+        function startMove(position) {
+            mouse.x = position.x;
+            mouse.y = position.y;
+            for (let i = 0; i < points.length; i++)
+                if (points[i].hover(position)) {
+                    points[i].selected = true;
+                    break;
+                }
+        }
+
+        function stopMove() {
+            for (let i = 0; i < points.length; i++) points[i].selected = false;
+        }
+
+        startClick(eCanvas, startMove);
+        stopClick(eCanvas, stopMove);
+    </script>
+    <!-- ENDSECTION: SKETCH -->
+</Layout>
