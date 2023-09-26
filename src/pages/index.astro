@@ -8,6 +8,7 @@ import mouseFollowImage from "../assets/previews/mouse-follow-preview.png";
 import flockingImage from "../assets/previews/flocking-preview.png";
 import blackHoleImage from "../assets/previews/black-hole-preview.jpg";
 import rayCastingImage from "../assets/previews/ray-casting-preview.png";
+import timesTableImage from "../assets/previews/times-table-preview.png";
 
 const ageDifMs = Date.now() - new Date("2002-09-23").getTime();
 const ageDate = new Date(ageDifMs); // milliseconds from epoch
@@ -128,6 +129,12 @@ const age = Math.abs(ageDate.getUTCFullYear() - 1970);
                     route="/sketches/ray-casting"
                     title="Ray Casting"
                     alt="The ray casting sketch"
+                />
+                <SketchCard
+                    image={timesTableImage}
+                    route="/sketches/times-table"
+                    title="Times Table"
+                    alt="The times table sketch"
                 />
             </div>
         </section>

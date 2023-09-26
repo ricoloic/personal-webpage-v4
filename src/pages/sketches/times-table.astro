@@ -1,0 +1,204 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import EditDropdown from "../../components/EditDropdown.astro";
+import Checkbox from "../../components/inputs/Checkbox.astro";
+import Range from "../../components/inputs/Range.astro";
+---
+
+<Layout title="Times Table">
+    <EditDropdown slot="edit">
+        <ul slot="options" class="text-sm text-gray-700">
+            <li class="text-sm text-gray-700 border-b-2 px-4 py-2">
+                <Checkbox id="log-framerate-checkbox" title="Log Framerate" />
+            </li>
+            <li class="border-b-2 px-4 py-2">
+                <Range
+                    id="point-amount-range"
+                    title="Point Amount"
+                    min={50}
+                    max={2000}
+                    step={1}
+                />
+            </li>
+            <li class="border-b-2 px-4 py-2">
+                <Range
+                    id="multiplier-range"
+                    title="Multiplier"
+                    min={2}
+                    max={500}
+                    step={1}
+                />
+            </li>
+            <li class="border-b-2 px-4 py-2">
+                <Range
+                    id="transparency-range"
+                    title="Transparency"
+                    min={1}
+                    max={255}
+                    step={1}
+                />
+            </li>
+            <li class="border-b-2 px-4 py-2">
+                <Range
+                    id="line-thickness-range"
+                    title="Line Thickness"
+                    min={1}
+                    max={15}
+                    step={1}
+                />
+            </li>
+        </ul>
+    </EditDropdown>
+
+    <main
+        id="canvas-wrapper"
+        class="overflow-y-auto relative flex-1 overflow-hidden h-full">
+        <span
+            id="framerate"
+            class="z-10 select-none px-1 absolute top-3 left-3 text-white bg-black"
+        ></span>
+        <canvas
+            id="times-table-canvas"
+            class="block absolute top-0 right-0 bottom-0 left-0"></canvas>
+    </main>
+
+    <!-- SECTION: STATIC_IMPORTS -->
+    <script is:inline src="/js/utils/html.js"></script>
+    <script is:inline src="/js/utils/mouse.js"></script>
+    <script is:inline src="/js/utils/draw.js"></script>
+    <script is:inline src="/js/utils/core.js"></script>
+    <script is:inline src="/js/utils/color.js"></script>
+    <script is:inline src="/js/classes/vector.js"></script>
+    <!-- ENDSECTION: STATIC_IMPORTS -->
+
+    <!-- SECTION: CONFIG -->
+    <script is:inline>
+        const config = {
+            amountOfPoints: 200,
+            multiplier: 2,
+            radius: 0,
+            transparency: 60,
+            lineThickness: 2,
+            logFramerate: true,
+        };
+
+        const eLogFramerateCheckbox = document.getElementById(
+            "log-framerate-checkbox"
+        );
+        const eFramerate = document.getElementById("framerate");
+        const ePointAmountRange = document.getElementById("point-amount-range");
+        const ePointAmountLabel = document.querySelector(
+            'label[for="point-amount-range"]>span'
+        );
+        const eMultiplierRange = document.getElementById("multiplier-range");
+        const eMultiplierLabel = document.querySelector(
+            'label[for="multiplier-range"]>span'
+        );
+        const eTransparencyRange =
+            document.getElementById("transparency-range");
+        const eTransparencyLabel = document.querySelector(
+            'label[for="transparency-range"]>span'
+        );
+        const eLineThicknessRange = document.getElementById(
+            "line-thickness-range"
+        );
+        const eLineThicknessLabel = document.querySelector(
+            'label[for="line-thickness-range"]>span'
+        );
+
+        if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
+        eLogFramerateCheckbox.addEventListener("change", function () {
+            config.logFramerate = !config.logFramerate;
+            if (!config.logFramerate) eFramerate.textContent = "";
+        });
+
+        eMultiplierRange.setAttribute("value", config.multiplier);
+        eMultiplierLabel.textContent = config.multiplier;
+        eMultiplierRange.addEventListener("change", function (event) {
+            config.multiplier = parseInt(event.target.value, 10);
+            eMultiplierLabel.textContent = event.target.value;
+        });
+
+        ePointAmountRange.setAttribute("value", config.amountOfPoints);
+        ePointAmountLabel.textContent = config.amountOfPoints;
+        ePointAmountRange.addEventListener("change", function (event) {
+            config.amountOfPoints = parseInt(event.target.value, 10);
+            ePointAmountLabel.textContent = event.target.value;
+        });
+
+        eTransparencyRange.setAttribute("value", config.transparency);
+        eTransparencyLabel.textContent = config.transparency;
+        eTransparencyRange.addEventListener("change", function (event) {
+            config.transparency = parseInt(event.target.value, 10);
+            eTransparencyLabel.textContent = event.target.value;
+        });
+
+        eLineThicknessRange.setAttribute("value", config.lineThickness);
+        eLineThicknessLabel.textContent = config.lineThickness;
+        eLineThicknessRange.addEventListener("change", function (event) {
+            config.lineThickness = parseInt(event.target.value, 10);
+            eLineThicknessLabel.textContent = event.target.value;
+        });
+    </script>
+    <!-- ENDSECTION: CONFIG -->
+
+    <!-- SECTION: SKETCH -->
+    <script is:inline>
+        const eMain = document.getElementById("canvas-wrapper");
+        const eCanvas = document.getElementById("times-table-canvas");
+        eCanvas.width = eMain.offsetWidth;
+        eCanvas.height = eMain.offsetHeight;
+        let halfWidth = eCanvas.width / 2,
+            halfHeight = eCanvas.height / 2;
+        let radius = min(halfWidth, halfHeight) - 50;
+
+        window.addEventListener("resize", function () {
+            eCanvas.width = eMain.offsetWidth;
+            eCanvas.height = eMain.offsetHeight;
+            radius = min(halfWidth, halfHeight) - 50;
+        });
+
+        const ctx = eCanvas.getContext("2d");
+        const mouse = mousePosition(eCanvas);
+        ctx.lineCap = "round";
+
+        function calculatePositionFromIteration(iteration) {
+            const angle = map(iteration, 0, config.amountOfPoints, 0, TWO_PI);
+            return Vector.create(
+                Math.cos(angle) * radius + halfWidth,
+                Math.sin(angle) * radius + halfHeight
+            );
+        }
+
+        let framerate = 0;
+
+        function draw() {
+            framerate++;
+            requestAnimationFrame(draw);
+
+            background(ctx, "#333333");
+
+            for (let i = 0; i < config.amountOfPoints; i++) {
+                const thint = (config.transparency / 16)
+                    .toString(16)
+                    .replaceAll(".", "")
+                    .padStart(2, "0");
+                ctx.strokeStyle = `#ffffff${thint}`;
+                ctx.lineWidth = config.lineThickness;
+                const point1 = calculatePositionFromIteration(i);
+                const j = (i * config.multiplier) % config.amountOfPoints;
+                const point2 = calculatePositionFromIteration(j);
+
+                strokeLine(ctx, point1.x, point1.y, point2.x, point2.y);
+            }
+        }
+
+        setInterval(function () {
+            if (config.logFramerate) eFramerate.textContent = `${framerate}fps`;
+            framerate = 0;
+        }, 1000);
+
+        draw();
+    </script>
+    <!-- ENDSECTION: SKETCH -->
+</Layout>
