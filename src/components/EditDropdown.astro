@@ -5,16 +5,14 @@
                 type="button"
                 aria-controls="edit-dropdown"
                 name="edit-button"
-                class="h-full flex items-center gap-1 px-3"
-            >
+                class="h-full flex items-center gap-1 px-3">
                 <span class="select-none">Edit</span>
                 <i class="fa-solid fa-pen-to-square"></i>
             </button>
         </li>
         <li
             id="edit-dropdown"
-            class="hidden absolute w-max right-0 font-normal bg-white divide-y divide-gray-100 shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] top-full z-10"
-        >
+            class="hidden absolute max-h-[250px] overflow-y-auto w-max right-0 font-normal bg-white shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] top-full z-10">
             <slot name="options" />
         </li>
     </ul>

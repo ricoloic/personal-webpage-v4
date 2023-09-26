@@ -135,7 +135,7 @@ const { title } = Astro.props;
                             </li>
                             <li
                                 id="sketches-dropdown"
-                                class="hidden absolute w-max right-0 font-normal bg-white divide-y divide-gray-100 shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] top-full">
+                                class="hidden absolute w-max max-h-[250px] overflow-y-auto right-0 font-normal bg-white shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] top-full">
                                 <ul class="text-sm text-gray-700">
                                     <li class="border-b-2">
                                         <a
@@ -172,11 +172,18 @@ const { title } = Astro.props;
                                             >Ray Casting</a
                                         >
                                     </li>
-                                    <li>
+                                    <li class="border-b-2">
                                         <a
                                             href="/sketches/times-table"
                                             class="block px-4 py-2 hover:bg-gray-100"
                                             >Times Table</a
+                                        >
+                                    </li>
+                                    <li class="border-b-2">
+                                        <a
+                                            href="/sketches/meta-balls"
+                                            class="block px-4 py-2 hover:bg-gray-100"
+                                            >Meta Balls</a
                                         >
                                     </li>
                                 </ul>

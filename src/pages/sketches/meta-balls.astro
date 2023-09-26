@@ -1,0 +1,400 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import EditDropdown from "../../components/EditDropdown.astro";
+import Checkbox from "../../components/inputs/Checkbox.astro";
+import Range from "../../components/inputs/Range.astro";
+---
+
+<Layout title="Meta Balls">
+    <EditDropdown slot="edit">
+        <ul slot="options" class="text-sm text-gray-700">
+            <li class="text-sm text-gray-700 border-b-2 px-4 py-2">
+                <Checkbox id="log-framerate-checkbox" title="Log Framerate" />
+            </li>
+            <li class="text-sm text-gray-700 border-b-2 px-4 py-2">
+                <Checkbox id="show-circles-checkbox" title="Show Circles" />
+            </li>
+            <li class="border-b-2 px-4 py-2">
+                <Range
+                    id="cicle-amount-range"
+                    title="Circle Amount"
+                    min={2}
+                    max={20}
+                    step={1}
+                />
+            </li>
+            <li class="border-b-2 px-4 py-2">
+                <Range
+                    id="scale-range"
+                    title="Scale"
+                    min={10}
+                    max={25}
+                    step={1}
+                />
+            </li>
+        </ul>
+    </EditDropdown>
+
+    <main
+        id="canvas-wrapper"
+        class="overflow-y-auto relative flex-1 overflow-hidden h-full">
+        <span
+            id="framerate"
+            class="z-10 select-none px-1 absolute top-3 left-3 text-white bg-black"
+        ></span>
+        <canvas
+            id="meta-balls-canvas"
+            class="block absolute top-0 right-0 bottom-0 left-0"></canvas>
+    </main>
+
+    <!-- SECTION: STATIC_IMPORTS -->
+    <script is:inline src="/js/utils/html.js"></script>
+    <script is:inline src="/js/utils/draw.js"></script>
+    <script is:inline src="/js/utils/core.js"></script>
+    <script is:inline src="/js/utils/color.js"></script>
+    <script is:inline src="/js/classes/vector.js"></script>
+    <!-- ENDSECTION: STATIC_IMPORTS -->
+
+    <!-- SECTION: CONFIG -->
+    <script is:inline>
+        const config = {
+            scale: 18,
+            ballAmount: 8,
+            showCircles: true,
+            logFramerate: true,
+        };
+
+        const eLogFramerateCheckbox = document.getElementById(
+            "log-framerate-checkbox"
+        );
+        const eFramerate = document.getElementById("framerate");
+        const eShowCirclesCheckbox = document.getElementById(
+            "show-circles-checkbox"
+        );
+        const eCircleAmountRange =
+            document.getElementById("cicle-amount-range");
+        const eCircleAmountLabel = document.querySelector(
+            'label[for="cicle-amount-range"]>span'
+        );
+        const eScaleRange = document.getElementById("scale-range");
+        const eScaleLabel = document.querySelector(
+            'label[for="scale-range"]>span'
+        );
+
+        if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
+        eLogFramerateCheckbox.addEventListener("change", function () {
+            config.logFramerate = !config.logFramerate;
+            if (!config.logFramerate) eFramerate.textContent = "";
+        });
+
+        if (config.showCircles) toggleCheckbox(eShowCirclesCheckbox);
+        eShowCirclesCheckbox.addEventListener("change", function () {
+            config.showCircles = !config.showCircles;
+        });
+
+        eCircleAmountRange.setAttribute("value", config.ballAmount);
+        eCircleAmountLabel.textContent = config.ballAmount;
+        eCircleAmountRange.addEventListener("change", function (event) {
+            config.ballAmount = parseInt(event.target.value, 10);
+            eCircleAmountLabel.textContent = event.target.value;
+        });
+
+        eScaleRange.setAttribute("value", config.scale);
+        eScaleLabel.textContent = config.scale;
+        eScaleRange.addEventListener("change", function (event) {
+            config.scale = parseInt(event.target.value, 10);
+            eScaleLabel.textContent = event.target.value;
+            initialize();
+        });
+    </script>
+    <!-- ENDSECTION: CONFIG -->
+
+    <script is:inline>
+        class Ball {
+            constructor(position, radius) {
+                this.position = position;
+                this.radius = radius;
+                this.velocity = Vector.create(
+                    random(-1, 1),
+                    random(-1, 1)
+                ).mult(random(2, 5));
+            }
+
+            bounce(minimum, maximum) {
+                const contactLeft = this.position.x - this.radius < minimum.x;
+                const contactRight = this.position.x + this.radius > maximum.x;
+                if (contactLeft || contactRight) this.velocity.x *= -1;
+
+                const contactTop = this.position.y - this.radius < minimum.y;
+                const contactBottom = this.position.y + this.radius > maximum.y;
+                if (contactTop || contactBottom) this.velocity.y *= -1;
+
+                return this;
+            }
+
+            update(minimum, maximum) {
+                this.bounce(minimum, maximum);
+                this.position.add(this.velocity);
+            }
+
+            show(ctx) {
+                ctx.strokeStyle = "white";
+                circle(ctx, this.position.x, this.position.y, this.radius);
+                ctx.stroke();
+            }
+        }
+
+        class ControlNode {
+            constructor(position, active, value) {
+                this.position = position;
+                this.value = value;
+                this.active = active;
+                this.above = Vector.create(position.x, position.y);
+                this.right = Vector.create(position.x, position.y);
+            }
+        }
+
+        class Square {
+            constructor(topLeft, topRight, bottomRight, bottomLeft) {
+                this.topLeft = topLeft;
+                this.topRight = topRight;
+                this.bottomRight = bottomRight;
+                this.bottomLeft = bottomLeft;
+
+                this.configuration = 0;
+                if (topLeft.active) this.configuration += 8;
+                if (topRight.active) this.configuration += 4;
+                if (bottomRight.active) this.configuration += 2;
+                if (bottomLeft.active) this.configuration += 1;
+            }
+        }
+
+        class SquareGrid {
+            constructor(map) {
+                const nodeCountX = map.length;
+                const nodeCountY = map[0].length;
+                const controlNodes = [];
+
+                for (let x = 0; x < nodeCountX; x++) {
+                    controlNodes[x] = [];
+                    for (let y = 0; y < nodeCountY; y++)
+                        controlNodes[x][y] = new ControlNode(
+                            Vector.create(x, y),
+                            map[x][y][0] === 1,
+                            map[x][y][1]
+                        );
+                }
+
+                this.squares = [];
+                for (let x = 0; x < nodeCountX - 1; x++) {
+                    this.squares[x] = [];
+                    for (let y = 0; y < nodeCountY - 1; y++)
+                        this.squares[x][y] = new Square(
+                            controlNodes[x][y + 1],
+                            controlNodes[x + 1][y + 1],
+                            controlNodes[x + 1][y],
+                            controlNodes[x][y]
+                        );
+                }
+            }
+        }
+
+        class MeshGenerator {
+            constructor(map, squareSize) {
+                this.squareGrid = new SquareGrid(map);
+                this.squareSize = squareSize;
+                this.lines = [];
+
+                for (let x = 0; x < this.squareGrid.squares.length; x++)
+                    for (let y = 0; y < this.squareGrid.squares[x].length; y++)
+                        this.triangulateSquare(this.squareGrid.squares[x][y]);
+            }
+
+            vLerp(v1, v2, pos) {
+                const isoLevel = 0.9;
+
+                if (Math.abs(isoLevel - v1.value) < 0.00001)
+                    return v1.position.copy();
+                if (Math.abs(isoLevel - v2.value) < 0.00001)
+                    return v2.position.copy();
+                if (Math.abs(v1.value - v2.value) < 0.00001)
+                    return v1.position.copy();
+
+                const mu = (isoLevel - v1.value) / (v2.value - v1.value);
+                const p = Vector.create();
+                if (pos === "top" || pos === "bottom") {
+                    p.x = lerp(v1.position.x, v2.position.x, mu);
+                    p.y = v1.position.y;
+                } else {
+                    p.y = lerp(v1.position.y, v2.position.y, mu);
+                    p.x = v1.position.x;
+                }
+                return p;
+            }
+
+            triangulateSquare(square) {
+                const top = this.vLerp(square.topLeft, square.topRight, "top");
+                const right = this.vLerp(
+                    square.topRight,
+                    square.bottomRight,
+                    "right"
+                );
+                const bottom = this.vLerp(
+                    square.bottomRight,
+                    square.bottomLeft,
+                    "bottom"
+                );
+                const left = this.vLerp(
+                    square.bottomLeft,
+                    square.topLeft,
+                    "left"
+                );
+
+                switch (square.configuration) {
+                    case 0:
+                    case 15:
+                        break;
+                    case 1:
+                    case 14:
+                        this.lines.push([left, bottom]);
+                        break;
+                    case 2:
+                    case 13:
+                        this.lines.push([bottom, right]);
+                        break;
+                    case 4:
+                    case 11:
+                        this.lines.push([right, top]);
+                        break;
+                    case 8:
+                    case 7:
+                        this.lines.push([top, left]);
+                        break;
+                    case 3:
+                    case 12:
+                        this.lines.push([right, left]);
+                        break;
+                    case 6:
+                    case 9:
+                        this.lines.push([top, bottom]);
+                        break;
+                    case 5:
+                        this.lines.push([top, right]);
+                        this.lines.push([bottom, left]);
+                        break;
+                    case 10:
+                        this.lines.push([top, right]);
+                        this.lines.push([bottom, left]);
+                        break;
+                }
+            }
+
+            show(ctx) {
+                ctx.strokeStyle = "white";
+
+                for (let i = 0; i < this.lines.length; i++)
+                    strokeLine(
+                        ctx,
+                        this.lines[i][0].x * this.squareSize,
+                        this.lines[i][0].y * this.squareSize,
+                        this.lines[i][1].x * this.squareSize,
+                        this.lines[i][1].y * this.squareSize
+                    );
+            }
+        }
+    </script>
+
+    <!-- SECTION: SKETCH -->
+    <script is:inline>
+        const eMain = document.getElementById("canvas-wrapper");
+        const eCanvas = document.getElementById("meta-balls-canvas");
+        const ctx = eCanvas.getContext("2d");
+        eCanvas.width = eMain.offsetWidth;
+        eCanvas.height = eMain.offsetHeight;
+        const maximumSize = Vector.create(eCanvas.width, eCanvas.height);
+        const minimumSize = Vector.create();
+        let cols, rows;
+        const balls = [];
+
+        function createBall() {
+            const radius = random(60, 120);
+            const position = Vector.create(
+                random(
+                    radius + config.scale,
+                    eCanvas.width - radius - config.scale
+                ),
+                random(
+                    radius + config.scale,
+                    eCanvas.height - radius - config.scale
+                )
+            );
+            return new Ball(position, radius);
+        }
+
+        function initialize() {
+            cols = Math.ceil(eCanvas.width / config.scale + 1);
+            rows = Math.ceil(eCanvas.height / config.scale + 1);
+            maximumSize.set(eCanvas.width, eCanvas.height);
+            for (let i = 0; i < config.ballAmount; i++)
+                balls.push(createBall());
+        }
+
+        window.addEventListener("resize", function () {
+            eCanvas.width = eMain.offsetWidth;
+            eCanvas.height = eMain.offsetHeight;
+            initialize();
+        });
+
+        initialize();
+
+        let framerate = 0;
+
+        function draw() {
+            framerate++;
+            requestAnimationFrame(draw);
+
+            background(ctx, "#333333");
+
+            if (config.ballAmount < balls.length) balls.splice(0, 1);
+            else if (config.ballAmount > balls.length) balls.push(createBall());
+
+            const plan = [];
+
+            for (let col = 0; col < cols; col++) {
+                plan[col] = [];
+                for (let row = 0; row < rows; row++) {
+                    const x = col * config.scale;
+                    const y = row * config.scale;
+                    let sum = 0;
+                    for (let i = 0; i < balls.length; i++) {
+                        const xdif = x - balls[i].position.x;
+                        const ydif = y - balls[i].position.y;
+                        const d = Math.sqrt(xdif * xdif + ydif * ydif);
+                        sum += balls[i].radius / d;
+                    }
+                    plan[col][row] = [
+                        sum >= 1.8 ? 1 : 0,
+                        min(map(sum, 0, 2, 0, 1), 1),
+                    ];
+                }
+            }
+
+            const meshGenerator = new MeshGenerator(plan, config.scale);
+            meshGenerator.show(ctx);
+
+            for (let i = 0; i < balls.length; i++) {
+                balls[i].update(minimumSize, maximumSize);
+
+                if (config.showCircles) balls[i].show(ctx);
+            }
+        }
+
+        setInterval(function () {
+            if (config.logFramerate) eFramerate.textContent = `${framerate}fps`;
+            framerate = 0;
+        }, 1000);
+
+        draw();
+    </script>
+    <!-- ENDSECTION: SKETCH -->
+</Layout>

@@ -64,7 +64,6 @@ import Range from "../../components/inputs/Range.astro";
 
     <!-- SECTION: STATIC_IMPORTS -->
     <script is:inline src="/js/utils/html.js"></script>
-    <script is:inline src="/js/utils/mouse.js"></script>
     <script is:inline src="/js/utils/draw.js"></script>
     <script is:inline src="/js/utils/core.js"></script>
     <script is:inline src="/js/utils/color.js"></script>
@@ -159,7 +158,6 @@ import Range from "../../components/inputs/Range.astro";
         });
 
         const ctx = eCanvas.getContext("2d");
-        const mouse = mousePosition(eCanvas);
         ctx.lineCap = "round";
 
         function calculatePositionFromIteration(iteration) {
