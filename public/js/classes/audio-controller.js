@@ -1,84 +1,216 @@
+/**
+ * @async
+ * @param {string} url
+ * @return {Promise<ArrayBuffer | null>}
+ */
+async function fetchArrayBuffer(url) {
+  return new Promise((resolve) => {
+    const request = new XMLHttpRequest();
+    request.open("GET", url);
+    request.responseType = "arraybuffer";
+
+    request.onload = () => {
+      if (request.status >= 200 && request.status < 300 && request.response) {
+        resolve(request.response);
+      } else {
+        resolve(null);
+      }
+    };
+
+    request.onerror = function () {
+      resolve(null);
+    };
+
+    request.send();
+  });
+}
+
+/**
+ * @typedef {32 | 64 | 128 | 256 | 512 | 1024 | 2048 | 4096 | 8192 | 16384 | 32768} FftSize
+ */
+
 class AudioController {
   constructor() {
     this.context = null;
+
     this.buffer = null;
     this.source = null;
     this.analyzer = null;
-    this.loaded = false;
-    this.started = false;
-    this.undecodedAudio = null;
-    this.initialized = false;
-    this.gainNode = null;
+    this.gain = null;
     this.convolver = null;
+
+    this.undecodedBuffer = null;
+
+    this.loaded = false;
+    this.initialized = false;
+
+    this.started = false;
 
     this.pausedTime = 0;
     this.startTime = 0;
-    this.initialTime = undefined;
   }
 
-  initialize() {
-    this.context = new AudioContext({ latencyHint: "interactive" });
-    this.gainNode = this.context.createGain();
-    this.convolver = this.context.createConvolver();
-    this.convolver.normalize = true;
-    return this.context
-      .decodeAudioData(this.undecodedAudio, (data) => {
-        this.buffer = data;
-        this.source = this.context.createBufferSource();
-        this.source.buffer = this.buffer;
-        this.convolver.buffer = this.buffer;
-        this.source.connect(this.context.destination);
-        this.createAnalyser();
-        this.source.connect(this.analyser);
-        this.analyser.connect(this.context.destination);
-        this.initialized = true;
-      })
-      .then((decodedData) => {
-        let decodedBuffer = decodedData.getChannelData(0);
-        let sliceLen = Math.floor(decodedData.sampleRate * 0.05);
-        let averages = [];
-        let sum = 0.0;
-        for (let i = 0; i < decodedBuffer.length; i++) {
-          sum += decodedBuffer[i] ** 2;
-          if (i % sliceLen === 0) {
-            sum = Math.sqrt(sum / sliceLen);
-            averages.push(sum);
-            sum = 0;
-          }
-        }
-        // Ascending sort of the averages array
-        averages.sort();
-        // Take the average at the 95th percentile
-        let a = averages[Math.floor(averages.length * 0.95)];
+  /**
+   * @async
+   * @method load
+   * @methodOf AudioController
+   * @param {string} url
+   * @return {Promise<AudioController>}
+   */
+  async load(url) {
+    const data = await fetchArrayBuffer(url);
+    if (data) {
+      this.undecodedBuffer = data;
+      this.loaded = true;
+    } else {
+      console.error(
+        "There wa an error while fetching the audio file, check the network tab for more details",
+      );
+    }
 
-        let gain = 1.0 / a;
-
-        // Perform some clamping
-        gain = Math.max(gain, 0.02);
-        gain = Math.min(gain, 100.0);
-
-        gain = gain / 10.0;
-        this.gainNode.gain.value = gain;
-      });
+    return this;
   }
 
-  toggle() {
-    console.log("toggle: ", this.started);
-    if (this.started) this.stop();
-    else this.start();
+  /**
+   * AudioController.initialize is used to instantiate the AudioContext and its buffer. This method should only be
+   * called when AudioController.loaded is true.
+   *
+   * @async
+   * @method initialize
+   * @methodOf AudioController
+   * @param {AudioContextLatencyCategory} latencyHint
+   * @return {Promise<AudioController>}
+   */
+  async initialize(latencyHint = "interactive") {
+    if (!this.loaded) return this;
+
+    this.context = new AudioContext({ latencyHint });
+    this.context.onstatechange = () => {
+      if (this.context.state !== "running") this.started = false;
+    };
+    this.buffer = await this.context.decodeAudioData(this.undecodedBuffer);
+
+    this.createGain();
+    this.createAnalyser();
+    this.createSource();
+    this.createConvolver();
+
+    this.initialized = true;
+
+    return this;
   }
 
-  play() {
-    console.log("play");
-    // Create a new source node
+  /**
+   * @method createSource
+   * @methodOf AudioController
+   * @return {AudioController}
+   */
+  createSource() {
+    if (!this.context) return this;
+
     this.source = this.context.createBufferSource();
     this.source.buffer = this.buffer;
 
-    // Reconnect the new source to the analyser and destination
-    this.source.connect(this.gainNode).connect(this.context.destination);
-    this.source.connect(this.analyser);
+    if (this.gain)
+      this.source.connect(this.gain).connect(this.context.destination);
+    else this.source.connect(this.context.destination);
+    if (this.analyser) this.source.connect(this.analyser);
 
-    if (!this.initialTime) this.initialTime = Date.now();
+    return this;
+  }
+
+  /**
+   * @method createConvolver
+   * @methodOf AudioController
+   * @return {AudioController}
+   */
+  createConvolver() {
+    if (!this.context) return this;
+
+    this.convolver = this.context.createConvolver();
+    this.convolver.normalize = true;
+    this.convolver.buffer = this.buffer;
+
+    return this;
+  }
+
+  /**
+   * @method createAnalyser
+   * @methodOf AudioController
+   * @param {FftSize} fftSize
+   * @return {AudioController}
+   */
+  createAnalyser(fftSize = 2048) {
+    if (!this.context) return this;
+
+    this.analyser = this.context.createAnalyser();
+
+    if (fftSize) this.analyser.fftSize = fftSize;
+
+    this.analyser.connect(this.context.destination);
+
+    return this;
+  }
+
+  /**
+   * @method createGain
+   * @methodOf AudioController
+   * @return {AudioController}
+   */
+  createGain() {
+    if (!this.context || !this.buffer) return this;
+
+    this.gain = this.context.createGain();
+    let decodedBuffer = this.buffer.getChannelData(0);
+    let sliceLen = Math.floor(this.buffer.sampleRate * 0.05);
+    let averages = [];
+    let sum = 0.0;
+    for (let i = 0; i < decodedBuffer.length; i++) {
+      sum += decodedBuffer[i] ** 2;
+      if (i % sliceLen === 0) {
+        sum = Math.sqrt(sum / sliceLen);
+        averages.push(sum);
+        sum = 0;
+      }
+    }
+    // Ascending sort of the averages array
+    averages.sort();
+    // Take the average at the 95th percentile
+    let a = averages[Math.floor(averages.length * 0.95)];
+
+    let gain = 1.0 / a;
+
+    // Perform some clamping
+    gain = Math.max(gain, 0.02);
+    gain = Math.min(gain, 100.0);
+
+    gain = gain / 10.0;
+    this.gain.gain.value = gain;
+
+    return this;
+  }
+
+  /**
+   * @method start
+   * @methodOf AudioController
+   * @return {AudioController}
+   */
+  start() {
+    if (this.started || !this.initialized || this.context.state === "closed")
+      return this;
+
+    if (
+      this.context.state === "interrupted" ||
+      this.context.state === "suspended"
+    ) {
+      this.context.resume().then(() => this.start());
+      return this;
+    }
+
+    if (this.context.state !== "running") return this;
+
+    this.createSource();
+
     if (this.pausedTime) {
       this.source.start(0, this.pausedTime / 1000);
     } else {
@@ -87,11 +219,10 @@ class AudioController {
     }
 
     let userStopped = false;
+
     this.source.onended = () => {
       this.started = false;
-      if (!userStopped) {
-        this.pausedTime = 0;
-      }
+      if (!userStopped) this.pausedTime = 0;
       userStopped = false;
     };
 
@@ -100,116 +231,76 @@ class AudioController {
       this.source.stop(0);
     };
 
-    console.log("starting");
     this.started = true;
+
+    return this;
   }
 
-  start(...args) {
-    if (this.ready() && !this.started) {
-      if (!this.context) {
-        this.initialize().then(() => {
-          this.play(...args);
-        });
-      } else {
-        this.play(...args);
-      }
-    }
-  }
-
+  /**
+   * @method stop
+   * @methodOf AudioController
+   * @return {AudioController}
+   */
   stop() {
-    if (this.ready() && this.started) {
-      console.log("stop");
-      this.source.userStop();
-      this.pausedTime = Date.now() - this.startTime;
-    }
-  }
+    if (!this.started || !this.initialized || this.context.state === "closed")
+      return this;
 
-  loop() {
-    if (this.ready()) this.source.loop = true;
-  }
+    this.source.userStop();
+    this.pausedTime = Date.now() - this.startTime;
 
-  noloop() {
-    if (this.ready()) this.source.loop = false;
-  }
-
-  ready() {
-    return this.loaded;
+    return this;
   }
 
   /**
-   * @param analyserOptions {object} - Options to configure the AnalyserNode
+   * @method toggle
+   * @methodOf AudioController
+   * @return {AudioController}
    */
-  createAnalyser(analyserOptions = { fftSize: 4096 }) {
-    this.analyser = this.context.createAnalyser();
+  toggle() {
+    if (!this.initialized) return this;
 
-    if (analyserOptions?.fftSize) {
-      this.analyser.fftSize = analyserOptions.fftSize;
-    }
+    if (this.started) this.stop();
+    else this.start();
+
+    return this;
   }
 
   /**
-   * @param filepath {string}
+   * @method analyzeFrequency
+   * @methodOf AudioController
+   * @param {{ fftSize: FftSize, minFrequency: number, maxFrequency: number }} options
+   * @return {Uint8Array | null}
    */
-  async load(filepath) {
-    return new Promise((resolve) => {
-      const request = new XMLHttpRequest();
-      request.open("GET", filepath);
-      request.responseType = "arraybuffer";
-
-      request.onload = () => {
-        if (request.status === 200) {
-          this.undecodedAudio = request.response;
-          this.loaded = true;
-          resolve(true);
-        } else {
-          resolve(false);
-        }
-      };
-
-      request.onerror = function () {
-        resolve(false);
-      };
-
-      request.send();
-    });
-  }
-
-  getFrequencyData(
-    fftSize = 2048,
-    minFrequency = 0,
-    maxFrequency = this.context.sampleRate / 2,
+  analyzeFrequency(
+    options = {
+      fftSize: undefined,
+      minFrequency: undefined,
+      maxFrequency: undefined,
+    },
   ) {
-    if (!this.analyser) return null;
+    if (!this.initialized || !this.analyser) return null;
 
-    this.analyser.fftSize = fftSize;
+    let { fftSize, minFrequency, maxFrequency } = options;
+
+    const sampleRate = this.context.sampleRate;
+
+    if (!minFrequency) minFrequency = 0;
+    if (!maxFrequency) maxFrequency = sampleRate / 2;
+
+    if (fftSize) this.analyser.fftSize = fftSize;
+    else fftSize = this.analyser.fftSize;
 
     const bufferLength = this.analyser.frequencyBinCount;
+
     const dataArray = new Uint8Array(bufferLength);
     this.analyser.getByteFrequencyData(dataArray);
 
-    // Return the subarray containing the frequency data within the specified range
-    return this.getFrequencyRange(dataArray, minFrequency, maxFrequency);
-  }
-
-  getFrequencyRange(
-    dataArray,
-    minFrequency = 0,
-    maxFrequency = this.context.sampleRate / 2,
-  ) {
-    if (!this.analyser) return null;
-
-    // Calculate the start and end indices based on the specified frequency range
-    const sampleRate = this.context.sampleRate;
-
-    const startIndex = Math.floor(
-      (minFrequency / sampleRate) * this.analyser.fftSize,
-    );
+    const startIndex = Math.floor((minFrequency / sampleRate) * fftSize);
     const endIndex = Math.min(
-      Math.floor((maxFrequency / sampleRate) * this.analyser.fftSize),
-      dataArray.length,
+      Math.floor((maxFrequency / sampleRate) * fftSize),
+      bufferLength,
     );
 
-    // Return the subarray containing the frequency data within the specified range
     return dataArray.subarray(startIndex, endIndex);
   }
 
@@ -222,228 +313,3 @@ class AudioController {
     }
   }
 }
-
-// class AudioController {
-//   constructor() {
-//     this.context = null;
-//     this.buffer = null;
-//     this.source = null;
-//     this.analyzer = null;
-//     this.loaded = false;
-//     this.started = false;
-//     this.undecodedAudio = null;
-//     this.initialized = false;
-//     this.gainNode = null;
-//     this.convolver = null;
-//
-//     this.pausedTime = 0;
-//     this.startTime = 0;
-//     this.initialTime = undefined;
-//   }
-//
-//   initialize() {
-//     this.context = new AudioContext({ latencyHint: "interactive" });
-//     this.gainNode = this.context.createGain();
-//     this.convolver = this.context.createConvolver();
-//     this.convolver.normalize = true;
-//     return this.context
-//         .decodeAudioData(this.undecodedAudio, (data) => {
-//           this.buffer = data;
-//           this.source = this.context.createBufferSource();
-//           this.source.buffer = this.buffer;
-//           this.convolver.buffer = this.buffer;
-//           this.source.connect(this.context.destination);
-//           this.createAnalyser();
-//           this.source.connect(this.analyser);
-//           this.analyser.connect(this.context.destination);
-//           this.initialized = true;
-//         })
-//         .then((decodedData) => {
-//           let decodedBuffer = decodedData.getChannelData(0);
-//           let sliceLen = Math.floor(decodedData.sampleRate * 0.05);
-//           let averages = [];
-//           let sum = 0.0;
-//           for (let i = 0; i < decodedBuffer.length; i++) {
-//             sum += decodedBuffer[i] ** 2;
-//             if (i % sliceLen === 0) {
-//               sum = Math.sqrt(sum / sliceLen);
-//               averages.push(sum);
-//               sum = 0;
-//             }
-//           }
-//           // Ascending sort of the averages array
-//           averages.sort();
-//           // Take the average at the 95th percentile
-//           let a = averages[Math.floor(averages.length * 0.95)];
-//
-//           let gain = 1.0 / a;
-//
-//           // Perform some clamping
-//           gain = Math.max(gain, 0.02);
-//           gain = Math.min(gain, 100.0);
-//
-//           gain = gain / 10.0;
-//           this.gainNode.gain.value = gain;
-//         });
-//   }
-//
-//   toggle() {
-//     console.log("toggle: ", this.started);
-//     if (this.started) this.stop();
-//     else this.start();
-//   }
-//
-//   play() {
-//     console.log("play");
-//     // Create a new source node
-//     this.source = this.context.createBufferSource();
-//     this.source.buffer = this.buffer;
-//
-//     // Reconnect the new source to the analyser and destination
-//     this.source.connect(this.gainNode).connect(this.context.destination);
-//     this.source.connect(this.analyser);
-//
-//     if (!this.initialTime) this.initialTime = Date.now();
-//     if (this.pausedTime) {
-//       this.source.start(0, this.pausedTime / 1000);
-//     } else {
-//       this.startTime = Date.now();
-//       this.source.start(0);
-//     }
-//
-//     let userStopped = false;
-//     this.source.onended = () => {
-//       this.started = false;
-//       if (!userStopped) {
-//         this.pausedTime = this.initialTime - this.startTime;
-//       }
-//       userStopped = false;
-//     };
-//
-//     this.source.userStop = () => {
-//       userStopped = true;
-//       this.source.stop(0);
-//     };
-//
-//     console.log("starting");
-//     this.started = true;
-//   }
-//
-//   start(...args) {
-//     if (this.ready() && !this.started) {
-//       if (!this.context) {
-//         this.initialize().then(() => {
-//           this.play(...args);
-//         });
-//       } else {
-//         this.play(...args);
-//       }
-//     }
-//   }
-//
-//   stop() {
-//     if (this.ready() && this.started) {
-//       console.log("stop");
-//       this.source.userStop();
-//       this.pausedTime = Date.now() - this.startTime;
-//     }
-//   }
-//
-//   loop() {
-//     if (this.ready()) this.source.loop = true;
-//   }
-//
-//   noloop() {
-//     if (this.ready()) this.source.loop = false;
-//   }
-//
-//   ready() {
-//     return this.loaded;
-//   }
-//
-//   /**
-//    * @param analyserOptions {object} - Options to configure the AnalyserNode
-//    */
-//   createAnalyser(analyserOptions = { fftSize: 4096 }) {
-//     this.analyser = this.context.createAnalyser();
-//
-//     if (analyserOptions?.fftSize) {
-//       this.analyser.fftSize = analyserOptions.fftSize;
-//     }
-//   }
-//
-//   /**
-//    * @param filepath {string}
-//    */
-//   async load(filepath) {
-//     return new Promise((resolve) => {
-//       const request = new XMLHttpRequest();
-//       request.open("GET", filepath);
-//       request.responseType = "arraybuffer";
-//
-//       request.onload = () => {
-//         if (request.status === 200) {
-//           this.undecodedAudio = request.response;
-//           this.loaded = true;
-//           resolve(true);
-//         } else {
-//           resolve(false);
-//         }
-//       };
-//
-//       request.onerror = function () {
-//         resolve(false);
-//       };
-//
-//       request.send();
-//     });
-//   }
-//
-//   getFrequencyData(
-//       fftSize = 2048,
-//       minFrequency = 0,
-//       maxFrequency = this.context.sampleRate / 2,
-//   ) {
-//     if (!this.analyser) return null;
-//
-//     this.analyser.fftSize = fftSize;
-//
-//     const bufferLength = this.analyser.frequencyBinCount;
-//     const dataArray = new Uint8Array(bufferLength);
-//     this.analyser.getByteFrequencyData(dataArray);
-//
-//     // Return the subarray containing the frequency data within the specified range
-//     return this.getFrequencyRange(dataArray, minFrequency, maxFrequency);
-//   }
-//
-//   getFrequencyRange(
-//       dataArray,
-//       minFrequency = 0,
-//       maxFrequency = this.context.sampleRate / 2,
-//   ) {
-//     if (!this.analyser) return null;
-//
-//     // Calculate the start and end indices based on the specified frequency range
-//     const sampleRate = this.context.sampleRate;
-//
-//     const startIndex = Math.floor(
-//         (minFrequency / sampleRate) * this.analyser.fftSize,
-//     );
-//     const endIndex = Math.min(
-//         Math.floor((maxFrequency / sampleRate) * this.analyser.fftSize),
-//         dataArray.length,
-//     );
-//
-//     // Return the subarray containing the frequency data within the specified range
-//     return dataArray.subarray(startIndex, endIndex);
-//   }
-//
-//   static create(...args) {
-//     try {
-//       return new AudioController(...args);
-//     } catch (err) {
-//       console.error(err);
-//       return null;
-//     }
-//   }
-// }

@@ -24,9 +24,9 @@ import Checkbox from "../../components/inputs/Checkbox.astro";
                 id="audio-spectrum-canvas"
                 class="block absolute top-0 right-0 bottom-0 left-0"></canvas>
 
-        <div class="absolute bottom-0 w-full flex">
-            <button>Play</button>
-        </div>
+        <!--<div class="absolute bottom-0 w-full flex">-->
+        <!--    <button>Play</button>-->
+        <!--</div>-->
     </main>
 
     <!-- SECTION: STATIC_IMPORTS -->
@@ -67,7 +67,7 @@ import Checkbox from "../../components/inputs/Checkbox.astro";
             circle(
                 ctx,
                 freq,
-                { filled = false, closed = false, rMult = 1, baseRadius = this.baseRadius } = { filled: false, closed: false, rMult: 1, baseRadius: this.baseRadius }
+                {filled = false, closed = false, rMult = 1, baseRadius = this.baseRadius} = {filled: false, closed: false, rMult: 1, baseRadius: this.baseRadius}
             ) {
                 ctx.beginPath();
                 ctx.moveTo(Math.cos(0) * freq[0], Math.sin(0) * freq[0]);
@@ -87,7 +87,7 @@ import Checkbox from "../../components/inputs/Checkbox.astro";
             mirroredCircle(
                 ctx,
                 freq,
-                { filled = false, closed = false, rMult = 1, baseRadius = this.baseRadius } = { filled: false, closed: false, rMult: 1, baseRadius: this.baseRadius }
+                {filled = false, closed = false, rMult = 1, baseRadius = this.baseRadius} = {filled: false, closed: false, rMult: 1, baseRadius: this.baseRadius}
             ) {
                 ctx.beginPath();
                 ctx.moveTo(Math.cos(0) * (freq[0] * rMult + baseRadius), Math.sin(0) * (freq[0] * rMult + baseRadius));
@@ -115,7 +115,7 @@ import Checkbox from "../../components/inputs/Checkbox.astro";
             points(
                 ctx,
                 freq,
-                { radius = 2, rMult = 1, baseRadius = this.baseRadius } = { radius: 2, rMult: 1, baseRadius: this.baseRadius }
+                {radius = 2, rMult = 1, baseRadius = this.baseRadius} = {radius: 2, rMult: 1, baseRadius: this.baseRadius}
             ) {
                 for (let a = 0; a < TWO_PI; a += this.incrementor) {
                     const i = Math.floor(map(a, 0, TWO_PI, 0, freq.length));
@@ -129,7 +129,7 @@ import Checkbox from "../../components/inputs/Checkbox.astro";
             mirroredPoints(
                 ctx,
                 freq,
-                { radius = 2, rMult = 1, baseRadius = this.baseRadius } = { radius: 2, rMult: 1, baseRadius: this.baseRadius }
+                {radius = 2, rMult = 1, baseRadius = this.baseRadius} = {radius: 2, rMult: 1, baseRadius: this.baseRadius}
             ) {
                 ctx.beginPath();
                 for (let a = 0; a < PI; a += this.incrementor) {
@@ -170,9 +170,9 @@ import Checkbox from "../../components/inputs/Checkbox.astro";
         initialize();
 
         const audioController = AudioController.create();
-        audioController.load('/audio/Kirra2.m4a');
+        audioController.load('/audio/Kirra2.m4a').then((ac) => ac.initialize());
 
-        eCanvas.addEventListener('click',  () => {
+        eCanvas.addEventListener('click', () => {
             audioController.toggle();
         })
 
@@ -197,16 +197,16 @@ import Checkbox from "../../components/inputs/Checkbox.astro";
         //     '#F6D8AE'
         // ];
         const colors = [
-         '#6b2d5cff',
-         '#8d3060ff',
-         '#ae3364ff',
-         '#cf3668ff',
-         '#f0386bff',
-         '#f84671ff',
-         '#ff5376ff',
-         '#fe6f8bff',
-         '#fc8a9fff',
-         '#f8c0c8ff',
+            '#6b2d5cff',
+            '#8d3060ff',
+            '#ae3364ff',
+            '#cf3668ff',
+            '#f0386bff',
+            '#f84671ff',
+            '#ff5376ff',
+            '#fe6f8bff',
+            '#fc8a9fff',
+            '#f8c0c8ff',
         ];
         const visualizerDelay = 10;
         const frequencyRange = [50, 1000];
@@ -229,7 +229,13 @@ import Checkbox from "../../components/inputs/Checkbox.astro";
             }
 
             setTimeout(() => {
-                frequenciesList.push(audioController.getFrequencyData(freqDomain, frequencyRange[0], frequencyRange[1] + offsetFreq));
+                const frequencies = audioController.analyzeFrequency({
+                    fftSize: freqDomain,
+                    minFrequency: frequencyRange[0],
+                    maxFrequency: frequencyRange[1] + offsetFreq
+                });
+
+                frequenciesList.push(frequencies);
 
                 if (frequenciesList.length != layerColors.length) {
                     buildVisualizer(layerColors, delay, offsetFreq, frequenciesList);
