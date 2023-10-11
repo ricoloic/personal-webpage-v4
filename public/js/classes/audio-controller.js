@@ -46,8 +46,8 @@ class AudioController {
 
     this.started = false;
 
-    this.pausedTime = 0;
-    this.startTime = 0;
+    this.realPausedTime = 0;
+    this.realStartTime = 0;
   }
 
   /**
@@ -88,7 +88,9 @@ class AudioController {
     this.context.onstatechange = () => {
       if (this.context.state !== "running") this.started = false;
     };
-    this.buffer = await this.context.decodeAudioData(this.undecodedBuffer);
+    this.buffer = await this.context.decodeAudioData(
+      this.undecodedBuffer.slice(),
+    );
 
     this.createGain();
     this.createAnalyser();
@@ -96,6 +98,8 @@ class AudioController {
     this.createConvolver();
 
     this.initialized = true;
+
+    this.initialTime = this.context.currentTime;
 
     return this;
   }
@@ -211,18 +215,24 @@ class AudioController {
 
     this.createSource();
 
-    if (this.pausedTime) {
-      this.source.start(0, this.pausedTime / 1000);
+    if (this.realPausedTime) {
+      this.source.start(0, this.realPausedTime);
     } else {
-      this.startTime = Date.now();
+      this.realStartTime = this.context.currentTime;
       this.source.start(0);
     }
 
     let userStopped = false;
 
-    this.source.onended = () => {
+    this.source.onended = async () => {
       this.started = false;
-      if (!userStopped) this.pausedTime = 0;
+      if (!userStopped) {
+        this.realPausedTime = 0;
+        this.realStartTime = 0;
+        if (this.onended) {
+          this.onended();
+        }
+      }
       userStopped = false;
     };
 
@@ -246,7 +256,7 @@ class AudioController {
       return this;
 
     this.source.userStop();
-    this.pausedTime = Date.now() - this.startTime;
+    this.realPausedTime = this.context.currentTime - this.realStartTime;
 
     return this;
   }
@@ -268,7 +278,7 @@ class AudioController {
   /**
    * @method analyzeFrequency
    * @methodOf AudioController
-   * @param {{ fftSize: FftSize, minFrequency: number, maxFrequency: number }} options
+   * @param {{ fftSize?: FftSize, minFrequency?: number, maxFrequency?: number }} options
    * @return {Uint8Array | null}
    */
   analyzeFrequency(
@@ -280,7 +290,11 @@ class AudioController {
   ) {
     if (!this.initialized || !this.analyser) return null;
 
-    let { fftSize, minFrequency, maxFrequency } = options;
+    let {
+      fftSize = undefined,
+      minFrequency = undefined,
+      maxFrequency = undefined,
+    } = options;
 
     const sampleRate = this.context.sampleRate;
 

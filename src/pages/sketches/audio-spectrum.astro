@@ -2,6 +2,8 @@
 import Layout from "../../layouts/Layout.astro";
 import EditDropdown from "../../components/EditDropdown.astro";
 import Checkbox from "../../components/inputs/Checkbox.astro";
+import Dropdown from "../../components/inputs/Dropdown.astro";
+import Range from "../../components/inputs/Range.astro";
 ---
 
 <Layout title="Audio Spectrum">
@@ -9,6 +11,45 @@ import Checkbox from "../../components/inputs/Checkbox.astro";
         <ul slot="options" class="text-sm text-gray-700">
             <li class="flex items-center border-b-2 px-4 py-2">
                 <Checkbox id="log-framerate-checkbox" title="Log Framerate"/>
+            </li>
+            <li class="flex items-center border-b-2 px-4 py-2">
+                <Checkbox id="filled-checkbox" title="Filled"/>
+            </li>
+            <li class="px-4 py-2">
+                <Range
+                        id="min-freq-range"
+                        title="Min Frequency"
+                        min={10}
+                        max={9999}
+                        step={10}
+                />
+            </li>
+            <li class="px-4 py-2">
+                <Range
+                        id="max-freq-range"
+                        title="Max Frequency"
+                        min={11}
+                        max={10000}
+                        step={10}
+                />
+            </li>
+            <li class="px-4 py-2">
+                <Dropdown
+                        id="freq-domain-dropdown"
+                        title="Frequency Domain"
+                        options={[
+                            {value: '64', label: '64'},
+                            {value: '128', label: '128'},
+                            {value: '256', label: '256'},
+                            {value: '512', label: '512'},
+                            {value: '1024', label: '1024'},
+                            {value: '2048', label: '2048'},
+                            {value: '4096', label: '4096'},
+                            {value: '8192', label: '8192'},
+                            {value: '16384', label: '16384'},
+                            {value: '32768', label: '32768'}
+                        ]}
+                />
             </li>
         </ul>
     </EditDropdown>
@@ -24,9 +65,11 @@ import Checkbox from "../../components/inputs/Checkbox.astro";
                 id="audio-spectrum-canvas"
                 class="block absolute top-0 right-0 bottom-0 left-0"></canvas>
 
-        <!--<div class="absolute bottom-0 w-full flex">-->
-        <!--    <button>Play</button>-->
-        <!--</div>-->
+        <div id="controls" class="hidden absolute bottom-5 w-full flex justify-center gap-2">
+            <button name="toggle" class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2">
+                Play
+            </button>
+        </div>
     </main>
 
     <!-- SECTION: STATIC_IMPORTS -->
@@ -37,9 +80,12 @@ import Checkbox from "../../components/inputs/Checkbox.astro";
     <script is:inline src="/js/classes/audio-controller.js"></script>
     <!-- ENDSECTION: STATIC_IMPORTS -->
 
-    <!-- SECTION: CONFIG -->
     <script is:inline>
         const config = {
+            minFreq: 10,
+            maxFreq: 1000,
+            freqDomain: 2048,
+            filled: false,
             logFramerate: true,
         };
 
@@ -47,17 +93,58 @@ import Checkbox from "../../components/inputs/Checkbox.astro";
             "log-framerate-checkbox"
         );
         const eFramerate = document.getElementById("framerate");
+        const eControls = document.getElementById('controls');
+        const eToggle = document.querySelector('button[name="toggle"]');
+        const eFreqDomainDropdown = document.getElementById('freq-domain-dropdown');
+        const eFreqDomainOptions = document.querySelectorAll(
+            "#freq-domain-dropdown>option"
+        );
+        const eMinFreqRange = document.getElementById('min-freq-range');
+        const eMinFreqLabel = document.querySelector(
+            'label[for="min-freq-range"]>span'
+        );
+        const eMaxFreqRange = document.getElementById('max-freq-range');
+        const eMaxFreqLabel = document.querySelector(
+            'label[for="max-freq-range"]>span'
+        );
+        const eFilledCheckbox = document.getElementById('filled-checkbox');
 
         if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
         eLogFramerateCheckbox.addEventListener("change", function () {
             config.logFramerate = !config.logFramerate;
             if (!config.logFramerate) eFramerate.textContent = "";
         });
-    </script>
-    <!-- ENDSECTION: CONFIG -->
 
-    <!-- SECTION: SKETCH -->
-    <script is:inline>
+        if (config.filled) toggleCheckbox(eFilledCheckbox);
+        eFilledCheckbox.addEventListener("change", function () {
+            config.filled = !config.filled;
+        });
+
+        eMinFreqRange.setAttribute("value", config.minFreq);
+        eMinFreqLabel.textContent = config.minFreq;
+        eMinFreqRange.addEventListener("change", function (event) {
+            eMinFreqLabel.textContent = event.target.value;
+            config.minFreq = parseFloat(event.target.value);
+        });
+        eMaxFreqRange.setAttribute("value", config.maxFreq);
+        eMaxFreqLabel.textContent = config.maxFreq;
+        eMaxFreqRange.addEventListener("change", function (event) {
+            eMaxFreqLabel.textContent = event.target.value;
+            config.maxFreq = parseFloat(event.target.value);
+        });
+
+
+        for (const freqDomainOption of eFreqDomainOptions) {
+            const value = freqDomainOption.getAttribute("value");
+            if (value == config.freqDomain) {
+                freqDomainOption.setAttribute("selected", "");
+                break;
+            }
+        }
+        eFreqDomainDropdown.addEventListener('change', function (event)  {
+            config.freqDomain = parseInt(event.target.value, 10);
+        });
+
         class Visualizer {
             constructor(baseRadius = 100) {
                 this.incrementor = 0.001;
@@ -170,17 +257,24 @@ import Checkbox from "../../components/inputs/Checkbox.astro";
         initialize();
 
         const audioController = AudioController.create();
-        audioController.load('/audio/Kirra2.m4a').then((ac) => ac.initialize());
+        audioController.load('/audio/Kirra.mp3').then((ac) => ac.initialize()).then(() => {
+            removeClass(eControls, 'hidden');
+        });
 
-        eCanvas.addEventListener('click', () => {
+        eToggle.textContent = 'Play';
+        eToggle.addEventListener('click', function () {
             audioController.toggle();
-        })
+            eToggle.textContent = eToggle.textContent === 'Play' ? 'Pause' : 'Play';
+        });
+
+        audioController.onended = () => {
+            eToggle.textContent = 'Play';
+        }
 
         const visualizer = new Visualizer(10);
 
         let framerate = 0;
 
-        const freqDomain = 2048 * 4;
         const frequencyOffset = 10;
         // const colors = [
         //     '#114B5F',
@@ -196,20 +290,30 @@ import Checkbox from "../../components/inputs/Checkbox.astro";
         //     '#F4D35E',
         //     '#F6D8AE'
         // ];
+        // const colors = [
+        //     '#6b2d5cff',
+        //     '#8d3060ff',
+        //     '#ae3364ff',
+        //     '#cf3668ff',
+        //     '#f0386bff',
+        //     '#f84671ff',
+        //     '#ff5376ff',
+        //     '#fe6f8bff',
+        //     '#fc8a9fff',
+        //     '#f8c0c8ff',
+        // ];
         const colors = [
-            '#6b2d5cff',
-            '#8d3060ff',
-            '#ae3364ff',
-            '#cf3668ff',
-            '#f0386bff',
-            '#f84671ff',
-            '#ff5376ff',
-            '#fe6f8bff',
-            '#fc8a9fff',
-            '#f8c0c8ff',
-        ];
+            "#13293d",
+            "#0a4769",
+            "#006494",
+            "#0e7eba",
+            "#1b98e0",
+            "#4fafe5",
+            "#82c5e9",
+            "#b5dbee",
+            "#e8f1f2"
+        ]
         const visualizerDelay = 10;
-        const frequencyRange = [50, 1000];
 
 
         function draw() {
@@ -230,9 +334,9 @@ import Checkbox from "../../components/inputs/Checkbox.astro";
 
             setTimeout(() => {
                 const frequencies = audioController.analyzeFrequency({
-                    fftSize: freqDomain,
-                    minFrequency: frequencyRange[0],
-                    maxFrequency: frequencyRange[1] + offsetFreq
+                    fftSize: config.freqDomain,
+                    minFrequency: config.minFreq,
+                    maxFrequency: config.maxFreq + offsetFreq
                 });
 
                 frequenciesList.push(frequencies);
@@ -247,7 +351,7 @@ import Checkbox from "../../components/inputs/Checkbox.astro";
                     for (let i = 0; i < frequenciesList.length; i++) {
                         ctx.fillStyle = layerColors[i];
                         ctx.strokeStyle = layerColors[i];
-                        visualizer.mirroredCircle(ctx, frequenciesList[i], {closed: true, baseRadius: 100});
+                        visualizer.mirroredCircle(ctx, frequenciesList[i], {filled: config.filled,closed: true, baseRadius: 100});
                     }
 
                     ctx.setTransform(1, 0, 0, 1, 0, 0);
