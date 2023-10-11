@@ -1,25 +1,10 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import EditDropdown from "../../components/EditDropdown.astro";
 import Checkbox from "../../components/inputs/Checkbox.astro";
-import Range from "../../components/inputs/Range.astro";
+import EditFab from "../../components/EditFab.astro";
 ---
 
 <Layout title="Quadratic Besier Curve">
-    <EditDropdown slot="edit">
-        <ul slot="options" class="text-sm text-gray-700">
-            <li class="text-sm text-gray-700 border-b-2 px-4 py-2">
-                <Checkbox id="log-framerate-checkbox" title="Log Framerate" />
-            </li>
-            <li class="text-sm text-gray-700 border-b-2 px-4 py-2">
-                <Checkbox
-                    id="show-control-lines-checkbox"
-                    title="Show Control Lines"
-                />
-            </li>
-        </ul>
-    </EditDropdown>
-
     <main
         id="canvas-wrapper"
         class="overflow-y-auto relative flex-1 overflow-hidden h-full">
@@ -30,6 +15,23 @@ import Range from "../../components/inputs/Range.astro";
         <canvas
             id="quadratic-besier-curve-canvas"
             class="block absolute top-0 right-0 bottom-0 left-0"></canvas>
+
+        <EditFab>
+            <ul slot="options" class="text-sm text-gray-700">
+                <li class="text-sm text-gray-700 border-b-2 px-4 py-2">
+                    <Checkbox
+                        id="log-framerate-checkbox"
+                        title="Log Framerate"
+                    />
+                </li>
+                <li class="text-sm text-gray-700 border-b-2 px-4 py-2">
+                    <Checkbox
+                        id="show-control-lines-checkbox"
+                        title="Show Control Lines"
+                    />
+                </li>
+            </ul>
+        </EditFab>
     </main>
 
     <!-- SECTION: STATIC_IMPORTS -->

@@ -1,10 +1,10 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import EditDropdown from "../../components/EditDropdown.astro";
 import COLOR_PALETTES from "../../constants/colors.js";
 import Checkbox from "../../components/inputs/Checkbox.astro";
 import Range from "../../components/inputs/Range.astro";
 import Dropdown from "../../components/inputs/Dropdown.astro";
+import EditFab from "../../components/EditFab.astro";
 
 const paletteNames = Object.keys(COLOR_PALETTES);
 const colorPaletteOptions = paletteNames.map(function (paletteName) {
@@ -13,48 +13,6 @@ const colorPaletteOptions = paletteNames.map(function (paletteName) {
 ---
 
 <Layout title="Mouse Follow">
-    <EditDropdown slot="edit">
-        <ul slot="options" class="text-sm text-gray-700">
-            <li class="text-sm text-gray-700 border-b-2 px-4 py-2">
-                <Checkbox id="log-framerate-checkbox" title="Log Framerate" />
-            </li>
-            <li class="border-b-2 px-4 py-2 flex items-center">
-                <Checkbox id="show-blob-checkbox" title="Show Blob" />
-            </li>
-            <li class="border-b-2 px-4 py-2 flex items-center">
-                <Checkbox id="show-particles-checkbox" title="Show Particles" />
-            </li>
-            <li class="border-b-2 px-4 py-2 flex items-center">
-                <Checkbox
-                    id="show-particle-border-checkbox"
-                    title="Show Particle Border"
-                />
-            </li>
-            <li class="border-b-2 px-4 py-2 flex items-center">
-                <Checkbox
-                    id="show-particle-alfa-checkbox"
-                    title="Show Particle Alfa"
-                />
-            </li>
-            <li class="border-b-2 px-4 py-2">
-                <Range
-                    id="particle-amount-range"
-                    title="Particle Amount"
-                    min={10}
-                    max={250}
-                    step={5}
-                />
-            </li>
-            <li class="px-4 py-2">
-                <Dropdown
-                    id="color-palette-dropdown"
-                    title="Color Palette"
-                    options={colorPaletteOptions}
-                />
-            </li>
-        </ul>
-    </EditDropdown>
-
     <main
         id="canvas-wrapper"
         class="overflow-y-auto relative flex-1 overflow-hidden h-full">
@@ -65,6 +23,54 @@ const colorPaletteOptions = paletteNames.map(function (paletteName) {
         <canvas
             id="mouse-follow-canvas"
             class="block absolute top-0 right-0 bottom-0 left-0"></canvas>
+
+        <EditFab>
+            <ul slot="options" class="text-sm text-gray-700">
+                <li class="text-sm text-gray-700 border-b-2 px-4 py-2">
+                    <Checkbox
+                        id="log-framerate-checkbox"
+                        title="Log Framerate"
+                    />
+                </li>
+                <li class="border-b-2 px-4 py-2 flex items-center">
+                    <Checkbox id="show-blob-checkbox" title="Show Blob" />
+                </li>
+                <li class="border-b-2 px-4 py-2 flex items-center">
+                    <Checkbox
+                        id="show-particles-checkbox"
+                        title="Show Particles"
+                    />
+                </li>
+                <li class="border-b-2 px-4 py-2 flex items-center">
+                    <Checkbox
+                        id="show-particle-border-checkbox"
+                        title="Show Particle Border"
+                    />
+                </li>
+                <li class="border-b-2 px-4 py-2 flex items-center">
+                    <Checkbox
+                        id="show-particle-alfa-checkbox"
+                        title="Show Particle Alfa"
+                    />
+                </li>
+                <li class="border-b-2 px-4 py-2">
+                    <Range
+                        id="particle-amount-range"
+                        title="Particle Amount"
+                        min={10}
+                        max={250}
+                        step={5}
+                    />
+                </li>
+                <li class="px-4 py-2">
+                    <Dropdown
+                        id="color-palette-dropdown"
+                        title="Color Palette"
+                        options={colorPaletteOptions}
+                    />
+                </li>
+            </ul>
+        </EditFab>
     </main>
 
     <!-- SECTION: STATIC_IMPORTS -->

@@ -1,36 +1,10 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import EditDropdown from "../../components/EditDropdown.astro";
 import Checkbox from "../../components/inputs/Checkbox.astro";
+import EditFab from "../../components/EditFab.astro";
 ---
 
 <Layout title="Ray Casting">
-    <EditDropdown slot="edit">
-        <ul slot="options" class="text-sm text-gray-700">
-            <li class="flex items-center border-b-2 px-4 py-2">
-                <Checkbox id="log-framerate-checkbox" title="Log Framerate" />
-            </li>
-            <li class="flex items-center border-b-2 px-4 py-2">
-                <Checkbox id="cast-rays-checkbox" title="Cast Rays" />
-            </li>
-            <li class="flex items-center border-b-2 px-4 py-2">
-                <Checkbox id="cast-shadows-checkbox" title="Cast Shadows" />
-            </li>
-            <li class="flex items-center border-b-2 px-4 py-2">
-                <Checkbox
-                    id="cast-background-checkbox"
-                    title="Cast Background"
-                />
-            </li>
-            <li class="flex items-center border-b-2 px-4 py-2">
-                <Checkbox id="edit-mode-checkbox" title="Edit Mode" />
-            </li>
-            <li class="flex items-center border-b-2 px-4 py-2">
-                <Checkbox id="outline-checkbox" title="Outline" />
-            </li>
-        </ul>
-    </EditDropdown>
-
     <main
         id="canvas-wrapper"
         class="overflow-y-auto relative flex-1 overflow-hidden h-full">
@@ -42,6 +16,35 @@ import Checkbox from "../../components/inputs/Checkbox.astro";
             id="ray-casting-canvas"
             class="block absolute top-0 right-0 bottom-0 left-0">
         </canvas>
+
+        <EditFab>
+            <ul slot="options" class="text-sm text-gray-700">
+                <li class="flex items-center border-b-2 px-4 py-2">
+                    <Checkbox
+                        id="log-framerate-checkbox"
+                        title="Log Framerate"
+                    />
+                </li>
+                <li class="flex items-center border-b-2 px-4 py-2">
+                    <Checkbox id="cast-rays-checkbox" title="Cast Rays" />
+                </li>
+                <li class="flex items-center border-b-2 px-4 py-2">
+                    <Checkbox id="cast-shadows-checkbox" title="Cast Shadows" />
+                </li>
+                <li class="flex items-center border-b-2 px-4 py-2">
+                    <Checkbox
+                        id="cast-background-checkbox"
+                        title="Cast Background"
+                    />
+                </li>
+                <li class="flex items-center border-b-2 px-4 py-2">
+                    <Checkbox id="edit-mode-checkbox" title="Edit Mode" />
+                </li>
+                <li class="flex items-center border-b-2 px-4 py-2">
+                    <Checkbox id="outline-checkbox" title="Outline" />
+                </li>
+            </ul>
+        </EditFab>
     </main>
 
     <!-- SECTION: STATIC_IMPORTS -->
@@ -79,7 +82,7 @@ import Checkbox from "../../components/inputs/Checkbox.astro";
             "cast-background-checkbox"
         );
         const eEditModeCheckbox = document.getElementById("edit-mode-checkbox");
-        const eOutlineCheckbox = document.getElementById('outline-checkbox');
+        const eOutlineCheckbox = document.getElementById("outline-checkbox");
 
         if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
         eLogFramerateCheckbox.addEventListener("change", function () {
@@ -153,13 +156,13 @@ import Checkbox from "../../components/inputs/Checkbox.astro";
                 ctx.strokeWidth = 2;
                 ctx.strokeStyle = "#ffffff";
                 if (config.outline)
-                strokeLine(
-                    ctx,
-                    this.point1.x,
-                    this.point1.y,
-                    this.point2.x,
-                    this.point2.y
-                );
+                    strokeLine(
+                        ctx,
+                        this.point1.x,
+                        this.point1.y,
+                        this.point2.x,
+                        this.point2.y
+                    );
                 if (editing) {
                     this.point1.show(ctx, mouse);
                     this.point2.show(ctx, mouse);

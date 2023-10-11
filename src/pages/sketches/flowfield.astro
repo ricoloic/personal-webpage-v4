@@ -1,40 +1,11 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import EditDropdown from "../../components/EditDropdown.astro";
+import EditFab from "../../components/EditFab.astro";
 import Checkbox from "../../components/inputs/Checkbox.astro";
 import Range from "../../components/inputs/Range.astro";
 ---
 
 <Layout title="Flowfield">
-    <EditDropdown slot="edit">
-        <ul slot="options" class="text-sm text-gray-700">
-            <li class="flex items-center border-b-2 px-4 py-2">
-                <Checkbox id="log-framerate-checkbox" title="Log Framerate" />
-            </li>
-            <li class="flex items-center border-b-2 px-4 py-2">
-                <Checkbox id="show-flow-checkbox" title="Show Flow" />
-            </li>
-            <li class="border-b-2 px-4 py-2">
-                <Range
-                    id="particle-amount-range"
-                    title="Particle Amount"
-                    min={100}
-                    max={5000}
-                    step={100}
-                />
-            </li>
-            <li class="px-4 py-2">
-                <Range
-                    id="scale-range"
-                    title="Scale"
-                    min={4}
-                    max={50}
-                    step={2}
-                />
-            </li>
-        </ul>
-    </EditDropdown>
-
     <main
         id="canvas-wrapper"
         class="overflow-y-auto relative flex-1 overflow-hidden h-full">
@@ -45,6 +16,37 @@ import Range from "../../components/inputs/Range.astro";
         <canvas
             id="flowfield-canvas"
             class="block absolute top-0 right-0 bottom-0 left-0"></canvas>
+        <EditFab>
+            <ul slot="options" class="text-sm text-gray-700">
+                <li class="flex items-center border-b-2 px-4 py-2">
+                    <Checkbox
+                        id="log-framerate-checkbox"
+                        title="Log Framerate"
+                    />
+                </li>
+                <li class="flex items-center border-b-2 px-4 py-2">
+                    <Checkbox id="show-flow-checkbox" title="Show Flow" />
+                </li>
+                <li class="border-b-2 px-4 py-2">
+                    <Range
+                        id="particle-amount-range"
+                        title="Particle Amount"
+                        min={100}
+                        max={5000}
+                        step={100}
+                    />
+                </li>
+                <li class="px-4 py-2">
+                    <Range
+                        id="scale-range"
+                        title="Scale"
+                        min={4}
+                        max={50}
+                        step={2}
+                    />
+                </li>
+            </ul>
+        </EditFab>
     </main>
 
     <!-- SECTION: STATIC_IMPORTS -->

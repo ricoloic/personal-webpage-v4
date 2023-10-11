@@ -1,0 +1,45 @@
+<div id="edit-options" class="absolute bottom-5 right-5">
+    <button
+        type="button"
+        aria-controls="edit-dropdown"
+        name="edit-button"
+        class="rounded-full bg-white px-4 py-5">
+        <i class="text-black fa-solid fa-pen-to-square fa-2xl"></i>
+    </button>
+    <div
+        id="edit-dropdown"
+        class="opacity-0 -z-10 absolute transition-opacity overflow-y-auto w-max right-0 font-normal bg-white shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] bottom-10">
+        <slot name="options" />
+    </div>
+</div>
+
+<script lang="js">
+window.addEventListener("load", function () {
+    const eEditDropdown = document.getElementById("edit-dropdown");
+    const eEditOtions = document.getElementById("edit-options");
+
+    function handleCloseEditDropdown(event) {
+        let target = event.target;
+        while (target) {
+            if (target == eEditOtions) return;
+            target = target.parentNode;
+        }
+
+        addClasses(eEditDropdown, ["opacity-0", "-z-10"]);
+    }
+
+    function handleToggleEditDropdown() {
+        if (findClassIndex(eEditDropdown, "opacity-0") === -1) {
+            addClasses(eEditDropdown, ["opacity-0", "-z-10"]);
+        } else {
+            removeClasses(eEditDropdown, ["opacity-0", "-z-10"]);
+        }
+    }
+
+    document
+        .querySelector('button[name="edit-button"]')
+        .addEventListener("click", handleToggleEditDropdown);
+
+    document.addEventListener("click", handleCloseEditDropdown);
+});
+</script>
