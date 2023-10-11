@@ -25,6 +25,9 @@ import Checkbox from "../../components/inputs/Checkbox.astro";
             <li class="flex items-center border-b-2 px-4 py-2">
                 <Checkbox id="edit-mode-checkbox" title="Edit Mode" />
             </li>
+            <li class="flex items-center border-b-2 px-4 py-2">
+                <Checkbox id="outline-checkbox" title="Outline" />
+            </li>
         </ul>
     </EditDropdown>
 
@@ -60,6 +63,7 @@ import Checkbox from "../../components/inputs/Checkbox.astro";
             casting: false,
             clicking: false,
             background: true,
+            outline: false,
             displayShadow: true,
         };
 
@@ -75,6 +79,7 @@ import Checkbox from "../../components/inputs/Checkbox.astro";
             "cast-background-checkbox"
         );
         const eEditModeCheckbox = document.getElementById("edit-mode-checkbox");
+        const eOutlineCheckbox = document.getElementById('outline-checkbox');
 
         if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
         eLogFramerateCheckbox.addEventListener("change", function () {
@@ -100,6 +105,11 @@ import Checkbox from "../../components/inputs/Checkbox.astro";
         if (config.editing) toggleCheckbox(eEditModeCheckbox);
         eEditModeCheckbox.addEventListener("change", function () {
             config.editing = !config.editing;
+        });
+
+        if (config.outline) toggleCheckbox(eOutlineCheckbox);
+        eOutlineCheckbox.addEventListener("change", function () {
+            config.outline = !config.outline;
         });
     </script>
     <!-- ENDSECTION: CONFIG -->
@@ -142,6 +152,7 @@ import Checkbox from "../../components/inputs/Checkbox.astro";
             show(ctx, editing, mouse) {
                 ctx.strokeWidth = 2;
                 ctx.strokeStyle = "#ffffff";
+                if (config.outline)
                 strokeLine(
                     ctx,
                     this.point1.x,

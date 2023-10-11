@@ -518,13 +518,13 @@ import Range from "../../components/inputs/Range.astro";
 
             const quadTree = new QuadTree(boundary, 4);
 
-            for (let i = 0; i < boids.length; i += 1) {
+            for (let i = 0; i < boids.length; i++) {
                 quadTree.insert(boids[i]);
             }
 
             if (config.displayQuadTree) quadTree.show(ctx);
 
-            for (let i = 0; i < boids.length; i += 1) {
+            for (let i = 0; i < boids.length; i++) {
                 const range = new Rectangle(
                     boids[i].position.x,
                     boids[i].position.y,

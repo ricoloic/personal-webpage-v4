@@ -1,0 +1,370 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import EditDropdown from "../../components/EditDropdown.astro";
+import Checkbox from "../../components/inputs/Checkbox.astro";
+import Dropdown from "../../components/inputs/Dropdown.astro";
+import Range from "../../components/inputs/Range.astro";
+---
+
+<Layout title="Audio Spectrum">
+    <EditDropdown slot="edit">
+        <ul slot="options" class="text-sm text-gray-700">
+            <li class="flex items-center border-b-2 px-4 py-2">
+                <Checkbox id="log-framerate-checkbox" title="Log Framerate"/>
+            </li>
+            <li class="flex items-center border-b-2 px-4 py-2">
+                <Checkbox id="filled-checkbox" title="Filled"/>
+            </li>
+            <li class="px-4 py-2">
+                <Range
+                        id="min-freq-range"
+                        title="Min Frequency"
+                        min={10}
+                        max={9999}
+                        step={10}
+                />
+            </li>
+            <li class="px-4 py-2">
+                <Range
+                        id="max-freq-range"
+                        title="Max Frequency"
+                        min={11}
+                        max={10000}
+                        step={10}
+                />
+            </li>
+            <li class="px-4 py-2">
+                <Dropdown
+                        id="freq-domain-dropdown"
+                        title="Frequency Domain"
+                        options={[
+                            {value: '64', label: '64'},
+                            {value: '128', label: '128'},
+                            {value: '256', label: '256'},
+                            {value: '512', label: '512'},
+                            {value: '1024', label: '1024'},
+                            {value: '2048', label: '2048'},
+                            {value: '4096', label: '4096'},
+                            {value: '8192', label: '8192'},
+                            {value: '16384', label: '16384'},
+                            {value: '32768', label: '32768'}
+                        ]}
+                />
+            </li>
+        </ul>
+    </EditDropdown>
+
+    <main
+            id="canvas-wrapper"
+            class="overflow-y-auto relative flex-1 overflow-hidden h-full">
+        <span
+                id="framerate"
+                class="z-10 select-none px-1 text-white absolute top-3 left-3 bg-black"
+        ></span>
+        <canvas
+                id="audio-spectrum-canvas"
+                class="block absolute top-0 right-0 bottom-0 left-0"></canvas>
+
+        <div id="controls" class="hidden absolute bottom-5 w-full flex justify-center gap-2">
+            <button name="toggle" class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2">
+                Play
+            </button>
+        </div>
+    </main>
+
+    <!-- SECTION: STATIC_IMPORTS -->
+    <script is:inline src="/js/utils/html.js"></script>
+    <script is:inline src="/js/classes/vector.js"></script>
+    <script is:inline src="/js/utils/core.js"></script>
+    <script is:inline src="/js/utils/draw.js"></script>
+    <script is:inline src="/js/classes/audio-controller.js"></script>
+    <!-- ENDSECTION: STATIC_IMPORTS -->
+
+    <script is:inline>
+        const config = {
+            minFreq: 10,
+            maxFreq: 1000,
+            freqDomain: 2048,
+            filled: false,
+            logFramerate: true,
+        };
+
+        const eLogFramerateCheckbox = document.getElementById(
+            "log-framerate-checkbox"
+        );
+        const eFramerate = document.getElementById("framerate");
+        const eControls = document.getElementById('controls');
+        const eToggle = document.querySelector('button[name="toggle"]');
+        const eFreqDomainDropdown = document.getElementById('freq-domain-dropdown');
+        const eFreqDomainOptions = document.querySelectorAll(
+            "#freq-domain-dropdown>option"
+        );
+        const eMinFreqRange = document.getElementById('min-freq-range');
+        const eMinFreqLabel = document.querySelector(
+            'label[for="min-freq-range"]>span'
+        );
+        const eMaxFreqRange = document.getElementById('max-freq-range');
+        const eMaxFreqLabel = document.querySelector(
+            'label[for="max-freq-range"]>span'
+        );
+        const eFilledCheckbox = document.getElementById('filled-checkbox');
+
+        if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
+        eLogFramerateCheckbox.addEventListener("change", function () {
+            config.logFramerate = !config.logFramerate;
+            if (!config.logFramerate) eFramerate.textContent = "";
+        });
+
+        if (config.filled) toggleCheckbox(eFilledCheckbox);
+        eFilledCheckbox.addEventListener("change", function () {
+            config.filled = !config.filled;
+        });
+
+        eMinFreqRange.setAttribute("value", config.minFreq);
+        eMinFreqLabel.textContent = config.minFreq;
+        eMinFreqRange.addEventListener("change", function (event) {
+            eMinFreqLabel.textContent = event.target.value;
+            config.minFreq = parseFloat(event.target.value);
+        });
+        eMaxFreqRange.setAttribute("value", config.maxFreq);
+        eMaxFreqLabel.textContent = config.maxFreq;
+        eMaxFreqRange.addEventListener("change", function (event) {
+            eMaxFreqLabel.textContent = event.target.value;
+            config.maxFreq = parseFloat(event.target.value);
+        });
+
+
+        for (const freqDomainOption of eFreqDomainOptions) {
+            const value = freqDomainOption.getAttribute("value");
+            if (value == config.freqDomain) {
+                freqDomainOption.setAttribute("selected", "");
+                break;
+            }
+        }
+        eFreqDomainDropdown.addEventListener('change', function (event)  {
+            config.freqDomain = parseInt(event.target.value, 10);
+        });
+
+        class Visualizer {
+            constructor(baseRadius = 100) {
+                this.incrementor = 0.001;
+                this.baseRadius = baseRadius;
+            }
+
+            circle(
+                ctx,
+                freq,
+                {filled = false, closed = false, rMult = 1, baseRadius = this.baseRadius} = {filled: false, closed: false, rMult: 1, baseRadius: this.baseRadius}
+            ) {
+                ctx.beginPath();
+                ctx.moveTo(Math.cos(0) * freq[0], Math.sin(0) * freq[0]);
+                for (let a = this.incrementor; a < TWO_PI; a += this.incrementor) {
+                    const i = Math.floor(map(a, 0, TWO_PI, 0, freq.length));
+                    const r = freq[i];
+                    const x = Math.cos(a) * (r * rMult + baseRadius);
+                    const y = Math.sin(a) * (r * rMult + baseRadius);
+                    ctx.lineTo(x, y);
+                }
+
+                if (closed) ctx.closePath();
+                if (filled) ctx.fill();
+                else ctx.stroke();
+            }
+
+            mirroredCircle(
+                ctx,
+                freq,
+                {filled = false, closed = false, rMult = 1, baseRadius = this.baseRadius} = {filled: false, closed: false, rMult: 1, baseRadius: this.baseRadius}
+            ) {
+                ctx.beginPath();
+                ctx.moveTo(Math.cos(0) * (freq[0] * rMult + baseRadius), Math.sin(0) * (freq[0] * rMult + baseRadius));
+                for (let a = this.incrementor; a < PI; a += this.incrementor) {
+                    const i = Math.floor(map(a, 0, PI, 0, freq.length));
+                    const r = freq[i];
+                    const x = Math.cos(a) * (r * rMult + baseRadius);
+                    const y = Math.sin(a) * (r * rMult + baseRadius);
+                    ctx.lineTo(x, y);
+                }
+                for (let a = PI; a >= 0; a -= this.incrementor) {
+                    const ar = map(a, PI, 0, PI, TWO_PI);
+                    const i = Math.floor(map(a, 0, PI, 0, freq.length));
+                    const r = freq[i];
+                    const x = Math.cos(ar) * (r * rMult + baseRadius);
+                    const y = Math.sin(ar) * (r * rMult + baseRadius);
+                    ctx.lineTo(x, y);
+                }
+
+                if (closed) ctx.closePath();
+                if (filled) ctx.fill();
+                else ctx.stroke();
+            }
+
+            points(
+                ctx,
+                freq,
+                {radius = 2, rMult = 1, baseRadius = this.baseRadius} = {radius: 2, rMult: 1, baseRadius: this.baseRadius}
+            ) {
+                for (let a = 0; a < TWO_PI; a += this.incrementor) {
+                    const i = Math.floor(map(a, 0, TWO_PI, 0, freq.length));
+                    const r = freq[i];
+                    const x = Math.cos(a) * (r * rMult + baseRadius);
+                    const y = Math.sin(a) * (r * rMult + baseRadius);
+                    ctx.fillRect(x, y, radius, radius);
+                }
+            }
+
+            mirroredPoints(
+                ctx,
+                freq,
+                {radius = 2, rMult = 1, baseRadius = this.baseRadius} = {radius: 2, rMult: 1, baseRadius: this.baseRadius}
+            ) {
+                ctx.beginPath();
+                for (let a = 0; a < PI; a += this.incrementor) {
+                    const i = Math.floor(map(a, 0, PI, 0, freq.length));
+                    const r = freq[i];
+                    const x = Math.cos(a) * (r * rMult + baseRadius);
+                    const y = Math.sin(a) * (r * rMult + baseRadius);
+                    ctx.fillRect(x, y, radius, radius);
+                }
+                for (let a = PI; a >= 0; a -= this.incrementor) {
+                    const ar = map(a, PI, 0, PI, TWO_PI);
+                    const i = Math.floor(map(a, 0, PI, 0, freq.length));
+                    const r = freq[i];
+                    const x = Math.cos(ar) * (r * rMult + baseRadius);
+                    const y = Math.sin(ar) * (r * rMult + baseRadius);
+                    ctx.fillRect(x, y, radius, radius);
+                }
+            }
+        }
+
+        const eMain = document.getElementById("canvas-wrapper");
+        const eCanvas = document.getElementById("audio-spectrum-canvas");
+        const ctx = eCanvas.getContext("2d");
+        let halfWidth, halfHeight, halfMinimum;
+
+        function initialize() {
+            eCanvas.width = eMain.offsetWidth;
+            eCanvas.height = eMain.offsetHeight;
+
+            halfWidth = eCanvas.width / 2;
+            halfHeight = eCanvas.height / 2;
+            halfMinimum = min(halfWidth, halfHeight);
+            background(ctx, "#333333");
+        }
+
+        window.addEventListener("resize", initialize);
+
+        initialize();
+
+        const audioController = AudioController.create();
+        audioController.load('/audio/Kirra.mp3').then((ac) => ac.initialize()).then(() => {
+            removeClass(eControls, 'hidden');
+        });
+
+        eToggle.textContent = 'Play';
+        eToggle.addEventListener('click', function () {
+            audioController.toggle();
+            eToggle.textContent = eToggle.textContent === 'Play' ? 'Pause' : 'Play';
+        });
+
+        audioController.onended = () => {
+            eToggle.textContent = 'Play';
+        }
+
+        const visualizer = new Visualizer(10);
+
+        let framerate = 0;
+
+        const frequencyOffset = 10;
+        // const colors = [
+        //     '#114B5F',
+        //     '#1A936F',
+        //     '#88D498',
+        //     '#C6DABF',
+        //     '#F3E9D2'
+        // ];
+        // const colors = [
+        //     '#2E4057',
+        //     '#083D77',
+        //     '#DA4167',
+        //     '#F4D35E',
+        //     '#F6D8AE'
+        // ];
+        // const colors = [
+        //     '#6b2d5cff',
+        //     '#8d3060ff',
+        //     '#ae3364ff',
+        //     '#cf3668ff',
+        //     '#f0386bff',
+        //     '#f84671ff',
+        //     '#ff5376ff',
+        //     '#fe6f8bff',
+        //     '#fc8a9fff',
+        //     '#f8c0c8ff',
+        // ];
+        const colors = [
+            "#13293d",
+            "#0a4769",
+            "#006494",
+            "#0e7eba",
+            "#1b98e0",
+            "#4fafe5",
+            "#82c5e9",
+            "#b5dbee",
+            "#e8f1f2"
+        ]
+        const visualizerDelay = 10;
+
+
+        function draw() {
+            framerate++;
+            requestAnimationFrame(draw);
+
+            if (!audioController.initialized) return;
+
+            buildVisualizer(colors, visualizerDelay, frequencyOffset);
+        }
+
+        function buildVisualizer(layerColors, delay, offsetFreq = 0, frequenciesList = []) {
+            let baseDelay = delay;
+
+            if (frequenciesList.length == 0) {
+                baseDelay = 0;
+            }
+
+            setTimeout(() => {
+                const frequencies = audioController.analyzeFrequency({
+                    fftSize: config.freqDomain,
+                    minFrequency: config.minFreq,
+                    maxFrequency: config.maxFreq + offsetFreq
+                });
+
+                frequenciesList.push(frequencies);
+
+                if (frequenciesList.length != layerColors.length) {
+                    buildVisualizer(layerColors, delay, offsetFreq, frequenciesList);
+                } else {
+                    background(ctx, "#333333");
+                    ctx.translate(halfWidth, halfHeight);
+                    ctx.rotate(TWO_PI - PI / 2);
+
+                    for (let i = 0; i < frequenciesList.length; i++) {
+                        ctx.fillStyle = layerColors[i];
+                        ctx.strokeStyle = layerColors[i];
+                        visualizer.mirroredCircle(ctx, frequenciesList[i], {filled: config.filled,closed: true, baseRadius: 100});
+                    }
+
+                    ctx.setTransform(1, 0, 0, 1, 0, 0);
+                }
+            }, baseDelay)
+        }
+
+        setInterval(function () {
+            if (config.logFramerate) eFramerate.textContent = `${framerate}fps`;
+            framerate = 0;
+        }, 1000);
+
+        draw();
+    </script>
+    <!-- ENDSECTION: SKETCH -->
+</Layout>
