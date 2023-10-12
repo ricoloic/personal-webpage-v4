@@ -516,7 +516,6 @@ import EditFab from "../../components/EditFab.astro";
         let framerate = 0;
         function draw() {
             framerate++;
-            requestAnimationFrame(draw);
 
             background(ctx, "#333333");
 
@@ -536,6 +535,7 @@ import EditFab from "../../components/EditFab.astro";
             for (let i = 0; i < boundaries.length; i++) {
                 boundaries[i].show(ctx, config.editing, mouse);
             }
+            requestAnimationFrame(draw);
         }
 
         setInterval(function () {

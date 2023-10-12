@@ -271,7 +271,6 @@ import Range from "../../components/inputs/Range.astro";
         let framerate = 0;
         function draw() {
             framerate++;
-            requestAnimationFrame(draw);
 
             if (config.showFlow) {
                 background(ctx, "#333333");
@@ -315,6 +314,7 @@ import Range from "../../components/inputs/Range.astro";
                     .follow(columns, flowfield)
                     .show(ctx, config.scale);
             }
+            requestAnimationFrame(draw);
         }
 
         setInterval(function () {

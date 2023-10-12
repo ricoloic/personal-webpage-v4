@@ -13,6 +13,7 @@ import metaBallsImage from "../assets/previews/meta-balls-preview.png";
 import quadraticBesierCurveImage from "../assets/previews/quadratic-besier-curve-preview.png";
 import cubicBesierCurveImage from "../assets/previews/cubic-besier-curve-preview.png";
 import audioSpectrumImage from "../assets/previews/audio-spectrum-preview.png";
+import lineFollowImage from "../assets/previews/line-follow-preview.png";
 
 const ageDifMs = Date.now() - new Date("2002-09-23").getTime();
 const ageDate = new Date(ageDifMs); // milliseconds from epoch
@@ -153,16 +154,22 @@ const age = Math.abs(ageDate.getUTCFullYear() - 1970);
                     alt="The quadratic besier curve sketch"
                 />
                 <SketchCard
-                        image={cubicBesierCurveImage}
-                        route="/sketches/cubic-besier-curve"
-                        title="Cubic Besier Curve"
-                        alt="The cubic besier curve sketch"
+                    image={cubicBesierCurveImage}
+                    route="/sketches/cubic-besier-curve"
+                    title="Cubic Besier Curve"
+                    alt="The cubic besier curve sketch"
                 />
                 <SketchCard
-                        image={audioSpectrumImage}
-                        route="/sketches/audio-spectrum"
-                        title="Audio Spectrum"
-                        alt="The audio spectrum curve sketch"
+                    image={audioSpectrumImage}
+                    route="/sketches/audio-spectrum"
+                    title="Audio Spectrum"
+                    alt="The audio spectrum sketch"
+                />
+                <SketchCard
+                    image={lineFollowImage}
+                    route="/sketches/line-follow"
+                    title="Line Follow"
+                    alt="The line follow curve sketch"
                 />
             </div>
         </section>

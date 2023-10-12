@@ -354,7 +354,6 @@ import EditFab from "../../components/EditFab.astro";
 
         function draw() {
             framerate++;
-            requestAnimationFrame(draw);
 
             background(ctx, "#333333");
 
@@ -390,6 +389,7 @@ import EditFab from "../../components/EditFab.astro";
 
                 if (config.showCircles) balls[i].show(ctx);
             }
+            requestAnimationFrame(draw);
         }
 
         setInterval(function () {

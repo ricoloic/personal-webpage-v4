@@ -458,15 +458,16 @@ const colors = {
 
         function draw() {
             framerate++;
+
+            if (audioController.initialized) {
+                buildVisualizer(
+                    colors[currentPalette],
+                    visualizerDelay,
+                    frequencyOffset
+                );
+            }
+
             requestAnimationFrame(draw);
-
-            if (!audioController.initialized) return;
-
-            buildVisualizer(
-                colors[currentPalette],
-                visualizerDelay,
-                frequencyOffset
-            );
         }
 
         function buildVisualizer(

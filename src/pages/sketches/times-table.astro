@@ -177,7 +177,6 @@ import EditFab from "../../components/EditFab.astro";
 
         function draw() {
             framerate++;
-            requestAnimationFrame(draw);
 
             background(ctx, "#333333");
 
@@ -194,6 +193,7 @@ import EditFab from "../../components/EditFab.astro";
 
                 strokeLine(ctx, point1.x, point1.y, point2.x, point2.y);
             }
+            requestAnimationFrame(draw);
         }
 
         setInterval(function () {
