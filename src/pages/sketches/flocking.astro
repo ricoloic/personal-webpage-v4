@@ -509,7 +509,6 @@ import EditFab from "../../components/EditFab.astro";
         let framerate = 0;
         function draw() {
             framerate++;
-            requestAnimationFrame(draw);
 
             background(ctx, "#333333");
 
@@ -547,6 +546,7 @@ import EditFab from "../../components/EditFab.astro";
                     .update(config.maxBoidSpeed)
                     .show(ctx);
             }
+            requestAnimationFrame(draw);
         }
 
         setInterval(function () {

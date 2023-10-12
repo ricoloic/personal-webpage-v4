@@ -1,0 +1,126 @@
+---
+import EditFab from "../../components/EditFab.astro";
+import Checkbox from "../../components/inputs/Checkbox.astro";
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="Line Follow">
+    <main
+        id="canvas-wrapper"
+        class="overflow-y-auto relative flex-1 overflow-hidden h-full">
+        <span
+            id="framerate"
+            class="z-10 select-none px-1 absolute top-3 left-3 text-white bg-black"
+        ></span>
+        <canvas
+            id="line-follow-canvas"
+            class="block absolute top-0 right-0 bottom-0 left-0"></canvas>
+
+        <EditFab>
+            <ul slot="options" class="text-sm text-gray-700">
+                <li class="text-sm text-gray-700 border-b-2 px-4 py-2">
+                    <Checkbox
+                        id="log-framerate-checkbox"
+                        title="Log Framerate"
+                    />
+                </li>
+            </ul>
+        </EditFab>
+    </main>
+
+    <!-- SECTION: STATIC_IMPORTS -->
+    <script is:inline src="/js/utils/html.js"></script>
+    <script is:inline src="/js/utils/mouse.js"></script>
+    <script is:inline src="/js/utils/draw.js"></script>
+    <script is:inline src="/js/utils/core.js"></script>
+    <script is:inline src="/js/utils/color.js"></script>
+    <script is:inline src="/js/classes/vector.js"></script>
+    <!-- ENDSECTION: STATIC_IMPORTS -->
+
+    <script is:inline>
+        // SECTION: CONFIG
+        const config = {
+            spring: 0.4,
+            pointsNumber: 40,
+            friction: 0.5,
+            baseWidth: 0.3,
+            logFramerate: true,
+        };
+
+        const eLogFramerateCheckbox = document.getElementById(
+            "log-framerate-checkbox"
+        );
+        const eFramerate = document.getElementById("framerate");
+
+        const eMain = document.getElementById("canvas-wrapper");
+        const eCanvas = document.getElementById("line-follow-canvas");
+        eCanvas.width = eMain.offsetWidth;
+        eCanvas.height = eMain.offsetHeight;
+
+        window.addEventListener("resize", function () {
+            eCanvas.width = eMain.offsetWidth;
+            eCanvas.height = eMain.offsetHeight;
+        });
+
+        const ctx = eCanvas.getContext("2d");
+        const mouse = mousePosition(eCanvas);
+        const trail = Array.from({ length: config.pointsNumber });
+
+        ctx.lineWidth = 1;
+
+        let framerate = 0;
+
+        for (let i = 0; i < trail.length; i++) {
+            trail[i] = {
+                x: mouse.x,
+                y: mouse.y,
+                dx: 0,
+                dy: 0,
+            };
+        }
+
+        function draw(t) {
+            framerate++;
+
+            background(ctx, "#333333");
+
+            for (let i = 0; i < trail.length; i++) {
+                const p = trail[i];
+                const prev = i === 0 ? mouse : trail[i - 1];
+                const spring = i === 0 ? 0.4 * config.spring : config.spring;
+
+                p.dx += (prev.x - p.x) * spring;
+                p.dy += (prev.y - p.y) * spring;
+                p.dx *= config.friction;
+                p.dy *= config.friction;
+
+                p.x += p.dx;
+                p.y += p.dy;
+            }
+
+            ctx.beginPath();
+            ctx.moveTo(trail[0].x, trail[0].y);
+
+            for (let i = 1; i < trail.length - 1; i++) {
+                const xc = 0.5 * (trail[i].x + trail[i + 1].x);
+                const yc = 0.5 * (trail[i].y + trail[i + 1].y);
+                ctx.quadraticCurveTo(trail[i].x, trail[i].y, xc, yc);
+                ctx.lineWidth = config.baseWidth * (config.pointsNumber - i);
+                ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
+                ctx.stroke();
+            }
+
+            ctx.lineTo(trail[trail.length - 1].x, trail[trail.length - 1].y);
+            ctx.stroke();
+            requestAnimationFrame(draw);
+        }
+
+        setInterval(function () {
+            if (config.logFramerate) eFramerate.textContent = `${framerate}fps`;
+            framerate = 0;
+        }, 1000);
+
+        draw();
+    </script>
+    <!-- ENDSECTION: SKETCH -->
+</Layout>

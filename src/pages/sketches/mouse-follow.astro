@@ -238,7 +238,6 @@ const colorPaletteOptions = paletteNames.map(function (paletteName) {
 
         function draw() {
             framerate++;
-            requestAnimationFrame(draw);
 
             background(ctx, "#333333");
 
@@ -280,6 +279,7 @@ const colorPaletteOptions = paletteNames.map(function (paletteName) {
                 ctx.fillStyle = "#ffffff";
                 fillCircle(ctx, averagePosition.x, averagePosition.y, 25);
             }
+            requestAnimationFrame(draw);
         }
 
         setInterval(function () {

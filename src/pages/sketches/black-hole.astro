@@ -175,7 +175,6 @@ import EditFab from "../../components/EditFab.astro";
         let framerate = 0;
         function draw() {
             framerate++;
-            requestAnimationFrame(draw);
 
             background(ctx, "#333333");
 
@@ -193,6 +192,7 @@ import EditFab from "../../components/EditFab.astro";
 
             ctx.fillStyle = "#ff6347";
             fillCircle(ctx, blackHole.x, blackHole.y, 25);
+            requestAnimationFrame(draw);
         }
 
         setInterval(function () {

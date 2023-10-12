@@ -1,7 +1,6 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import Checkbox from "../../components/inputs/Checkbox.astro";
-import Range from "../../components/inputs/Range.astro";
 import EditFab from "../../components/EditFab.astro";
 ---
 
@@ -205,7 +204,6 @@ import EditFab from "../../components/EditFab.astro";
 
         function draw() {
             framerate++;
-            requestAnimationFrame(draw);
 
             background(ctx, "#333333");
 
@@ -265,6 +263,7 @@ import EditFab from "../../components/EditFab.astro";
                 points[i].update(mouse);
                 points[i].show(ctx);
             }
+            requestAnimationFrame(draw);
         }
 
         setInterval(function () {
