@@ -1,5 +1,5 @@
 ---
-import { ImageMetadata } from "astro";
+import { type ImageMetadata } from "astro";
 import { Image } from "astro:assets";
 
 interface Props {
@@ -12,26 +12,17 @@ interface Props {
 const { image, route, title, alt } = Astro.props;
 ---
 
-<a href={route} class="relative rounded h-60 group">
+<a
+    href={route}
+    class="relative rounded-xl h-60 group transition-all duration-200 ease-linear hover:scale-95">
     <Image
         id={route}
         class="object-cover w-full h-full"
         src={image}
         alt={alt}
     />
-    <p class="absolute bottom-0 left-0 right-0 p-4 bg-black bg-opacity-80">
+    <p
+        class="absolute bottom-0 left-0 right-0 p-4 bg-black text-white bg-opacity-80">
         {title}
     </p>
-    <span
-        class="ease absolute left-0 top-0 h-0 w-0 border-t-2 border-white transition-all duration-200 group-hover:w-full">
-    </span>
-    <span
-        class="ease absolute right-0 top-0 h-0 w-0 border-r-2 border-white transition-all duration-200 group-hover:h-full">
-    </span>
-    <span
-        class="ease absolute bottom-0 right-0 h-0 w-0 border-b-2 border-white transition-all duration-200 group-hover:w-full">
-    </span>
-    <span
-        class="ease absolute bottom-0 left-0 h-0 w-0 border-l-2 border-white transition-all duration-200 group-hover:h-full">
-    </span>
 </a>

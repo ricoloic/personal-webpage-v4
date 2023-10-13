@@ -3,21 +3,12 @@ import Layout from "../../layouts/Layout.astro";
 import Checkbox from "../../components/inputs/Checkbox.astro";
 import Range from "../../components/inputs/Range.astro";
 import EditFab from "../../components/EditFab.astro";
+import Canvas from "../../components/Canvas.astro";
 ---
 
 <Layout title="Meta Balls">
-    <main
-        id="canvas-wrapper"
-        class="overflow-y-auto relative flex-1 overflow-hidden h-full">
-        <span
-            id="framerate"
-            class="z-10 select-none px-1 absolute top-3 left-3 text-white bg-black"
-        ></span>
-        <canvas
-            id="meta-balls-canvas"
-            class="block absolute top-0 right-0 bottom-0 left-0"></canvas>
-
-        <EditFab>
+    <Canvas id="meta-balls-canvas">
+        <EditFab slot="edit">
             <ul slot="options" class="text-sm text-gray-700">
                 <li class="text-sm text-gray-700 border-b-2 px-4 py-2">
                     <Checkbox
@@ -48,7 +39,7 @@ import EditFab from "../../components/EditFab.astro";
                 </li>
             </ul>
         </EditFab>
-    </main>
+    </Canvas>
 
     <!-- SECTION: STATIC_IMPORTS -->
     <script is:inline src="/js/utils/html.js"></script>
@@ -58,7 +49,6 @@ import EditFab from "../../components/EditFab.astro";
     <script is:inline src="/js/classes/vector.js"></script>
     <!-- ENDSECTION: STATIC_IMPORTS -->
 
-    <!-- SECTION: CONFIG -->
     <script is:inline>
         const config = {
             scale: 18,
@@ -109,10 +99,7 @@ import EditFab from "../../components/EditFab.astro";
             eScaleLabel.textContent = event.target.value;
             initialize();
         });
-    </script>
-    <!-- ENDSECTION: CONFIG -->
 
-    <script is:inline>
         class Ball {
             constructor(position, radius) {
                 this.position = position;
@@ -305,10 +292,7 @@ import EditFab from "../../components/EditFab.astro";
                     );
             }
         }
-    </script>
 
-    <!-- SECTION: SKETCH -->
-    <script is:inline>
         const eMain = document.getElementById("canvas-wrapper");
         const eCanvas = document.getElementById("meta-balls-canvas");
         const ctx = eCanvas.getContext("2d");
@@ -399,5 +383,4 @@ import EditFab from "../../components/EditFab.astro";
 
         draw();
     </script>
-    <!-- ENDSECTION: SKETCH -->
 </Layout>

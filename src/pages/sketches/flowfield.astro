@@ -3,20 +3,12 @@ import Layout from "../../layouts/Layout.astro";
 import EditFab from "../../components/EditFab.astro";
 import Checkbox from "../../components/inputs/Checkbox.astro";
 import Range from "../../components/inputs/Range.astro";
+import Canvas from "../../components/Canvas.astro";
 ---
 
 <Layout title="Flowfield">
-    <main
-        id="canvas-wrapper"
-        class="overflow-y-auto relative flex-1 overflow-hidden h-full">
-        <span
-            id="framerate"
-            class="z-10 select-none px-1 text-white absolute top-3 left-3 bg-black"
-        ></span>
-        <canvas
-            id="flowfield-canvas"
-            class="block absolute top-0 right-0 bottom-0 left-0"></canvas>
-        <EditFab>
+    <Canvas id="flowfield-canvas">
+        <EditFab slot="edit">
             <ul slot="options" class="text-sm text-gray-700">
                 <li class="flex items-center border-b-2 px-4 py-2">
                     <Checkbox
@@ -47,7 +39,7 @@ import Range from "../../components/inputs/Range.astro";
                 </li>
             </ul>
         </EditFab>
-    </main>
+    </Canvas>
 
     <!-- SECTION: STATIC_IMPORTS -->
     <script is:inline src="/js/utils/html.js"></script>
@@ -58,7 +50,6 @@ import Range from "../../components/inputs/Range.astro";
     <script is:inline src="/js/utils/draw.js"></script>
     <!-- ENDSECTION: STATIC_IMPORTS -->
 
-    <!-- SECTION: CONFIG -->
     <script is:inline>
         const config = {
             logFramerate: true,
@@ -112,11 +103,7 @@ import Range from "../../components/inputs/Range.astro";
             config.scale = parseFloat(event.target.value);
             initialize();
         });
-    </script>
-    <!-- ENDSECTION: CONFIG -->
 
-    <!-- SECTION: PARTICLE_CLASS -->
-    <script is:inline>
         class Particle {
             constructor(x, y) {
                 this.position = Vector.create(x, y);
@@ -180,11 +167,7 @@ import Range from "../../components/inputs/Range.astro";
                 return new Particle(...args);
             }
         }
-    </script>
-    <!-- ENDSECTION: PARTICLE_CLASS -->
 
-    <!-- SECTION: FLOW_CLASS -->
-    <script is:inline>
         class Flow {
             constructor() {
                 this.vector = Vector.create();
@@ -208,11 +191,7 @@ import Range from "../../components/inputs/Range.astro";
                 return new Flow();
             }
         }
-    </script>
-    <!-- ENDSECTION: FLOW_CLASS -->
 
-    <!-- SECTION: SKETCH -->
-    <script is:inline>
         const eMain = document.getElementById("canvas-wrapper");
         const eCanvas = document.getElementById("flowfield-canvas");
 
@@ -271,6 +250,7 @@ import Range from "../../components/inputs/Range.astro";
         let framerate = 0;
         function draw() {
             framerate++;
+            requestAnimationFrame(draw);
 
             if (config.showFlow) {
                 background(ctx, "#333333");
@@ -314,7 +294,6 @@ import Range from "../../components/inputs/Range.astro";
                     .follow(columns, flowfield)
                     .show(ctx, config.scale);
             }
-            requestAnimationFrame(draw);
         }
 
         setInterval(function () {
@@ -324,5 +303,4 @@ import Range from "../../components/inputs/Range.astro";
 
         draw();
     </script>
-    <!-- ENDSECTION: SKETCH -->
 </Layout>

@@ -3,23 +3,14 @@ import Layout from "../../layouts/Layout.astro";
 import Checkbox from "../../components/inputs/Checkbox.astro";
 import Range from "../../components/inputs/Range.astro";
 import EditFab from "../../components/EditFab.astro";
+import Canvas from "../../components/Canvas.astro";
 ---
 
 <Layout title="Times Table">
-    <main
-        id="canvas-wrapper"
-        class="overflow-y-auto relative flex-1 overflow-hidden h-full">
-        <span
-            id="framerate"
-            class="z-10 select-none px-1 absolute top-3 left-3 text-white bg-black"
-        ></span>
-        <canvas
-            id="times-table-canvas"
-            class="block absolute top-0 right-0 bottom-0 left-0"></canvas>
-
-        <EditFab>
+    <Canvas id="times-table-canvas">
+        <EditFab slot="edit">
             <ul slot="options" class="text-sm text-gray-700">
-                <li class="text-sm text-gray-700 border-b-2 px-4 py-2">
+                <li class="border-b-2 px-4 py-2">
                     <Checkbox
                         id="log-framerate-checkbox"
                         title="Log Framerate"
@@ -63,7 +54,7 @@ import EditFab from "../../components/EditFab.astro";
                 </li>
             </ul>
         </EditFab>
-    </main>
+    </Canvas>
 
     <!-- SECTION: STATIC_IMPORTS -->
     <script is:inline src="/js/utils/html.js"></script>
@@ -73,7 +64,6 @@ import EditFab from "../../components/EditFab.astro";
     <script is:inline src="/js/classes/vector.js"></script>
     <!-- ENDSECTION: STATIC_IMPORTS -->
 
-    <!-- SECTION: CONFIG -->
     <script is:inline>
         const config = {
             amountOfPoints: 200,
@@ -141,11 +131,7 @@ import EditFab from "../../components/EditFab.astro";
             config.lineThickness = parseInt(event.target.value, 10);
             eLineThicknessLabel.textContent = event.target.value;
         });
-    </script>
-    <!-- ENDSECTION: CONFIG -->
 
-    <!-- SECTION: SKETCH -->
-    <script is:inline>
         const eMain = document.getElementById("canvas-wrapper");
         const eCanvas = document.getElementById("times-table-canvas");
         eCanvas.width = eMain.offsetWidth;
@@ -203,5 +189,4 @@ import EditFab from "../../components/EditFab.astro";
 
         draw();
     </script>
-    <!-- ENDSECTION: SKETCH -->
 </Layout>

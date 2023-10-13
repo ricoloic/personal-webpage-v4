@@ -2,7 +2,7 @@
 import { Image } from "astro:assets";
 import SketchCard from "../components/SketchCard.astro";
 import Layout from "../layouts/Layout.astro";
-import selfImage from "../assets/photos/loic.webp";
+import selfImage from "../assets/photos/loic.jpg";
 import flowfieldImage from "../assets/previews/flow-field-preview.png";
 import mouseFollowImage from "../assets/previews/mouse-follow-preview.png";
 import flockingImage from "../assets/previews/flocking-preview.png";
@@ -14,6 +14,7 @@ import quadraticBesierCurveImage from "../assets/previews/quadratic-besier-curve
 import cubicBesierCurveImage from "../assets/previews/cubic-besier-curve-preview.png";
 import audioSpectrumImage from "../assets/previews/audio-spectrum-preview.png";
 import lineFollowImage from "../assets/previews/line-follow-preview.png";
+import pointMeshImage from "../assets/previews/point-mesh-preview.png";
 
 const ageDifMs = Date.now() - new Date("2002-09-23").getTime();
 const ageDate = new Date(ageDifMs); // milliseconds from epoch
@@ -61,27 +62,36 @@ const age = Math.abs(ageDate.getUTCFullYear() - 1970);
                     creations. It was build with
                     <a
                         href="https://astro.build/"
-                        class="underline hover:decoration-double">Astro</a
-                    >, <a
+                        class="underline hover:decoration-double">
+                        Astro
+                    </a>
+                     ,
+                    <a
                         href="https://tailwindcss.com/"
-                        class="underline hover:decoration-double">Tailwind</a
-                    > and the <a
+                        class="underline hover:decoration-double">
+                        Tailwind
+                    </a>
+                     and the <a
                         href="https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/"
                         class="underline hover:decoration-double">
-                        Canvas Element with Javascipt</a
-                    > to render the different sketches. The source code is
+                        Canvas Element with Javascipt
+                    </a>
+                     to render the different sketches. The source code is
                     available on the
                     <a
                         href="https://github.com/ricoloic/personal-webpage-v4/"
-                        class="underline hover:decoration-double">Github Repo</a
-                    >
+                        class="underline hover:decoration-double">
+                        Github Repo
+                    </a>
                      . I'm currently working on this site on my free time. If
                     you would like to report a feature or a bug, feel free to
-                    leave an <a
+                    leave an
+                    <a
                         href="https://github.com/ricoloic/personal-webpage-v4/issues/new/"
                         class="underline hover:decoration-double">
-                        Issue</a
-                    > on the project repository. Before I decided to create this
+                        Issue
+                    </a>
+                     on the project repository. Before I decided to create this
                     site, I was always finding my self searching for a
                     particular project to show to someone. And more often than
                     not I wasn't even able to start the project since the person
@@ -171,6 +181,12 @@ const age = Math.abs(ageDate.getUTCFullYear() - 1970);
                     title="Line Follow"
                     alt="The line follow curve sketch"
                 />
+                <SketchCard
+                    image={pointMeshImage}
+                    route="/sketches/point-mesh"
+                    title="Point Mesh"
+                    alt="The point mesh sketch"
+                />
             </div>
         </section>
 
@@ -205,9 +221,9 @@ const age = Math.abs(ageDate.getUTCFullYear() - 1970);
         <div
             class="mx-auto leading-none h-min rounded-2xl flex items-center text-white bg-slate-800 p-2 border-white border-2"
             role="alert">
-            <span class="font-semibold mx-2 text-left flex-auto"
-                >URL copied to clipboard!</span
-            >
+            <span class="font-semibold mx-2 text-left flex-auto">
+                URL copied to clipboard!
+            </span>
             <button type="button" name="link-copied-alert-close-button">
                 <span class="sr-only">Close Button</span>
                 <i class="fa-regular fa-circle-xmark fa-lg"></i>

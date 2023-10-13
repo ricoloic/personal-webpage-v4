@@ -4,6 +4,7 @@ import Checkbox from "../../components/inputs/Checkbox.astro";
 import Dropdown from "../../components/inputs/Dropdown.astro";
 import Range from "../../components/inputs/Range.astro";
 import EditFab from "../../components/EditFab.astro";
+import Canvas from "../../components/Canvas.astro";
 
 const colors = {
     pink: [
@@ -69,18 +70,8 @@ const colors = {
 ---
 
 <Layout title="Audio Spectrum">
-    <main
-        id="canvas-wrapper"
-        class="overflow-y-auto relative flex-1 overflow-hidden h-full">
-        <span
-            id="framerate"
-            class="z-10 select-none px-1 text-white absolute top-3 left-3 bg-black"
-        ></span>
-        <canvas
-            id="audio-spectrum-canvas"
-            class="block absolute top-0 right-0 bottom-0 left-0"></canvas>
-
-        <EditFab>
+    <Canvas id="audio-spectrum-canvas">
+        <EditFab slot="edit">
             <ul slot="options" class="text-sm text-gray-700">
                 <li class="flex items-center px-4 py-2">
                     <Checkbox
@@ -157,7 +148,7 @@ const colors = {
                 </li>
             </ul>
         </EditFab>
-    </main>
+    </Canvas>
 
     <!-- SECTION: STATIC_IMPORTS -->
     <script is:inline src="/js/utils/html.js"></script>

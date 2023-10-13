@@ -74,11 +74,16 @@ const { title } = Astro.props;
                 height: 100vh;
                 height: 100dvh;
             }
+
+            hr {
+                border-top-style: groove;
+                border-top-color: black;
+            }
         </style>
     </head>
 
-    <body class="relative flex flex-col bg-slate-800 text-white">
-        <header class="bg-white text-black w-full sticky top-0 z-10">
+    <body class="relative flex flex-col">
+        <header class="w-full sticky top-0 z-10">
             <nav>
                 <ul class="flex shadow">
                     <li class="mr-auto">
@@ -191,8 +196,15 @@ const { title } = Astro.props;
                                     <li class="border-b-2">
                                         <a
                                             href="/sketches/line-follow"
-                                            class="block px-4 py-2 hover:bg-gray-100"
-                                            >Line Follow</a
+                                            class="block px-4 py-2 hover:bg-gray-100">
+                                            Line Follow</a
+                                        >
+                                    </li>
+                                    <li class="border-b-2">
+                                        <a
+                                            href="/sketches/point-mesh"
+                                            class="block px-4 py-2 hover:bg-gray-100">
+                                            Point Mesh</a
                                         >
                                     </li>
                                 </ul>
