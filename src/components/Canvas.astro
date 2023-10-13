@@ -1,0 +1,20 @@
+---
+interface Props {
+    id: string;
+}
+
+const { id } = Astro.props;
+---
+
+<main
+    id="canvas-wrapper"
+    class="overflow-y-auto relative flex-1 overflow-hidden h-full">
+    <span
+        id="framerate"
+        class="z-10 select-none px-1 text-white absolute top-3 left-3 bg-black"
+    ></span>
+    <canvas id={id} class="block absolute top-0 right-0 bottom-0 left-0"
+    ></canvas>
+
+    <slot name="edit" />
+</main>

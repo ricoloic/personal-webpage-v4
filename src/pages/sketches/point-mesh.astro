@@ -1,0 +1,186 @@
+---
+import Canvas from "../../components/Canvas.astro";
+import EditFab from "../../components/EditFab.astro";
+import Checkbox from "../../components/inputs/Checkbox.astro";
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="Point Mesh">
+    <Canvas id="point-mesh-canvas">
+        <EditFab slot="edit">
+            <ul slot="options" class="text-sm text-gray-700">
+                <li class="border-b-2 px-4 py-2">
+                    <Checkbox
+                        id="log-framerate-checkbox"
+                        title="Log Framerate"
+                    />
+                </li>
+            </ul>
+        </EditFab>
+    </Canvas>
+
+    <!-- SECTION: STATIC_IMPORTS -->
+    <script is:inline src="/js/utils/html.js"></script>
+    <script is:inline src="/js/utils/mouse.js"></script>
+    <script is:inline src="/js/utils/draw.js"></script>
+    <script is:inline src="/js/utils/core.js"></script>
+    <script is:inline src="/js/utils/color.js"></script>
+    <script is:inline src="/js/classes/vector.js"></script>
+    <script is:inline src="/js/classes/quadtree.js"></script>
+    <!-- ENDSECTION: STATIC_IMPORTS -->
+
+    <script is:inline>
+        const config = {
+            logFramerate: true,
+        };
+
+        const eLogFramerateCheckbox = document.getElementById(
+            "log-framerate-checkbox"
+        );
+        const eFramerate = document.getElementById("framerate");
+
+        if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
+        eLogFramerateCheckbox.addEventListener("change", function () {
+            config.logFramerate = !config.logFramerate;
+            if (!config.logFramerate) eFramerate.textContent = "";
+        });
+
+        class Point {
+            constructor(initialPosition) {
+                this.position = initialPosition;
+                this.velocity = Vector.create(random(-1, 1), random(-1, 1)).mag(
+                    0.4
+                );
+            }
+
+            bounce() {
+                if (this.position.x <= 0 || this.position.x >= eCanvas.width)
+                    this.velocity.x *= -1;
+                if (this.position.y <= 0 || this.position.y >= eCanvas.height)
+                    this.velocity.y *= -1;
+
+                return this;
+            }
+
+            update() {
+                this.position.add(this.velocity);
+                return this;
+            }
+
+            connect(others, distance) {
+                const connections = [];
+                for (let i = 0; i < others.length; i++) {
+                    const space = others[i].position.dist(this.position);
+
+                    if (space <= distance && others[i] != this) {
+                        connections.push([this, others[i]]);
+                    }
+                }
+                return connections;
+            }
+        }
+
+        class Mesh {
+            constructor(vextexAmount, connectDistance) {
+                this.boundary = new Rectangle(
+                    eCanvas.width / 2,
+                    eCanvas.height / 2,
+                    eCanvas.width,
+                    eCanvas.height
+                );
+                this.connectDistance = connectDistance;
+                this.vertices = [];
+
+                for (let i = 0; i < vextexAmount; i++) {
+                    const initialPosition = Vector.create(
+                        random(eCanvas.width),
+                        random(eCanvas.height)
+                    );
+                    this.vertices.push(new Point(initialPosition));
+                }
+            }
+
+            connect(ctx) {
+                const quadTree = new QuadTree(this.boundary, 4);
+                for (let i = 0; i < this.vertices.length; i++) {
+                    this.vertices[i].bounce().update();
+                    quadTree.insert(this.vertices[i]);
+                }
+
+                const m = new Point(Vector.create(mouse.x, mouse.y));
+                quadTree.insert(m);
+
+                for (let i = 0; i < this.vertices.length; i++) {
+                    const range = new Rectangle(
+                        this.vertices[i].position.x,
+                        this.vertices[i].position.y,
+                        this.connectDistance,
+                        this.connectDistance
+                    );
+
+                    const con = this.vertices[i].connect(
+                        quadTree.query(range),
+                        this.connectDistance
+                    );
+
+                    for (let j = 0; j < con.length; j++) {
+                        const a = con[j][0].position;
+                        const b = con[j][1].position;
+                        const alfa = map(
+                            dist(a.x, a.y, b.x, b.y),
+                            0,
+                            this.connectDistance,
+                            1,
+                            0
+                        );
+
+                        ctx.strokeStyle = `rgba(255, 255, 255, ${alfa})`;
+                        strokeLine(ctx, a.x, a.y, b.x, b.y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        const amount = 300;
+        const d = 200;
+        let mesh;
+        const eMain = document.getElementById("canvas-wrapper");
+        const eCanvas = document.getElementById("point-mesh-canvas");
+        const ctx = eCanvas.getContext("2d");
+        let halfWidth, halfHeight, halfMinimum;
+        const mouse = mousePosition(eCanvas);
+
+        function initialize() {
+            eCanvas.width = eMain.offsetWidth;
+            eCanvas.height = eMain.offsetHeight;
+
+            halfWidth = eCanvas.width / 2;
+            halfHeight = eCanvas.height / 2;
+            halfMinimum = min(halfWidth, halfHeight);
+            mesh = new Mesh(amount, d);
+            ctx.lineWidth = 1;
+        }
+
+        window.addEventListener("resize", initialize);
+
+        initialize();
+
+        let framerate = 0;
+        function draw() {
+            framerate++;
+
+            background(ctx, "#333333");
+            mesh.connect(ctx);
+
+            requestAnimationFrame(draw);
+        }
+
+        draw();
+
+        setInterval(function () {
+            if (config.logFramerate) eFramerate.textContent = `${framerate}fps`;
+            framerate = 0;
+        }, 1000);
+    </script>
+</Layout>

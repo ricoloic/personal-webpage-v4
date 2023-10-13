@@ -3,12 +3,12 @@
         type="button"
         aria-controls="edit-dropdown"
         name="edit-button"
-        class="rounded-full bg-white px-4 py-5">
-        <i class="text-black fa-solid fa-pen-to-square fa-2xl"></i>
+        class="rounded-full bg-white w-[50px] h-[50px] flex items-center justify-center hover:bg-gray-100">
+        <i class="text-black fa-solid fa-pen-to-square fa-xl"></i>
     </button>
     <div
         id="edit-dropdown"
-        class="opacity-0 -z-10 absolute transition-opacity overflow-y-auto w-max right-0 font-normal bg-white shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] bottom-10">
+        class="opacity-0 -z-10 absolute transition-opacity overflow-y-auto w-max right-0 font-normal bg-white shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] bottom-16">
         <slot name="options" />
     </div>
 </div>

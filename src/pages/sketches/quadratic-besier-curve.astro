@@ -2,21 +2,12 @@
 import Layout from "../../layouts/Layout.astro";
 import Checkbox from "../../components/inputs/Checkbox.astro";
 import EditFab from "../../components/EditFab.astro";
+import Canvas from "../../components/Canvas.astro";
 ---
 
 <Layout title="Quadratic Besier Curve">
-    <main
-        id="canvas-wrapper"
-        class="overflow-y-auto relative flex-1 overflow-hidden h-full">
-        <span
-            id="framerate"
-            class="z-10 select-none px-1 absolute top-3 left-3 text-white bg-black"
-        ></span>
-        <canvas
-            id="quadratic-besier-curve-canvas"
-            class="block absolute top-0 right-0 bottom-0 left-0"></canvas>
-
-        <EditFab>
+    <Canvas id="quadratic-besier-curve-canvas">
+        <EditFab slot="edit">
             <ul slot="options" class="text-sm text-gray-700">
                 <li class="text-sm text-gray-700 border-b-2 px-4 py-2">
                     <Checkbox
@@ -32,7 +23,7 @@ import EditFab from "../../components/EditFab.astro";
                 </li>
             </ul>
         </EditFab>
-    </main>
+    </Canvas>
 
     <!-- SECTION: STATIC_IMPORTS -->
     <script is:inline src="/js/utils/html.js"></script>
@@ -43,7 +34,6 @@ import EditFab from "../../components/EditFab.astro";
     <script is:inline src="/js/classes/vector.js"></script>
     <!-- ENDSECTION: STATIC_IMPORTS -->
 
-    <!-- SECTION: CONFIG -->
     <script is:inline>
         const config = {
             pointRadius: 10,
@@ -70,10 +60,7 @@ import EditFab from "../../components/EditFab.astro";
         eShowControlLinesCheckbox.addEventListener("change", function () {
             config.displayControlLines = !config.displayControlLines;
         });
-    </script>
-    <!-- ENDSECTION: CONFIG -->
 
-    <script is:inline>
         class Point {
             constructor(vector, radius = 5, text = "") {
                 this.radius = radius;
@@ -114,10 +101,7 @@ import EditFab from "../../components/EditFab.astro";
                 );
             }
         }
-    </script>
 
-    <!-- SECTION: SKETCH -->
-    <script is:inline>
         const eMain = document.getElementById("canvas-wrapper");
         const eCanvas = document.getElementById(
             "quadratic-besier-curve-canvas"
@@ -271,5 +255,4 @@ import EditFab from "../../components/EditFab.astro";
         startClick(eCanvas, startMove);
         stopClick(eCanvas, stopMove);
     </script>
-    <!-- ENDSECTION: SKETCH -->
 </Layout>

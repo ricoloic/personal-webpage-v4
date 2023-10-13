@@ -1,22 +1,13 @@
 ---
+import Canvas from "../../components/Canvas.astro";
 import EditFab from "../../components/EditFab.astro";
 import Checkbox from "../../components/inputs/Checkbox.astro";
 import Layout from "../../layouts/Layout.astro";
 ---
 
 <Layout title="Line Follow">
-    <main
-        id="canvas-wrapper"
-        class="overflow-y-auto relative flex-1 overflow-hidden h-full">
-        <span
-            id="framerate"
-            class="z-10 select-none px-1 absolute top-3 left-3 text-white bg-black"
-        ></span>
-        <canvas
-            id="line-follow-canvas"
-            class="block absolute top-0 right-0 bottom-0 left-0"></canvas>
-
-        <EditFab>
+    <Canvas id="line-follow-canvas">
+        <EditFab slot="edit">
             <ul slot="options" class="text-sm text-gray-700">
                 <li class="text-sm text-gray-700 border-b-2 px-4 py-2">
                     <Checkbox
@@ -26,7 +17,7 @@ import Layout from "../../layouts/Layout.astro";
                 </li>
             </ul>
         </EditFab>
-    </main>
+    </Canvas>
 
     <!-- SECTION: STATIC_IMPORTS -->
     <script is:inline src="/js/utils/html.js"></script>
@@ -122,5 +113,4 @@ import Layout from "../../layouts/Layout.astro";
 
         draw();
     </script>
-    <!-- ENDSECTION: SKETCH -->
 </Layout>

@@ -5,6 +5,7 @@ import Checkbox from "../../components/inputs/Checkbox.astro";
 import Range from "../../components/inputs/Range.astro";
 import Dropdown from "../../components/inputs/Dropdown.astro";
 import EditFab from "../../components/EditFab.astro";
+import Canvas from "../../components/Canvas.astro";
 
 const paletteNames = Object.keys(COLOR_PALETTES);
 const colorPaletteOptions = paletteNames.map(function (paletteName) {
@@ -13,18 +14,8 @@ const colorPaletteOptions = paletteNames.map(function (paletteName) {
 ---
 
 <Layout title="Mouse Follow">
-    <main
-        id="canvas-wrapper"
-        class="overflow-y-auto relative flex-1 overflow-hidden h-full">
-        <span
-            id="framerate"
-            class="z-10 select-none px-1 absolute top-3 left-3 text-white bg-black"
-        ></span>
-        <canvas
-            id="mouse-follow-canvas"
-            class="block absolute top-0 right-0 bottom-0 left-0"></canvas>
-
-        <EditFab>
+    <Canvas id="mouse-follow-canvas">
+        <EditFab slot="edit">
             <ul slot="options" class="text-sm text-gray-700">
                 <li class="text-sm text-gray-700 border-b-2 px-4 py-2">
                     <Checkbox
@@ -71,7 +62,7 @@ const colorPaletteOptions = paletteNames.map(function (paletteName) {
                 </li>
             </ul>
         </EditFab>
-    </main>
+    </Canvas>
 
     <!-- SECTION: STATIC_IMPORTS -->
     <script is:inline src="/js/utils/html.js"></script>
@@ -82,8 +73,7 @@ const colorPaletteOptions = paletteNames.map(function (paletteName) {
     <script is:inline src="/js/classes/vector.js"></script>
     <!-- ENDSECTION: STATIC_IMPORTS -->
 
-    <!-- SECTION: CONFIG -->
-    <script is:inline>
+    <script is:inline define:vars={{ COLOR_PALETTES }}>
         const config = {
             showBlob: true,
             showParticles: true,
@@ -165,11 +155,7 @@ const colorPaletteOptions = paletteNames.map(function (paletteName) {
         eColorPaletteDropdown.addEventListener("change", function (event) {
             config.colorPalette = event.target.value;
         });
-    </script>
-    <!-- ENDSECTION: CONFIG -->
 
-    <!-- SECTION: PARTICLE_CLASS -->
-    <script is:inline>
         class Particle {
             constructor(position, color) {
                 this.color = color;
@@ -213,11 +199,7 @@ const colorPaletteOptions = paletteNames.map(function (paletteName) {
                 return new Particle(...args);
             }
         }
-    </script>
-    <!-- ENDSECTION: PARTICLE_CLASS -->
 
-    <!-- SECTION: SKETCH -->
-    <script is:inline define:vars={{ COLOR_PALETTES }}>
         const eMain = document.getElementById("canvas-wrapper");
         const eCanvas = document.getElementById("mouse-follow-canvas");
         eCanvas.width = eMain.offsetWidth;
@@ -289,5 +271,4 @@ const colorPaletteOptions = paletteNames.map(function (paletteName) {
 
         draw();
     </script>
-    <!-- ENDSECTION: SKETCH -->
 </Layout>
