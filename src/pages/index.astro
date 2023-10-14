@@ -15,6 +15,7 @@ import cubicBesierCurveImage from "../assets/previews/cubic-besier-curve-preview
 import audioSpectrumImage from "../assets/previews/audio-spectrum-preview.png";
 import lineFollowImage from "../assets/previews/line-follow-preview.png";
 import pointMeshImage from "../assets/previews/point-mesh-preview.png";
+import maurerRoseImage from "../assets/previews/maurer-rose-preview.png";
 
 const ageDifMs = Date.now() - new Date("2002-09-23").getTime();
 const ageDate = new Date(ageDifMs); // milliseconds from epoch
@@ -186,6 +187,12 @@ const age = Math.abs(ageDate.getUTCFullYear() - 1970);
                     route="/sketches/point-mesh"
                     title="Point Mesh"
                     alt="The point mesh sketch"
+                />
+                <SketchCard
+                    image={maurerRoseImage}
+                    route="/sketches/maurer-rose"
+                    title="Maurer Rose"
+                    alt="The maurer rose sketch"
                 />
             </div>
         </section>

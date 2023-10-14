@@ -29,7 +29,6 @@ import FabButton from "../../components/FabButton.astro";
     <script is:inline src="/js/utils/draw.js"></script>
     <!-- ENDSECTION: STATIC_IMPORTS -->
 
-    <!-- SECTION: CONFIG -->
     <script is:inline>
         const config = {
             logFramerate: true,
@@ -65,10 +64,7 @@ import FabButton from "../../components/FabButton.astro";
             .addEventListener("click", function () {
                 particles.splice(0, particles.length);
             });
-    </script>
-    <!-- ENDSECTION: CONFIG -->
 
-    <script is:inline>
         class Particle {
             constructor(
                 position = Vector.create(),
@@ -112,10 +108,7 @@ import FabButton from "../../components/FabButton.astro";
                 return this;
             }
         }
-    </script>
 
-    <!-- SECTION: SKETCH -->
-    <script is:inline>
         const eMain = document.getElementById("canvas-wrapper");
         const eCanvas = document.getElementById("black-hole-canvas");
         const ctx = eCanvas.getContext("2d");
@@ -189,5 +182,4 @@ import FabButton from "../../components/FabButton.astro";
 
         draw();
     </script>
-    <!-- ENDSECTION: SKETCH -->
 </Layout>
