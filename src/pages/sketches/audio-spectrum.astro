@@ -143,6 +143,7 @@ const colors = {
     <script is:inline src="/js/classes/vector.js"></script>
     <script is:inline src="/js/utils/core.js"></script>
     <script is:inline src="/js/utils/draw.js"></script>
+    <script is:inline src="/js/utils/url.js"></script>
     <script is:inline src="/js/classes/audio-controller.js"></script>
     <!-- ENDSECTION: STATIC_IMPORTS -->
 
@@ -156,6 +157,8 @@ const colors = {
             maxWave: 10,
             logFramerate: true,
         };
+        prefillConfig(config);
+        setParamConfig(config);
 
         let currentPalette = config.palette;
 
@@ -207,12 +210,14 @@ const colors = {
         if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
         eLogFramerateCheckbox.addEventListener("change", function () {
             config.logFramerate = !config.logFramerate;
+            setParamConfig(config);
             if (!config.logFramerate) eFramerate.textContent = "";
         });
 
         if (config.filled) toggleCheckbox(eFilledCheckbox);
         eFilledCheckbox.addEventListener("change", function () {
             config.filled = !config.filled;
+            setParamConfig(config);
         });
 
         eMinFreqRange.setAttribute("value", config.minFreq);
@@ -220,18 +225,21 @@ const colors = {
         eMinFreqRange.addEventListener("change", function (event) {
             eMinFreqLabel.textContent = event.target.value;
             config.minFreq = parseFloat(event.target.value);
+            setParamConfig(config);
         });
         eMaxFreqRange.setAttribute("value", config.maxFreq);
         eMaxFreqLabel.textContent = config.maxFreq;
         eMaxFreqRange.addEventListener("change", function (event) {
             eMaxFreqLabel.textContent = event.target.value;
             config.maxFreq = parseFloat(event.target.value);
+            setParamConfig(config);
         });
         eMaxWaveRange.setAttribute("value", config.maxWave);
         eMaxWaveLabel.textContent = config.maxWave;
         eMaxWaveRange.addEventListener("change", function (event) {
             eMaxWaveLabel.textContent = event.target.value;
             config.maxWave = parseFloat(event.target.value);
+            setParamConfig(config);
         });
 
         for (const freqDomainOption of eFreqDomainOptions) {
@@ -243,6 +251,7 @@ const colors = {
         }
         eFreqDomainDropdown.addEventListener("change", function (event) {
             config.freqDomain = parseInt(event.target.value, 10);
+            setParamConfig(config);
         });
 
         for (const paletteOption of ePaletteOptions) {
@@ -256,6 +265,7 @@ const colors = {
             config.palette = event.target.value;
             if (config.palette == "random") initRandomPalette();
             else currentPalette = config.palette;
+            setParamConfig(config);
         });
 
         class Visualizer {

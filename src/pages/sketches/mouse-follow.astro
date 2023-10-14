@@ -51,6 +51,7 @@ const colorPaletteOptions = paletteNames.map(function (paletteName) {
     <script is:inline src="/js/utils/draw.js"></script>
     <script is:inline src="/js/utils/core.js"></script>
     <script is:inline src="/js/utils/color.js"></script>
+    <script is:inline src="/js/utils/url.js"></script>
     <script is:inline src="/js/classes/vector.js"></script>
     <!-- ENDSECTION: STATIC_IMPORTS -->
 
@@ -64,6 +65,8 @@ const colorPaletteOptions = paletteNames.map(function (paletteName) {
             colorPalette: "deep",
             logFramerate: true,
         };
+        prefillConfig(config);
+        setParamConfig(config);
 
         const eLogFramerateCheckbox = document.getElementById(
             "log-framerate-checkbox"
@@ -95,28 +98,33 @@ const colorPaletteOptions = paletteNames.map(function (paletteName) {
         if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
         eLogFramerateCheckbox.addEventListener("change", function () {
             config.logFramerate = !config.logFramerate;
+            setParamConfig(config);
             if (!config.logFramerate) eFramerate.textContent = "";
         });
 
         if (config.showBlob) toggleCheckbox(eShowBlobCheckbox);
         eShowBlobCheckbox.addEventListener("change", function () {
             config.showBlob = !config.showBlob;
+            setParamConfig(config);
         });
 
         if (config.showParticles) toggleCheckbox(eShowParticlesCheckbox);
         eShowParticlesCheckbox.addEventListener("change", function () {
             config.showParticles = !config.showParticles;
+            setParamConfig(config);
         });
 
         if (config.showParticleBorder)
             toggleCheckbox(eShowParticleBorderCheckbox);
         eShowParticleBorderCheckbox.addEventListener("change", function () {
             config.showParticleBorder = !config.showParticleBorder;
+            setParamConfig(config);
         });
 
         if (config.showParticleAlfa) toggleCheckbox(eShowParticleAlfaCheckbox);
         eShowParticleAlfaCheckbox.addEventListener("change", function () {
             config.showParticleAlfa = !config.showParticleAlfa;
+            setParamConfig(config);
         });
 
         eParticleAmountRange.setAttribute("value", config.particleAmount);
@@ -124,6 +132,7 @@ const colorPaletteOptions = paletteNames.map(function (paletteName) {
         eParticleAmountRange.addEventListener("change", function (event) {
             eParticleAmountLabel.textContent = event.target.value;
             config.particleAmount = parseFloat(event.target.value);
+            setParamConfig(config);
         });
 
         for (const colorPaletteOption of eColorPaletteOptions) {
@@ -135,6 +144,7 @@ const colorPaletteOptions = paletteNames.map(function (paletteName) {
         }
         eColorPaletteDropdown.addEventListener("change", function (event) {
             config.colorPalette = event.target.value;
+            setParamConfig(config);
         });
 
         class Particle {

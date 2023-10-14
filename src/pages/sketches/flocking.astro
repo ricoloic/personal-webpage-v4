@@ -60,6 +60,7 @@ import Controls from "../../components/Controls.astro";
     <script is:inline src="/js/classes/vector.js"></script>
     <script is:inline src="/js/utils/core.js"></script>
     <script is:inline src="/js/utils/draw.js"></script>
+    <script is:inline src="/js/utils/url.js"></script>
     <!-- ENDSECTION: STATIC_IMPORTS -->
 
     <script is:inline>
@@ -361,6 +362,8 @@ import Controls from "../../components/Controls.astro";
             displayQuadTree: false,
             boidAmount: 250,
         };
+        prefillConfig(config);
+        setParamConfig(config);
 
         const eLogFramerateCheckbox = document.getElementById(
             "log-framerate-checkbox"
@@ -401,12 +404,14 @@ import Controls from "../../components/Controls.astro";
         if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
         eLogFramerateCheckbox.addEventListener("change", function () {
             config.logFramerate = !config.logFramerate;
+            setParamConfig(config);
             if (!config.logFramerate) eFramerate.textContent = "";
         });
 
         if (config.displayQuadTree) toggleCheckbox(eDisplayQuadtreeCheckbox);
         eDisplayQuadtreeCheckbox.addEventListener("change", function () {
             config.displayQuadTree = !config.displayQuadTree;
+            setParamConfig(config);
         });
 
         eMaxBoidSpeedRange.setAttribute("value", config.maxBoidSpeed);
@@ -414,6 +419,7 @@ import Controls from "../../components/Controls.astro";
         eMaxBoidSpeedRange.addEventListener("change", function (event) {
             eMaxBoidSpeedLabel.textContent = event.target.value;
             config.maxBoidSpeed = parseFloat(event.target.value);
+            setParamConfig(config);
         });
 
         eBoidAmountRange.setAttribute("value", config.boidAmount);
@@ -421,6 +427,7 @@ import Controls from "../../components/Controls.astro";
         eBoidAmountRange.addEventListener("change", function (event) {
             eBoidAmountLabel.textContent = event.target.value;
             config.boidAmount = parseFloat(event.target.value);
+            setParamConfig(config);
         });
 
         eSeparationForceRange.setAttribute("value", config.separationForce);
@@ -428,6 +435,7 @@ import Controls from "../../components/Controls.astro";
         eSeparationForceRange.addEventListener("change", function (event) {
             eSeparationForceLabel.textContent = event.target.value;
             config.separationForce = parseFloat(event.target.value);
+            setParamConfig(config);
         });
 
         eCohesionForceRange.setAttribute("value", config.cohesionForce);
@@ -435,6 +443,7 @@ import Controls from "../../components/Controls.astro";
         eCohesionForceRange.addEventListener("change", function (event) {
             eCohesionForceLabel.textContent = event.target.value;
             config.cohesionForce = parseFloat(event.target.value);
+            setParamConfig(config);
         });
 
         eAlignmentForceRange.setAttribute("value", config.alignmentForce);
@@ -442,6 +451,7 @@ import Controls from "../../components/Controls.astro";
         eAlignmentForceRange.addEventListener("change", function (event) {
             eAlignmentForceLabel.textContent = event.target.value;
             config.alignmentForce = parseFloat(event.target.value);
+            setParamConfig(config);
         });
 
         const eMain = document.getElementById("canvas-wrapper");

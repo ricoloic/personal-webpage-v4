@@ -21,6 +21,7 @@ import Layout from "../../layouts/Layout.astro";
     <script is:inline src="/js/utils/draw.js"></script>
     <script is:inline src="/js/utils/core.js"></script>
     <script is:inline src="/js/utils/color.js"></script>
+    <script is:inline src="/js/utils/url.js"></script>
     <script is:inline src="/js/classes/vector.js"></script>
     <script is:inline src="/js/classes/quadtree.js"></script>
     <!-- ENDSECTION: STATIC_IMPORTS -->
@@ -29,6 +30,8 @@ import Layout from "../../layouts/Layout.astro";
         const config = {
             logFramerate: true,
         };
+        prefillConfig(config);
+        setParamConfig(config);
 
         const eLogFramerateCheckbox = document.getElementById(
             "log-framerate-checkbox"
@@ -38,6 +41,7 @@ import Layout from "../../layouts/Layout.astro";
         if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
         eLogFramerateCheckbox.addEventListener("change", function () {
             config.logFramerate = !config.logFramerate;
+            setParamConfig(config);
             if (!config.logFramerate) eFramerate.textContent = "";
         });
 

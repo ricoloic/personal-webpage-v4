@@ -25,6 +25,7 @@ import Controls from "../../components/Controls.astro";
     <script is:inline src="/js/utils/mouse.js"></script>
     <script is:inline src="/js/utils/core.js"></script>
     <script is:inline src="/js/utils/color.js"></script>
+    <script is:inline src="/js/utils/url.js"></script>
     <script is:inline src="/js/classes/vector.js"></script>
     <!-- ENDSECTION: STATIC_IMPORTS -->
 
@@ -34,6 +35,8 @@ import Controls from "../../components/Controls.astro";
             displayControlLines: true,
             logFramerate: true,
         };
+        prefillConfig(config);
+        setParamConfig(config);
 
         const eLogFramerateCheckbox = document.getElementById(
             "log-framerate-checkbox"
@@ -46,6 +49,7 @@ import Controls from "../../components/Controls.astro";
         if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
         eLogFramerateCheckbox.addEventListener("change", function () {
             config.logFramerate = !config.logFramerate;
+            setParamConfig(config);
             if (!config.logFramerate) eFramerate.textContent = "";
         });
 
@@ -53,6 +57,7 @@ import Controls from "../../components/Controls.astro";
             toggleCheckbox(eShowControlLinesCheckbox);
         eShowControlLinesCheckbox.addEventListener("change", function () {
             config.displayControlLines = !config.displayControlLines;
+            setParamConfig(config);
         });
 
         class Point {
