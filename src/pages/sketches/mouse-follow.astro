@@ -9,9 +9,10 @@ import Canvas from "../../components/Canvas.astro";
 import Controls from "../../components/Controls.astro";
 
 const paletteNames = Object.keys(COLOR_PALETTES);
-const colorPaletteOptions = paletteNames.map(function (paletteName) {
-    return { value: paletteName, label: paletteName };
-});
+const colorPaletteOptions = paletteNames.map((paletteName) => ({
+    value: paletteName,
+    label: paletteName,
+}));
 ---
 
 <Layout title="Mouse Follow">
@@ -62,7 +63,7 @@ const colorPaletteOptions = paletteNames.map(function (paletteName) {
             showParticleBorder: false,
             showParticleAlfa: false,
             particleAmount: 70,
-            colorPalette: "deep",
+            colorPalette: "happy",
             logFramerate: true,
         };
         prefillConfig(config);
@@ -92,7 +93,7 @@ const colorPaletteOptions = paletteNames.map(function (paletteName) {
             "color-palette-dropdown"
         );
         const eColorPaletteOptions = document.querySelectorAll(
-            "#color-palette-select>option"
+            "#color-palette-dropdown>option"
         );
 
         if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
@@ -136,6 +137,7 @@ const colorPaletteOptions = paletteNames.map(function (paletteName) {
         });
 
         for (const colorPaletteOption of eColorPaletteOptions) {
+            console.log(colorPaletteOption);
             const value = colorPaletteOption.getAttribute("value");
             if (value === config.colorPalette) {
                 colorPaletteOption.setAttribute("selected", "");

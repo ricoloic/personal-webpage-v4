@@ -1,0 +1,183 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import RefreshIcon from "../../components/icons/RefreshIcon.astro";
+import Checkbox from "../../components/inputs/Checkbox.astro";
+import Fab from "../../components/Fab.astro";
+import Canvas from "../../components/Canvas.astro";
+import Controls from "../../components/Controls.astro";
+import FabButton from "../../components/FabButton.astro";
+import Range from "../../components/inputs/Range.astro";
+---
+
+<Layout title="Maurer Rose">
+    <Canvas id="maurer-rose-canvas">
+        <Fab slot="edit">
+            <Controls slot="controls">
+                <Checkbox id="log-framerate-checkbox" title="Log Framerate" />
+                <Checkbox
+                    id="color-highlight-checkbox"
+                    title="Color Highlight"
+                />
+                <Range
+                    id="degrees-range"
+                    title="Degrees"
+                    min={3}
+                    max={50}
+                    step={1}
+                />
+                <Range
+                    id="petal-amount-range"
+                    title="Petal Amount"
+                    min={3}
+                    max={50}
+                    step={1}
+                />
+            </Controls>
+        </Fab>
+    </Canvas>
+
+    <!-- SECTION: STATIC_IMPORTS -->
+    <script is:inline src="/js/utils/html.js"></script>
+    <script is:inline src="/js/classes/vector.js"></script>
+    <script is:inline src="/js/utils/core.js"></script>
+    <script is:inline src="/js/utils/url.js"></script>
+    <script is:inline src="/js/utils/draw.js"></script>
+    <!-- ENDSECTION: STATIC_IMPORTS -->
+
+    <!-- SECTION: CONFIG -->
+    <script is:inline>
+        const config = {
+            petalAmount: 2,
+            degrees: 29,
+            colorHighlight: true,
+            logFramerate: true,
+        };
+        prefillConfig(config);
+        setParamConfig(config);
+
+        const eLogFramerateCheckbox = document.getElementById(
+            "log-framerate-checkbox"
+        );
+        const eFramerate = document.getElementById("framerate");
+        const eColorHighlightCheckbox = document.getElementById(
+            "color-highlight-checkbox"
+        );
+        const eDegreesRange = document.getElementById("degrees-range");
+        const eDegreesLabel = document.querySelector(
+            'label[for="degrees-range"]>span'
+        );
+        const ePetalAmountRange = document.getElementById("petal-amount-range");
+        const ePetalAmountLabel = document.querySelector(
+            'label[for="petal-amount-range"]>span'
+        );
+
+        if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
+        eLogFramerateCheckbox.addEventListener("change", function () {
+            config.logFramerate = !config.logFramerate;
+            setParamConfig(config);
+            if (!config.logFramerate) eFramerate.textContent = "";
+        });
+
+        if (config.colorHighlight) toggleCheckbox(eColorHighlightCheckbox);
+        eColorHighlightCheckbox.addEventListener("change", function () {
+            config.colorHighlight = !config.colorHighlight;
+            setParamConfig(config);
+        });
+
+        ePetalAmountRange.setAttribute("value", config.petalAmount);
+        ePetalAmountLabel.textContent = config.petalAmount;
+        ePetalAmountRange.addEventListener("change", function (event) {
+            ePetalAmountLabel.textContent = event.target.value;
+            config.petalAmount = parseFloat(event.target.value);
+            setParamConfig(config);
+        });
+
+        eDegreesRange.setAttribute("value", config.degrees);
+        eDegreesLabel.textContent = config.degrees;
+        eDegreesRange.addEventListener("change", function (event) {
+            eDegreesLabel.textContent = event.target.value;
+            config.degrees = parseFloat(event.target.value);
+            setParamConfig(config);
+        });
+
+        const eMain = document.getElementById("canvas-wrapper");
+        const eCanvas = document.getElementById("maurer-rose-canvas");
+        const ctx = eCanvas.getContext("2d");
+
+        let halfWidth, halfHeight, halfMinimum, size;
+
+        function initialize() {
+            eCanvas.width = eMain.offsetWidth;
+            eCanvas.height = eMain.offsetHeight;
+
+            halfWidth = eCanvas.width / 2;
+            halfHeight = eCanvas.height / 2;
+            halfMinimum = min(halfWidth, halfHeight);
+            size = (halfMinimum - halfMinimum / 50) / 2;
+        }
+
+        window.addEventListener("resize", initialize);
+
+        initialize();
+
+        let framerate = 0;
+        function draw() {
+            framerate++;
+
+            background(ctx, "#333333");
+
+            ctx.strokeStyle = "#ffffff";
+            ctx.lineWidth = 2;
+
+            ctx.translate(halfWidth, halfHeight);
+            const a = degreesToRadians(config.degrees);
+            ctx.beginPath();
+            const k1 = 0 * a;
+            const r1 = size * Math.sin(config.petalAmount * k1);
+            const x1 = r1 * Math.cos(k1);
+            const y1 = r1 * Math.sin(k1);
+            ctx.moveTo(x1, y1);
+            for (let i = 1; i < 360; i++) {
+                const k = i * a;
+                const r = size * Math.sin(config.petalAmount * k);
+                const x = r * Math.cos(k);
+                const y = r * Math.sin(k);
+                ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            ctx.stroke();
+
+            if (config.colorHighlight) {
+                ctx.strokeStyle = "#CC0011";
+                ctx.lineWidth = 3;
+
+                ctx.beginPath();
+                const r2 = size * Math.sin(config.petalAmount * 0);
+                const x2 = r2 * Math.cos(0);
+                const y2 = r2 * Math.sin(0);
+                ctx.moveTo(x2, y2);
+                for (let i = 1; i < 360; i++) {
+                    const a2 = degreesToRadians(i);
+                    const r = size * Math.sin(config.petalAmount * a2);
+                    const x = r * Math.cos(a2);
+                    const y = r * Math.sin(a2);
+                    ctx.lineTo(x, y);
+                }
+                ctx.closePath();
+                ctx.stroke();
+            }
+
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+            requestAnimationFrame(draw);
+        }
+
+        setInterval(function () {
+            if (config.logFramerate) eFramerate.textContent = `${framerate}fps`;
+            framerate = 0;
+        }, 1000);
+
+        draw();
+    </script>
+    <!-- ENDSECTION: SKETCH -->
+</Layout>

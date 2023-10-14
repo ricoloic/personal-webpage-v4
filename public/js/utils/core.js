@@ -11,6 +11,14 @@ function random(min = undefined, max = undefined) {
     return Math.random() * (max - min) + min;
 }
 
+function radiansToDegrees(radians) {
+    return radians * (180 / PI);
+}
+
+function degreesToRadians(degrees) {
+    return degrees * (PI / 180);
+}
+
 function constrain(n, low, high) {
     return Math.max(Math.min(n, high), low);
 }
