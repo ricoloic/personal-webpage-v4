@@ -12,7 +12,7 @@ import FabButton from "../../components/FabButton.astro";
     <Canvas id="black-hole-canvas">
         <Fab slot="edit">
             <FabButton name="clear-button">
-                <RefreshIcon />
+                <span class="px-4">Clear</span>
             </FabButton>
             <Controls slot="controls">
                 <Checkbox id="log-framerate-checkbox" title="Log Framerate" />
@@ -25,6 +25,7 @@ import FabButton from "../../components/FabButton.astro";
     <script is:inline src="/js/utils/html.js"></script>
     <script is:inline src="/js/classes/vector.js"></script>
     <script is:inline src="/js/utils/core.js"></script>
+    <script is:inline src="/js/utils/url.js"></script>
     <script is:inline src="/js/utils/draw.js"></script>
     <!-- ENDSECTION: STATIC_IMPORTS -->
 
@@ -35,6 +36,8 @@ import FabButton from "../../components/FabButton.astro";
             trailLife: 25,
             showTrail: true,
         };
+        prefillConfig(config);
+        setParamConfig(config);
 
         const eLogFramerateCheckbox = document.getElementById(
             "log-framerate-checkbox"
@@ -47,12 +50,14 @@ import FabButton from "../../components/FabButton.astro";
         if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
         eLogFramerateCheckbox.addEventListener("change", function () {
             config.logFramerate = !config.logFramerate;
+            setParamConfig(config);
             if (!config.logFramerate) eFramerate.textContent = "";
         });
 
         if (config.showTrail) toggleCheckbox(eShowTrailCheckbox);
         eShowTrailCheckbox.addEventListener("change", function () {
             config.showTrail = !config.showTrail;
+            setParamConfig(config);
         });
 
         document

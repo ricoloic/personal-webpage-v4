@@ -30,6 +30,7 @@ import Controls from "../../components/Controls.astro";
     <script is:inline src="/js/utils/core.js"></script>
     <script is:inline src="/js/utils/color.js"></script>
     <script is:inline src="/js/utils/draw.js"></script>
+    <script is:inline src="/js/utils/url.js"></script>
     <!-- ENDSECTION: STATIC_IMPORTS -->
 
     <script is:inline>
@@ -44,6 +45,8 @@ import Controls from "../../components/Controls.astro";
             outline: false,
             displayShadow: true,
         };
+        prefillConfig(config);
+        setParamConfig(config);
 
         const eLogFramerateCheckbox = document.getElementById(
             "log-framerate-checkbox"
@@ -62,32 +65,38 @@ import Controls from "../../components/Controls.astro";
         if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
         eLogFramerateCheckbox.addEventListener("change", function () {
             config.logFramerate = !config.logFramerate;
+            setParamConfig(config);
             if (!config.logFramerate) eFramerate.textContent = "";
         });
 
         if (config.casting) toggleCheckbox(eCastRaysCheckbox);
         eCastRaysCheckbox.addEventListener("change", function () {
             config.casting = !config.casting;
+            setParamConfig(config);
         });
 
         if (config.background) toggleCheckbox(eCastBackgroundCheckbox);
         eCastBackgroundCheckbox.addEventListener("change", function () {
             config.background = !config.background;
+            setParamConfig(config);
         });
 
         if (config.displayShadow) toggleCheckbox(eCastShadowsCheckbox);
         eCastShadowsCheckbox.addEventListener("change", function () {
             config.displayShadow = !config.displayShadow;
+            setParamConfig(config);
         });
 
         if (config.editing) toggleCheckbox(eEditModeCheckbox);
         eEditModeCheckbox.addEventListener("change", function () {
             config.editing = !config.editing;
+            setParamConfig(config);
         });
 
         if (config.outline) toggleCheckbox(eOutlineCheckbox);
         eOutlineCheckbox.addEventListener("change", function () {
             config.outline = !config.outline;
+            setParamConfig(config);
         });
 
         const SHADOW_DIST = 25;

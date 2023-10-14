@@ -1,13 +1,17 @@
 ---
 import FabButton from "./FabButton.astro";
 import MenuIcon from "./icons/MenuIcon.astro";
+import ShareIcon from "./icons/ShareIcon.astro";
 ---
 
 <div
     id="edit-options"
     class="absolute bottom-5 right-5 flex flex-col-reverse items-end gap-1">
     <div
-        class="flex items-center justify-between rounded-full bg-zinc-800 p-2 max-w-max right-0">
+        class="flex items-center justify-between rounded-full bg-zinc-800 p-2 max-w-max">
+        <FabButton name="share-button">
+            <ShareIcon />
+        </FabButton>
         <slot />
         <FabButton name="edit-button">
             <MenuIcon />
@@ -20,6 +24,24 @@ import MenuIcon from "./icons/MenuIcon.astro";
         <slot name="controls" />
     </div>
 </div>
+
+<div
+    id="link-copied-alert"
+    class="bg-transparent flex flex-col items-center justify-center fixed w-full z-50 p-3 hidden">
+    <div
+        class="mx-auto leading-none h-min rounded-2xl flex items-center text-white bg-slate-800 p-2 border-white border-2"
+        role="alert">
+        <span class="font-semibold mx-2 text-left flex-auto">
+            URL copied to clipboard!
+        </span>
+        <button type="button" name="link-copied-alert-close-button">
+            <span class="sr-only">Close Button</span>
+            <i class="fa-regular fa-circle-xmark fa-lg"></i>
+        </button>
+    </div>
+</div>
+
+<script is:inline src="/js/utils/html.js"></script>
 
 <script lang="js">
 window.addEventListener("load", function () {
@@ -49,5 +71,34 @@ window.addEventListener("load", function () {
         .addEventListener("click", handleToggleEditDropdown);
 
     document.addEventListener("click", handleCloseEditDropdown);
+
+    const eLinkAlert = document.getElementById("link-copied-alert");
+
+    function handleClickCloseLinkAlertButton() {
+        addClass(eLinkAlert, "hidden");
+    }
+
+    function copyUrl() {
+        navigator.clipboard
+            .writeText(window.location.href)
+            .then(function () {
+                removeClass(eLinkAlert, "hidden");
+                setTimeout(handleClickCloseLinkAlertButton, 3000);
+            });
+    }
+
+    function handleClickShare() {
+        const data = window.location;
+        if (navigator.share) navigator.share(data).catch(() => copyUrl());
+        else copyUrl();
+    }
+
+    document
+        .querySelector('button[name="share-button"]')
+        .addEventListener("click", handleClickShare);
+
+    document
+        .querySelector('button[name="link-copied-alert-close-button"]')
+        .addEventListener("click", handleClickCloseLinkAlertButton);
 });
 </script>

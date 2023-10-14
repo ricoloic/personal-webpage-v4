@@ -38,6 +38,7 @@ import Canvas from "../../components/Canvas.astro";
     <script is:inline src="/js/utils/core.js"></script>
     <script is:inline src="/js/utils/color.js"></script>
     <script is:inline src="/js/utils/draw.js"></script>
+    <script is:inline src="/js/utils/url.js"></script>
     <!-- ENDSECTION: STATIC_IMPORTS -->
 
     <script is:inline>
@@ -50,6 +51,8 @@ import Canvas from "../../components/Canvas.astro";
             fallOff: 0.6,
             showFlow: true,
         };
+        prefillConfig(config);
+        setParamConfig(config);
 
         const eLogFramerateCheckbox = document.getElementById(
             "log-framerate-checkbox"
@@ -70,6 +73,7 @@ import Canvas from "../../components/Canvas.astro";
         if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
         eLogFramerateCheckbox.addEventListener("change", function () {
             config.logFramerate = !config.logFramerate;
+            setParamConfig(config);
             if (!config.logFramerate) eFramerate.textContent = "";
         });
 
@@ -77,6 +81,7 @@ import Canvas from "../../components/Canvas.astro";
         eShowFlowCheckbox.addEventListener("change", function () {
             config.showFlow = !config.showFlow;
             initialize();
+            setParamConfig(config);
         });
 
         eParticleAmountRange.setAttribute("value", config.particleAmount);
@@ -84,6 +89,7 @@ import Canvas from "../../components/Canvas.astro";
         eParticleAmountRange.addEventListener("change", function (event) {
             eParticleAmountLabel.textContent = event.target.value;
             config.particleAmount = parseFloat(event.target.value);
+            setParamConfig(config);
         });
 
         eScaleRange.setAttribute("value", config.scale);
@@ -92,6 +98,7 @@ import Canvas from "../../components/Canvas.astro";
             eScaleLabel.textContent = event.target.value;
             config.scale = parseFloat(event.target.value);
             initialize();
+            setParamConfig(config);
         });
 
         class Particle {

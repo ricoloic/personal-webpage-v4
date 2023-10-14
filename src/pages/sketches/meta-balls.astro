@@ -36,6 +36,7 @@ import Controls from "../../components/Controls.astro";
     <script is:inline src="/js/utils/draw.js"></script>
     <script is:inline src="/js/utils/core.js"></script>
     <script is:inline src="/js/utils/color.js"></script>
+    <script is:inline src="/js/utils/url.js"></script>
     <script is:inline src="/js/classes/vector.js"></script>
     <!-- ENDSECTION: STATIC_IMPORTS -->
 
@@ -46,6 +47,8 @@ import Controls from "../../components/Controls.astro";
             showCircles: true,
             logFramerate: true,
         };
+        prefillConfig(config);
+        setParamConfig(config);
 
         const eLogFramerateCheckbox = document.getElementById(
             "log-framerate-checkbox"
@@ -67,12 +70,14 @@ import Controls from "../../components/Controls.astro";
         if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
         eLogFramerateCheckbox.addEventListener("change", function () {
             config.logFramerate = !config.logFramerate;
+            setParamConfig(config);
             if (!config.logFramerate) eFramerate.textContent = "";
         });
 
         if (config.showCircles) toggleCheckbox(eShowCirclesCheckbox);
         eShowCirclesCheckbox.addEventListener("change", function () {
             config.showCircles = !config.showCircles;
+            setParamConfig(config);
         });
 
         eCircleAmountRange.setAttribute("value", config.ballAmount);
@@ -80,6 +85,7 @@ import Controls from "../../components/Controls.astro";
         eCircleAmountRange.addEventListener("change", function (event) {
             config.ballAmount = parseInt(event.target.value, 10);
             eCircleAmountLabel.textContent = event.target.value;
+            setParamConfig(config);
         });
 
         eScaleRange.setAttribute("value", config.scale);
@@ -88,6 +94,7 @@ import Controls from "../../components/Controls.astro";
             config.scale = parseInt(event.target.value, 10);
             eScaleLabel.textContent = event.target.value;
             initialize();
+            setParamConfig(config);
         });
 
         class Ball {
