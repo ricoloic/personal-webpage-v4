@@ -1,22 +1,18 @@
 ---
 import Canvas from "../../components/Canvas.astro";
-import EditFab from "../../components/EditFab.astro";
+import Controls from "../../components/Controls.astro";
+import Fab from "../../components/Fab.astro";
 import Checkbox from "../../components/inputs/Checkbox.astro";
 import Layout from "../../layouts/Layout.astro";
 ---
 
 <Layout title="Point Mesh">
     <Canvas id="point-mesh-canvas">
-        <EditFab slot="edit">
-            <ul slot="options" class="text-sm text-gray-700">
-                <li class="border-b-2 px-4 py-2">
-                    <Checkbox
-                        id="log-framerate-checkbox"
-                        title="Log Framerate"
-                    />
-                </li>
-            </ul>
-        </EditFab>
+        <Fab slot="edit">
+            <Controls slot="controls">
+                <Checkbox id="log-framerate-checkbox" title="Log Framerate" />
+            </Controls>
+        </Fab>
     </Canvas>
 
     <!-- SECTION: STATIC_IMPORTS -->
@@ -143,7 +139,7 @@ import Layout from "../../layouts/Layout.astro";
         }
 
         const amount = 300;
-        const d = 200;
+        const d = 95;
         let mesh;
         const eMain = document.getElementById("canvas-wrapper");
         const eCanvas = document.getElementById("point-mesh-canvas");

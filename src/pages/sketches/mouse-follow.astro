@@ -4,8 +4,9 @@ import COLOR_PALETTES from "../../constants/colors.js";
 import Checkbox from "../../components/inputs/Checkbox.astro";
 import Range from "../../components/inputs/Range.astro";
 import Dropdown from "../../components/inputs/Dropdown.astro";
-import EditFab from "../../components/EditFab.astro";
+import Fab from "../../components/Fab.astro";
 import Canvas from "../../components/Canvas.astro";
+import Controls from "../../components/Controls.astro";
 
 const paletteNames = Object.keys(COLOR_PALETTES);
 const colorPaletteOptions = paletteNames.map(function (paletteName) {
@@ -15,53 +16,33 @@ const colorPaletteOptions = paletteNames.map(function (paletteName) {
 
 <Layout title="Mouse Follow">
     <Canvas id="mouse-follow-canvas">
-        <EditFab slot="edit">
-            <ul slot="options" class="text-sm text-gray-700">
-                <li class="text-sm text-gray-700 border-b-2 px-4 py-2">
-                    <Checkbox
-                        id="log-framerate-checkbox"
-                        title="Log Framerate"
-                    />
-                </li>
-                <li class="border-b-2 px-4 py-2 flex items-center">
-                    <Checkbox id="show-blob-checkbox" title="Show Blob" />
-                </li>
-                <li class="border-b-2 px-4 py-2 flex items-center">
-                    <Checkbox
-                        id="show-particles-checkbox"
-                        title="Show Particles"
-                    />
-                </li>
-                <li class="border-b-2 px-4 py-2 flex items-center">
-                    <Checkbox
-                        id="show-particle-border-checkbox"
-                        title="Show Particle Border"
-                    />
-                </li>
-                <li class="border-b-2 px-4 py-2 flex items-center">
-                    <Checkbox
-                        id="show-particle-alfa-checkbox"
-                        title="Show Particle Alfa"
-                    />
-                </li>
-                <li class="border-b-2 px-4 py-2">
-                    <Range
-                        id="particle-amount-range"
-                        title="Particle Amount"
-                        min={10}
-                        max={250}
-                        step={5}
-                    />
-                </li>
-                <li class="px-4 py-2">
-                    <Dropdown
-                        id="color-palette-dropdown"
-                        title="Color Palette"
-                        options={colorPaletteOptions}
-                    />
-                </li>
-            </ul>
-        </EditFab>
+        <Fab slot="edit">
+            <Controls slot="controls">
+                <Checkbox id="log-framerate-checkbox" title="Log Framerate" />
+                <Checkbox id="show-blob-checkbox" title="Show Blob" />
+                <Checkbox id="show-particles-checkbox" title="Show Particles" />
+                <Checkbox
+                    id="show-particle-border-checkbox"
+                    title="Show Particle Border"
+                />
+                <Checkbox
+                    id="show-particle-alfa-checkbox"
+                    title="Show Particle Alfa"
+                />
+                <Range
+                    id="particle-amount-range"
+                    title="Particle Amount"
+                    min={10}
+                    max={250}
+                    step={5}
+                />
+                <Dropdown
+                    id="color-palette-dropdown"
+                    title="Color Palette"
+                    options={colorPaletteOptions}
+                />
+            </Controls>
+        </Fab>
     </Canvas>
 
     <!-- SECTION: STATIC_IMPORTS -->

@@ -2,43 +2,33 @@
 import Layout from "../../layouts/Layout.astro";
 import Checkbox from "../../components/inputs/Checkbox.astro";
 import Range from "../../components/inputs/Range.astro";
-import EditFab from "../../components/EditFab.astro";
+import Fab from "../../components/Fab.astro";
 import Canvas from "../../components/Canvas.astro";
+import Controls from "../../components/Controls.astro";
 ---
 
 <Layout title="Meta Balls">
     <Canvas id="meta-balls-canvas">
-        <EditFab slot="edit">
-            <ul slot="options" class="text-sm text-gray-700">
-                <li class="text-sm text-gray-700 border-b-2 px-4 py-2">
-                    <Checkbox
-                        id="log-framerate-checkbox"
-                        title="Log Framerate"
-                    />
-                </li>
-                <li class="text-sm text-gray-700 border-b-2 px-4 py-2">
-                    <Checkbox id="show-circles-checkbox" title="Show Circles" />
-                </li>
-                <li class="border-b-2 px-4 py-2">
-                    <Range
-                        id="cicle-amount-range"
-                        title="Circle Amount"
-                        min={2}
-                        max={20}
-                        step={1}
-                    />
-                </li>
-                <li class="border-b-2 px-4 py-2">
-                    <Range
-                        id="scale-range"
-                        title="Scale"
-                        min={10}
-                        max={25}
-                        step={1}
-                    />
-                </li>
-            </ul>
-        </EditFab>
+        <Fab slot="edit">
+            <Controls slot="controls">
+                <Checkbox id="log-framerate-checkbox" title="Log Framerate" />
+                <Checkbox id="show-circles-checkbox" title="Show Circles" />
+                <Range
+                    id="cicle-amount-range"
+                    title="Circle Amount"
+                    min={2}
+                    max={20}
+                    step={1}
+                />
+                <Range
+                    id="scale-range"
+                    title="Scale"
+                    min={10}
+                    max={25}
+                    step={1}
+                />
+            </Controls>
+        </Fab>
     </Canvas>
 
     <!-- SECTION: STATIC_IMPORTS -->

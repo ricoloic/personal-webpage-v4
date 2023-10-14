@@ -1,33 +1,24 @@
 ---
 import Layout from "../../layouts/Layout.astro";
+import RefreshIcon from "../../components/icons/RefreshIcon.astro";
 import Checkbox from "../../components/inputs/Checkbox.astro";
-import EditFab from "../../components/EditFab.astro";
+import Fab from "../../components/Fab.astro";
 import Canvas from "../../components/Canvas.astro";
+import Controls from "../../components/Controls.astro";
+import FabButton from "../../components/FabButton.astro";
 ---
 
 <Layout title="Black Hole">
     <Canvas id="black-hole-canvas">
-        <EditFab slot="edit">
-            <ul slot="options" class="text-sm text-gray-700">
-                <li class="flex items-center border-b-2 px-4 py-2">
-                    <Checkbox
-                        id="log-framerate-checkbox"
-                        title="Log Framerate"
-                    />
-                </li>
-                <li class="flex items-center border-b-2 px-4 py-2">
-                    <Checkbox id="show-trail-checkbox" title="Show Trail" />
-                </li>
-                <li class="border-b-2 px-4 py-2">
-                    <button
-                        name="clear-button"
-                        type="button"
-                        class="text-gray-900 bg-white border w-full border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg text-sm px-5 py-2.5 mr-2">
-                        Clear
-                    </button>
-                </li>
-            </ul>
-        </EditFab>
+        <Fab slot="edit">
+            <FabButton name="clear-button">
+                <RefreshIcon />
+            </FabButton>
+            <Controls slot="controls">
+                <Checkbox id="log-framerate-checkbox" title="Log Framerate" />
+                <Checkbox id="show-trail-checkbox" title="Show Trail" />
+            </Controls>
+        </Fab>
     </Canvas>
 
     <!-- SECTION: STATIC_IMPORTS -->
