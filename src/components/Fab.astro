@@ -1,0 +1,53 @@
+---
+import FabButton from "./FabButton.astro";
+import MenuIcon from "./icons/MenuIcon.astro";
+---
+
+<div
+    id="edit-options"
+    class="absolute bottom-5 right-5 flex flex-col-reverse items-end gap-1">
+    <div
+        class="flex items-center justify-between rounded-full bg-zinc-800 p-2 max-w-max right-0">
+        <slot />
+        <FabButton name="edit-button">
+            <MenuIcon />
+        </FabButton>
+    </div>
+
+    <div
+        id="edit-dropdown"
+        class="hidden overflow-y-auto w-auto font-normal text-white bg-zinc-800 rounded-lg p-4 gap-2 flex flex-col">
+        <slot name="controls" />
+    </div>
+</div>
+
+<script lang="js">
+window.addEventListener("load", function () {
+    const eEditDropdown = document.getElementById("edit-dropdown");
+    const eEditOtions = document.getElementById("edit-options");
+
+    function handleCloseEditDropdown(event) {
+        let target = event.target;
+        while (target) {
+            if (target == eEditOtions) return;
+            target = target.parentNode;
+        }
+
+        addClass(eEditDropdown, "hidden");
+    }
+
+    function handleToggleEditDropdown() {
+        if (findClassIndex(eEditDropdown, "hidden") === -1) {
+            addClass(eEditDropdown, "hidden");
+        } else {
+            removeClass(eEditDropdown, "hidden");
+        }
+    }
+
+    document
+        .querySelector('button[name="edit-button"]')
+        .addEventListener("click", handleToggleEditDropdown);
+
+    document.addEventListener("click", handleCloseEditDropdown);
+});
+</script>

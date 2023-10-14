@@ -1,22 +1,18 @@
 ---
 import Canvas from "../../components/Canvas.astro";
-import EditFab from "../../components/EditFab.astro";
+import Controls from "../../components/Controls.astro";
+import Fab from "../../components/Fab.astro";
 import Checkbox from "../../components/inputs/Checkbox.astro";
 import Layout from "../../layouts/Layout.astro";
 ---
 
 <Layout title="Line Follow">
     <Canvas id="line-follow-canvas">
-        <EditFab slot="edit">
-            <ul slot="options" class="text-sm text-gray-700">
-                <li class="text-sm text-gray-700 border-b-2 px-4 py-2">
-                    <Checkbox
-                        id="log-framerate-checkbox"
-                        title="Log Framerate"
-                    />
-                </li>
-            </ul>
-        </EditFab>
+        <Fab slot="edit">
+            <Controls slot="controls">
+                <Checkbox id="log-framerate-checkbox" title="Log Framerate" />
+            </Controls>
+        </Fab>
     </Canvas>
 
     <!-- SECTION: STATIC_IMPORTS -->
@@ -42,6 +38,8 @@ import Layout from "../../layouts/Layout.astro";
             "log-framerate-checkbox"
         );
         const eFramerate = document.getElementById("framerate");
+
+        if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
 
         const eMain = document.getElementById("canvas-wrapper");
         const eCanvas = document.getElementById("line-follow-canvas");
@@ -99,6 +97,8 @@ import Layout from "../../layouts/Layout.astro";
                 ctx.lineWidth = config.baseWidth * (config.pointsNumber - i);
                 ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
                 ctx.stroke();
+                // ctx.fillStyle = "rgba(255, 255, 255, 1)";
+                // fillCircle(ctx, trail[i].x, trail[i].y, 2);
             }
 
             ctx.lineTo(trail[trail.length - 1].x, trail[trail.length - 1].y);

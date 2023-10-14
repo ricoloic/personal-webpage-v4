@@ -1,28 +1,22 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import Checkbox from "../../components/inputs/Checkbox.astro";
-import EditFab from "../../components/EditFab.astro";
+import Fab from "../../components/Fab.astro";
 import Canvas from "../../components/Canvas.astro";
+import Controls from "../../components/Controls.astro";
 ---
 
 <Layout title="Cubic Besier Curve">
     <Canvas id="cubic-besier-curve-canvas">
-        <EditFab slot="edit">
-            <ul slot="options" class="text-sm text-gray-700">
-                <li class="text-sm text-gray-700 border-b-2 px-4 py-2">
-                    <Checkbox
-                        id="log-framerate-checkbox"
-                        title="Log Framerate"
-                    />
-                </li>
-                <li class="text-sm text-gray-700 border-b-2 px-4 py-2">
-                    <Checkbox
-                        id="show-control-lines-checkbox"
-                        title="Show Control Lines"
-                    />
-                </li>
-            </ul>
-        </EditFab>
+        <Fab slot="edit">
+            <Controls slot="controls">
+                <Checkbox id="log-framerate-checkbox" title="Log Framerate" />
+                <Checkbox
+                    id="show-control-lines-checkbox"
+                    title="Show Control Lines"
+                />
+            </Controls>
+        </Fab>
     </Canvas>
 
     <!-- SECTION: STATIC_IMPORTS -->

@@ -3,8 +3,12 @@ import Layout from "../../layouts/Layout.astro";
 import Checkbox from "../../components/inputs/Checkbox.astro";
 import Dropdown from "../../components/inputs/Dropdown.astro";
 import Range from "../../components/inputs/Range.astro";
-import EditFab from "../../components/EditFab.astro";
+import Fab from "../../components/Fab.astro";
 import Canvas from "../../components/Canvas.astro";
+import Controls from "../../components/Controls.astro";
+import FabButton from "../../components/FabButton.astro";
+import PlayIcon from "../../components/icons/PlayIcon.astro";
+import PauseIcon from "../../components/icons/PauseIcon.astro";
 
 const colors = {
     pink: [
@@ -71,83 +75,67 @@ const colors = {
 
 <Layout title="Audio Spectrum">
     <Canvas id="audio-spectrum-canvas">
-        <EditFab slot="edit">
-            <ul slot="options" class="text-sm text-gray-700">
-                <li class="flex items-center px-4 py-2">
-                    <Checkbox
-                        id="log-framerate-checkbox"
-                        title="Log Framerate"
-                    />
-                </li>
-                <li id="controls" class="px-4 py-2">
-                    <button
-                        name="toggle"
-                        class="text-gray-900 w-full bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg text-sm px-5 py-2.5 mr-2">
-                        Play
-                    </button>
-                </li>
-                <li class="flex items-center px-4 py-2">
-                    <Checkbox id="filled-checkbox" title="Filled" />
-                </li>
-                <li class="px-4 py-2">
-                    <Range
-                        id="min-freq-range"
-                        title="Min Frequency"
-                        min={10}
-                        max={9999}
-                        step={10}
-                    />
-                </li>
-                <li class="px-4 py-2">
-                    <Range
-                        id="max-freq-range"
-                        title="Max Frequency"
-                        min={11}
-                        max={10000}
-                        step={10}
-                    />
-                </li>
-                <li class="px-4 py-2">
-                    <Range
-                        id="max-wave-range"
-                        title="Max Wave Amount"
-                        min={1}
-                        max={10}
-                        step={1}
-                    />
-                </li>
-                <li class="px-4 py-2">
-                    <Dropdown
-                        id="freq-domain-dropdown"
-                        title="Frequency Domain"
-                        options={[
-                            { value: "64", label: "64" },
-                            { value: "128", label: "128" },
-                            { value: "256", label: "256" },
-                            { value: "512", label: "512" },
-                            { value: "1024", label: "1024" },
-                            { value: "2048", label: "2048" },
-                            { value: "4096", label: "4096" },
-                            { value: "8192", label: "8192" },
-                            { value: "16384", label: "16384" },
-                            { value: "32768", label: "32768" },
-                        ]}
-                    />
-                </li>
-                <li class="px-4 py-2">
-                    <Dropdown
-                        id="palette-dropdown"
-                        title="Palette"
-                        options={[
-                            { value: "random", label: "random" },
-                            ...Object.keys(colors).map(function (palette) {
-                                return { value: palette, label: palette };
-                            }),
-                        ]}
-                    />
-                </li>
-            </ul>
-        </EditFab>
+        <Fab slot="edit">
+            <FabButton name="toggle">
+                <span id="play-icon">
+                    <PlayIcon />
+                </span>
+                <span id="pause-icon" class="hidden">
+                    <PauseIcon />
+                </span>
+            </FabButton>
+            <Controls slot="controls">
+                <Checkbox id="log-framerate-checkbox" title="Log Framerate" />
+                <Checkbox id="filled-checkbox" title="Filled" />
+                <Range
+                    id="min-freq-range"
+                    title="Min Frequency"
+                    min={10}
+                    max={9999}
+                    step={10}
+                />
+                <Range
+                    id="max-freq-range"
+                    title="Max Frequency"
+                    min={11}
+                    max={10000}
+                    step={10}
+                />
+                <Range
+                    id="max-wave-range"
+                    title="Max Wave Amount"
+                    min={1}
+                    max={10}
+                    step={1}
+                />
+                <Dropdown
+                    id="freq-domain-dropdown"
+                    title="Frequency Domain"
+                    options={[
+                        { value: "64", label: "64" },
+                        { value: "128", label: "128" },
+                        { value: "256", label: "256" },
+                        { value: "512", label: "512" },
+                        { value: "1024", label: "1024" },
+                        { value: "2048", label: "2048" },
+                        { value: "4096", label: "4096" },
+                        { value: "8192", label: "8192" },
+                        { value: "16384", label: "16384" },
+                        { value: "32768", label: "32768" },
+                    ]}
+                />
+                <Dropdown
+                    id="palette-dropdown"
+                    title="Palette"
+                    options={[
+                        { value: "random", label: "random" },
+                        ...Object.keys(colors).map(function (palette) {
+                            return { value: palette, label: palette };
+                        }),
+                    ]}
+                />
+            </Controls>
+        </Fab>
     </Canvas>
 
     <!-- SECTION: STATIC_IMPORTS -->
@@ -189,8 +177,9 @@ const colors = {
             "log-framerate-checkbox"
         );
         const eFramerate = document.getElementById("framerate");
-        const eControls = document.getElementById("controls");
         const eToggle = document.querySelector('button[name="toggle"]');
+        const iPauseIcon = document.getElementById("pause-icon");
+        const iPlayIcon = document.getElementById("play-icon");
         const eFreqDomainDropdown = document.getElementById(
             "freq-domain-dropdown"
         );
@@ -416,28 +405,33 @@ const colors = {
         initialize();
 
         const audioController = AudioController.create();
+        const toogleVisibility = () => {
+            if (findClassIndex(iPlayIcon, "hidden") !== -1) {
+                addClass(iPauseIcon, "hidden");
+                removeClass(iPlayIcon, "hidden");
+            } else {
+                addClass(iPlayIcon, "hidden");
+                removeClass(iPauseIcon, "hidden");
+            }
+        };
         audioController
             .load("/audio/Kirra.mp3")
             .then((ac) => ac.initialize())
             .then(() => {
-                removeClass(eControls, "hidden");
-
-                eCanvas.addEventListener("click", function () {
+                eCanvas.addEventListener("click", () => {
                     audioController.toggle();
-                    eToggle.textContent =
-                        eToggle.textContent === "Play" ? "Pause" : "Play";
+                    toogleVisibility();
                 });
 
-                eToggle.textContent = "Play";
-                eToggle.addEventListener("click", function () {
+                eToggle.addEventListener("click", () => {
                     audioController.toggle();
-                    eToggle.textContent =
-                        eToggle.textContent === "Play" ? "Pause" : "Play";
+                    toogleVisibility();
                 });
             });
 
         audioController.onended = () => {
-            eToggle.textContent = "Play";
+            addClass(iPauseIcon, "hidden");
+            removeClass(iPlayIcon, "hidden");
         };
 
         const visualizer = new Visualizer(10);
@@ -519,5 +513,4 @@ const colors = {
 
         draw();
     </script>
-    <!-- ENDSECTION: SKETCH -->
 </Layout>

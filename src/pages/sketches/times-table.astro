@@ -2,58 +2,46 @@
 import Layout from "../../layouts/Layout.astro";
 import Checkbox from "../../components/inputs/Checkbox.astro";
 import Range from "../../components/inputs/Range.astro";
-import EditFab from "../../components/EditFab.astro";
+import Fab from "../../components/Fab.astro";
 import Canvas from "../../components/Canvas.astro";
+import Controls from "../../components/Controls.astro";
 ---
 
 <Layout title="Times Table">
     <Canvas id="times-table-canvas">
-        <EditFab slot="edit">
-            <ul slot="options" class="text-sm text-gray-700">
-                <li class="border-b-2 px-4 py-2">
-                    <Checkbox
-                        id="log-framerate-checkbox"
-                        title="Log Framerate"
-                    />
-                </li>
-                <li class="border-b-2 px-4 py-2">
-                    <Range
-                        id="point-amount-range"
-                        title="Point Amount"
-                        min={50}
-                        max={2000}
-                        step={1}
-                    />
-                </li>
-                <li class="border-b-2 px-4 py-2">
-                    <Range
-                        id="multiplier-range"
-                        title="Multiplier"
-                        min={2}
-                        max={500}
-                        step={1}
-                    />
-                </li>
-                <li class="border-b-2 px-4 py-2">
-                    <Range
-                        id="transparency-range"
-                        title="Transparency"
-                        min={1}
-                        max={255}
-                        step={1}
-                    />
-                </li>
-                <li class="border-b-2 px-4 py-2">
-                    <Range
-                        id="line-thickness-range"
-                        title="Line Thickness"
-                        min={1}
-                        max={15}
-                        step={1}
-                    />
-                </li>
-            </ul>
-        </EditFab>
+        <Fab slot="edit">
+            <Controls slot="controls">
+                <Checkbox id="log-framerate-checkbox" title="Log Framerate" />
+                <Range
+                    id="point-amount-range"
+                    title="Point Amount"
+                    min={50}
+                    max={2000}
+                    step={1}
+                />
+                <Range
+                    id="multiplier-range"
+                    title="Multiplier"
+                    min={2}
+                    max={500}
+                    step={1}
+                />
+                <Range
+                    id="transparency-range"
+                    title="Transparency"
+                    min={1}
+                    max={255}
+                    step={1}
+                />
+                <Range
+                    id="line-thickness-range"
+                    title="Line Thickness"
+                    min={1}
+                    max={15}
+                    step={1}
+                />
+            </Controls>
+        </Fab>
     </Canvas>
 
     <!-- SECTION: STATIC_IMPORTS -->

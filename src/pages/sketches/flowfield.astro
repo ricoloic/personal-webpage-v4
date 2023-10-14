@@ -1,6 +1,7 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import EditFab from "../../components/EditFab.astro";
+import Fab from "../../components/Fab.astro";
+import Controls from "../../components/Controls.astro";
 import Checkbox from "../../components/inputs/Checkbox.astro";
 import Range from "../../components/inputs/Range.astro";
 import Canvas from "../../components/Canvas.astro";
@@ -8,37 +9,26 @@ import Canvas from "../../components/Canvas.astro";
 
 <Layout title="Flowfield">
     <Canvas id="flowfield-canvas">
-        <EditFab slot="edit">
-            <ul slot="options" class="text-sm text-gray-700">
-                <li class="flex items-center border-b-2 px-4 py-2">
-                    <Checkbox
-                        id="log-framerate-checkbox"
-                        title="Log Framerate"
-                    />
-                </li>
-                <li class="flex items-center border-b-2 px-4 py-2">
-                    <Checkbox id="show-flow-checkbox" title="Show Flow" />
-                </li>
-                <li class="border-b-2 px-4 py-2">
-                    <Range
-                        id="particle-amount-range"
-                        title="Particle Amount"
-                        min={100}
-                        max={5000}
-                        step={100}
-                    />
-                </li>
-                <li class="px-4 py-2">
-                    <Range
-                        id="scale-range"
-                        title="Scale"
-                        min={4}
-                        max={50}
-                        step={2}
-                    />
-                </li>
-            </ul>
-        </EditFab>
+        <Fab slot="edit">
+            <Controls slot="controls">
+                <Checkbox id="log-framerate-checkbox" title="Log Framerate" />
+                <Checkbox id="show-flow-checkbox" title="Show Flow" />
+                <Range
+                    id="particle-amount-range"
+                    title="Particle Amount"
+                    min={100}
+                    max={5000}
+                    step={100}
+                />
+                <Range
+                    id="scale-range"
+                    title="Scale"
+                    min={4}
+                    max={50}
+                    step={2}
+                />
+            </Controls>
+        </Fab>
     </Canvas>
 
     <!-- SECTION: STATIC_IMPORTS -->

@@ -1,40 +1,26 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import Checkbox from "../../components/inputs/Checkbox.astro";
-import EditFab from "../../components/EditFab.astro";
+import Fab from "../../components/Fab.astro";
 import Canvas from "../../components/Canvas.astro";
+import Controls from "../../components/Controls.astro";
 ---
 
 <Layout title="Ray Casting">
     <Canvas id="ray-casting-canvas">
-        <EditFab slot="edit">
-            <ul slot="options" class="text-sm text-gray-700">
-                <li class="flex items-center border-b-2 px-4 py-2">
-                    <Checkbox
-                        id="log-framerate-checkbox"
-                        title="Log Framerate"
-                    />
-                </li>
-                <li class="flex items-center border-b-2 px-4 py-2">
-                    <Checkbox id="cast-rays-checkbox" title="Cast Rays" />
-                </li>
-                <li class="flex items-center border-b-2 px-4 py-2">
-                    <Checkbox id="cast-shadows-checkbox" title="Cast Shadows" />
-                </li>
-                <li class="flex items-center border-b-2 px-4 py-2">
-                    <Checkbox
-                        id="cast-background-checkbox"
-                        title="Cast Background"
-                    />
-                </li>
-                <li class="flex items-center border-b-2 px-4 py-2">
-                    <Checkbox id="edit-mode-checkbox" title="Edit Mode" />
-                </li>
-                <li class="flex items-center border-b-2 px-4 py-2">
-                    <Checkbox id="outline-checkbox" title="Outline" />
-                </li>
-            </ul>
-        </EditFab>
+        <Fab slot="edit">
+            <Controls slot="controls">
+                <Checkbox id="log-framerate-checkbox" title="Log Framerate" />
+                <Checkbox id="cast-rays-checkbox" title="Cast Rays" />
+                <Checkbox id="cast-shadows-checkbox" title="Cast Shadows" />
+                <Checkbox
+                    id="cast-background-checkbox"
+                    title="Cast Background"
+                />
+                <Checkbox id="edit-mode-checkbox" title="Edit Mode" />
+                <Checkbox id="outline-checkbox" title="Outline" />
+            </Controls>
+        </Fab>
     </Canvas>
 
     <!-- SECTION: STATIC_IMPORTS -->

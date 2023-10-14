@@ -8,14 +8,38 @@ const { id, title } = Astro.props;
 const labelId = `${id}-label`;
 ---
 
-<div class="flex items-center">
-    <input
-        id={id}
-        type="checkbox"
-        aria-labelledby={labelId}
-        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-    />
-    <label id={labelId} for={id} class="ml-2 select-none text-sm text-gray-900"
-        >{title}</label
-    >
-</div>
+<style>
+    input:checked ~ div .toggle-thumb {
+        transform: translateX(100%);
+        background-color: #465366; /* Tailwind's bg-green-400 color */
+    }
+
+    .toggle-track::before {
+        content: "";
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        border-radius: inherit;
+        background: transparent;
+        transition: border 0.2s;
+    }
+
+    input:focus + .toggle-track::before {
+        border: 2px solid #93c5fd; /* Tailwind's blue-400 color */
+    }
+</style>
+
+<label id={labelId} for={id} class="flex items-center cursor-pointer">
+    <input aria-labelledby={labelId} id={id} type="checkbox" class="sr-only" />
+
+    <div
+        class="relative w-10 h-5 bg-gray-400 rounded-full outline-none toggle-track">
+        <div
+            class="absolute top-0 left-0 w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-200 ease-in toggle-thumb">
+        </div>
+    </div>
+
+    <span class="ml-3">{title}</span>
+</label>
