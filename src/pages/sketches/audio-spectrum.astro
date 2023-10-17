@@ -1,7 +1,7 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import Checkbox from "../../components/inputs/Checkbox.astro";
-import Dropdown from "../../components/inputs/Dropdown.astro";
+import Radio from "../../components/inputs/Radio.astro";
 import Range from "../../components/inputs/Range.astro";
 import Fab from "../../components/Fab.astro";
 import Canvas from "../../components/Canvas.astro";
@@ -153,6 +153,14 @@ const COLORS = {
                         title="Log Framerate"
                     />
                     <Checkbox id="filled-checkbox" title="Filled" />
+                    <Radio
+                        id="visualizer-type-radio"
+                        name="visualizer-type"
+                        options={[
+                            { value: "mirroredPoints", label: "Dots" },
+                            { value: "mirroredCircle", label: "Lines" },
+                        ]}
+                    />
                     <Range
                         id="min-freq-range"
                         title="Min Frequency"
@@ -174,21 +182,12 @@ const COLORS = {
                         max={10}
                         step={1}
                     />
-                    <Dropdown
-                        id="freq-domain-dropdown"
+                    <Range
+                        id="freq-domain-range"
                         title="Frequency Domain"
-                        options={[
-                            { value: "64", label: "64" },
-                            { value: "128", label: "128" },
-                            { value: "256", label: "256" },
-                            { value: "512", label: "512" },
-                            { value: "1024", label: "1024" },
-                            { value: "2048", label: "2048" },
-                            { value: "4096", label: "4096" },
-                            { value: "8192", label: "8192" },
-                            { value: "16384", label: "16384" },
-                            { value: "32768", label: "32768" },
-                        ]}
+                        min={6}
+                        max={15}
+                        step={1}
                     />
                 </Controls>
             </FabDropdown>
@@ -206,9 +205,10 @@ const COLORS = {
 
     <script is:inline define:vars={{ COLORS }}>
         const config = {
+            visualizerType: "mirroredCircle",
             minFreq: 10,
             maxFreq: 1000,
-            freqDomain: 2048,
+            freqPow: 11,
             filled: false,
             palette: "pink",
             maxWave: 10,
@@ -217,6 +217,7 @@ const COLORS = {
         prefillConfig(config);
         setParamConfig(config);
 
+        let freqDomain = Math.pow(2, config.freqPow);
         let currentPalette = config.palette;
 
         const eLogFramerateCheckbox = document.getElementById(
@@ -244,7 +245,14 @@ const COLORS = {
         const eMaxWaveLabel = document.querySelector(
             'label[for="max-wave-range"]>span'
         );
+        const eFreqPowRange = document.getElementById("freq-domain-range");
+        const eFreqPowLabel = document.querySelector(
+            'label[for="freq-domain-range"]>span'
+        );
         const eFilledCheckbox = document.getElementById("filled-checkbox");
+        const eVisualizerTypeRadios = document.querySelectorAll(
+            'input[name="visualizer-type"]'
+        );
 
         if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
         eLogFramerateCheckbox.addEventListener("change", function () {
@@ -280,18 +288,27 @@ const COLORS = {
             config.maxWave = parseFloat(event.target.value);
             setParamConfig(config);
         });
-
-        for (const freqDomainOption of eFreqDomainOptions) {
-            const value = freqDomainOption.getAttribute("value");
-            if (value == config.freqDomain) {
-                freqDomainOption.setAttribute("selected", "");
-                break;
-            }
-        }
-        eFreqDomainDropdown.addEventListener("change", function (event) {
-            config.freqDomain = parseInt(event.target.value, 10);
+        eFreqPowRange.setAttribute("value", config.freqPow);
+        eFreqPowLabel.textContent = freqDomain;
+        eFreqPowRange.addEventListener("change", function (event) {
+            config.freqPow = parseFloat(event.target.value);
+            freqDomain = Math.pow(2, config.freqPow);
+            eFreqPowLabel.textContent = freqDomain;
             setParamConfig(config);
         });
+
+        for (const elem of eVisualizerTypeRadios) {
+            if (elem.getAttribute("value") == config.visualizerType) {
+                toggleCheckbox(elem);
+            }
+        }
+
+        document
+            .getElementById("visualizer-type-radio")
+            .addEventListener("change", function (event) {
+                config.visualizerType = event.target.value;
+                setParamConfig(config);
+            });
 
         const eColorPill = document.getElementById("color-pill");
         const eColorButtons = document.querySelectorAll(
@@ -404,7 +421,7 @@ const COLORS = {
                     baseRadius: this.baseRadius,
                 }
             ) {
-                for (let a = 0; a < TWO_PI; a += this.incrementor) {
+                for (let a = 0; a < TWO_PI; a += 0.01) {
                     const i = Math.floor(map(a, 0, TWO_PI, 0, freq.length));
                     const r = freq[i];
                     const x = Math.cos(a) * (r * rMult + baseRadius);
@@ -423,14 +440,14 @@ const COLORS = {
                 }
             ) {
                 ctx.beginPath();
-                for (let a = 0; a < PI; a += this.incrementor) {
+                for (let a = 0; a < PI; a += 0.01) {
                     const i = Math.floor(map(a, 0, PI, 0, freq.length));
                     const r = freq[i];
                     const x = Math.cos(a) * (r * rMult + baseRadius);
                     const y = Math.sin(a) * (r * rMult + baseRadius);
                     ctx.fillRect(x, y, radius, radius);
                 }
-                for (let a = PI; a >= 0; a -= this.incrementor) {
+                for (let a = PI; a >= 0; a -= 0.01) {
                     const ar = map(a, PI, 0, PI, TWO_PI);
                     const i = Math.floor(map(a, 0, PI, 0, freq.length));
                     const r = freq[i];
@@ -483,6 +500,13 @@ const COLORS = {
                     audioController.toggle();
                     toogleVisibility();
                 });
+
+                window.addEventListener("keypress", (event) => {
+                    if (event.code == "Space") {
+                        audioController.toggle();
+                        toogleVisibility();
+                    }
+                });
             });
 
         audioController.onended = () => {
@@ -525,17 +549,18 @@ const COLORS = {
 
             setTimeout(() => {
                 const frequencies = audioController.analyzeFrequency({
-                    fftSize: config.freqDomain,
+                    fftSize: freqDomain,
                     minFrequency: config.minFreq,
                     maxFrequency: config.maxFreq + offsetFreq,
                 });
 
                 frequenciesList.push(frequencies);
 
-                if (
-                    frequenciesList.length !=
-                    Math.min(layerColors.length, config.maxWave)
-                ) {
+                const maxIteration = Math.min(
+                    layerColors.length,
+                    config.maxWave
+                );
+                if (frequenciesList.length != maxIteration) {
                     buildVisualizer(
                         layerColors,
                         delay,
@@ -547,14 +572,26 @@ const COLORS = {
                     ctx.translate(halfWidth, halfHeight);
                     ctx.rotate(TWO_PI - PI / 2);
 
-                    for (let i = 0; i < frequenciesList.length; i++) {
+                    const start =
+                        frequenciesList.length === layerColors.length
+                            ? 0
+                            : layerColors.length - frequenciesList.length;
+
+                    let j = 0;
+                    for (let i = start; i < layerColors.length; i++) {
                         ctx.fillStyle = layerColors[i];
                         ctx.strokeStyle = layerColors[i];
-                        visualizer.mirroredCircle(ctx, frequenciesList[i], {
-                            filled: config.filled,
-                            closed: true,
-                            baseRadius: 100,
-                        });
+
+                        visualizer[config.visualizerType](
+                            ctx,
+                            frequenciesList[j],
+                            {
+                                filled: config.filled,
+                                closed: true,
+                                baseRadius: 100,
+                            }
+                        );
+                        j++;
                     }
 
                     ctx.setTransform(1, 0, 0, 1, 0, 0);

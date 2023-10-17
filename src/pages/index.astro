@@ -16,6 +16,7 @@ import audioSpectrumImage from "../assets/previews/audio-spectrum-preview.png";
 import lineFollowImage from "../assets/previews/line-follow-preview.png";
 import pointMeshImage from "../assets/previews/point-mesh-preview.png";
 import maurerRoseImage from "../assets/previews/maurer-rose-preview.png";
+import ShareAlert from "../components/ShareAlert.astro";
 
 const ageDifMs = Date.now() - new Date("2002-09-23").getTime();
 const ageDate = new Date(ageDifMs); // milliseconds from epoch
@@ -222,52 +223,9 @@ const age = Math.abs(ageDate.getUTCFullYear() - 1970);
         </section>
     </main>
 
-    <div
-        id="link-copied-alert"
-        class="bg-transparent flex flex-col items-center justify-center fixed w-full z-50 p-3 hidden">
-        <div
-            class="mx-auto leading-none h-min rounded-2xl flex items-center text-white bg-zinc-800 p-2"
-            role="alert">
-            <span class="font-semibold mx-2 text-left flex-auto">
-                URL copied to clipboard!
-            </span>
-            <button type="button" name="link-copied-alert-close-button">
-                <span class="sr-only">Close Button</span>
-                <i class="fa-regular fa-circle-xmark fa-lg"></i>
-            </button>
-        </div>
-    </div>
-
-    <script is:inline src="/js/utils/html.js"></script>
-
     <script is:inline>
-        const eLinkAlert = document.getElementById("link-copied-alert");
-
-        function handleClickCloseLinkAlertButton() {
-            addClass(eLinkAlert, "hidden");
-        }
-
-        function copyUrl() {
-            navigator.clipboard
-                .writeText(window.location.href)
-                .then(function () {
-                    removeClass(eLinkAlert, "hidden");
-                    setTimeout(handleClickCloseLinkAlertButton, 3000);
-                });
-        }
-
-        function handleClickShare() {
-            const data = window.location;
-            if (navigator.share) navigator.share(data).catch(() => copyUrl());
-            else copyUrl();
-        }
-
         document
             .querySelector('button[name="share-button"]')
             .addEventListener("click", handleClickShare);
-
-        document
-            .querySelector('button[name="link-copied-alert-close-button"]')
-            .addEventListener("click", handleClickCloseLinkAlertButton);
     </script>
 </Layout>
