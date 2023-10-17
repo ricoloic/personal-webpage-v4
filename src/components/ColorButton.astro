@@ -1,0 +1,16 @@
+---
+interface Props {
+    name: string;
+    color: string;
+}
+
+const { color, name } = Astro.props;
+---
+
+<button
+    data-name="color-button"
+    data-color={color}
+    data-color-name={name}
+    name={`${name}-button`}
+    class="rounded"
+    style=`width: 25px; height: 25px; background-color: ${color};`></button>

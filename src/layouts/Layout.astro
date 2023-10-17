@@ -80,6 +80,11 @@ const { title } = Astro.props;
                 border-top-style: groove;
                 border-top-color: black;
             }
+
+            #color-pill {
+                width: calc(100% - 0.5rem);
+                height: calc(100% - 0.5rem);
+            }
         </style>
     </head>
 
@@ -187,6 +192,7 @@ const { title } = Astro.props;
         <slot />
 
         <script is:inline src="/js/utils/html.js"></script>
+
         <script>
             const eHomeLink = document.getElementById("home-link");
 

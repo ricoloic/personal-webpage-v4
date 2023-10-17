@@ -5,42 +5,67 @@ import Range from "../../components/inputs/Range.astro";
 import Fab from "../../components/Fab.astro";
 import Canvas from "../../components/Canvas.astro";
 import Controls from "../../components/Controls.astro";
+import FabDropdown from "../../components/FabDropdown.astro";
+import MenuIcon from "../../components/icons/MenuIcon.astro";
+import ColorButton from "../../components/ColorButton.astro";
 ---
 
 <Layout title="Times Table">
     <Canvas id="times-table-canvas">
         <Fab slot="edit">
-            <Controls slot="controls">
-                <Checkbox id="log-framerate-checkbox" title="Log Framerate" />
-                <Range
-                    id="point-amount-range"
-                    title="Point Amount"
-                    min={50}
-                    max={2000}
-                    step={1}
-                />
-                <Range
-                    id="multiplier-range"
-                    title="Multiplier"
-                    min={2}
-                    max={500}
-                    step={1}
-                />
-                <Range
-                    id="transparency-range"
-                    title="Transparency"
-                    min={1}
-                    max={255}
-                    step={1}
-                />
-                <Range
-                    id="line-thickness-range"
-                    title="Line Thickness"
-                    min={1}
-                    max={15}
-                    step={1}
-                />
-            </Controls>
+            <FabDropdown id="color">
+                <div slot="button" id="color-pill" class="rounded-full"></div>
+
+                <div
+                    slot="dropdown"
+                    class="flex gap-2 max-w-full flex-wrap justify-between">
+                    <ColorButton name="red" color="#ff0000" />
+                    <ColorButton name="green" color="#00ff00" />
+                    <ColorButton name="yellow" color="#ffff00" />
+                    <ColorButton name="cyan" color="#00ffff" />
+                    <ColorButton name="magenta" color="#ff00ff" />
+                    <ColorButton name="lightcoral" color="#f08080" />
+                    <ColorButton name="greenyellow" color="#adff2f" />
+                    <ColorButton name="white" color="#ffffff" />
+                </div>
+            </FabDropdown>
+            <FabDropdown id="edit">
+                <MenuIcon slot="button" />
+                <Controls slot="dropdown">
+                    <Checkbox
+                        id="log-framerate-checkbox"
+                        title="Log Framerate"
+                    />
+                    <Range
+                        id="point-amount-range"
+                        title="Point Amount"
+                        min={50}
+                        max={2000}
+                        step={1}
+                    />
+                    <Range
+                        id="multiplier-range"
+                        title="Multiplier"
+                        min={2}
+                        max={500}
+                        step={1}
+                    />
+                    <Range
+                        id="transparency-range"
+                        title="Transparency"
+                        min={1}
+                        max={255}
+                        step={1}
+                    />
+                    <Range
+                        id="line-thickness-range"
+                        title="Line Thickness"
+                        min={1}
+                        max={15}
+                        step={1}
+                    />
+                </Controls>
+            </FabDropdown>
         </Fab>
     </Canvas>
 
@@ -51,6 +76,7 @@ import Controls from "../../components/Controls.astro";
     <script is:inline src="/js/utils/color.js"></script>
     <script is:inline src="/js/utils/url.js"></script>
     <script is:inline src="/js/classes/vector.js"></script>
+    <script is:inline src="/js/config/use-colors.js"></script>
     <!-- ENDSECTION: STATIC_IMPORTS -->
 
     <script is:inline>
@@ -60,6 +86,7 @@ import Controls from "../../components/Controls.astro";
             radius: 0,
             transparency: 60,
             lineThickness: 2,
+            color: "#ffffff",
             logFramerate: true,
         };
         prefillConfig(config);
@@ -88,6 +115,8 @@ import Controls from "../../components/Controls.astro";
         const eLineThicknessLabel = document.querySelector(
             'label[for="line-thickness-range"]>span'
         );
+
+        useColors(config);
 
         if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
         eLogFramerateCheckbox.addEventListener("change", function () {
@@ -167,7 +196,7 @@ import Controls from "../../components/Controls.astro";
                     .toString(16)
                     .replaceAll(".", "")
                     .padStart(2, "0");
-                ctx.strokeStyle = `#ffffff${thint}`;
+                ctx.strokeStyle = `${config.color}${thint}`;
                 ctx.lineWidth = config.lineThickness;
                 const point1 = calculatePositionFromIteration(i);
                 const j = (i * config.multiplier) % config.amountOfPoints;

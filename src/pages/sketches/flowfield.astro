@@ -5,29 +5,37 @@ import Controls from "../../components/Controls.astro";
 import Checkbox from "../../components/inputs/Checkbox.astro";
 import Range from "../../components/inputs/Range.astro";
 import Canvas from "../../components/Canvas.astro";
+import FabDropdown from "../../components/FabDropdown.astro";
+import MenuIcon from "../../components/icons/MenuIcon.astro";
 ---
 
 <Layout title="Flowfield">
     <Canvas id="flowfield-canvas">
         <Fab slot="edit">
-            <Controls slot="controls">
-                <Checkbox id="log-framerate-checkbox" title="Log Framerate" />
-                <Checkbox id="show-flow-checkbox" title="Show Flow" />
-                <Range
-                    id="particle-amount-range"
-                    title="Particle Amount"
-                    min={100}
-                    max={5000}
-                    step={100}
-                />
-                <Range
-                    id="scale-range"
-                    title="Scale"
-                    min={4}
-                    max={50}
-                    step={2}
-                />
-            </Controls>
+            <FabDropdown id="edit">
+                <MenuIcon slot="button" />
+                <Controls slot="dropdown">
+                    <Checkbox
+                        id="log-framerate-checkbox"
+                        title="Log Framerate"
+                    />
+                    <Checkbox id="show-flow-checkbox" title="Show Flow" />
+                    <Range
+                        id="particle-amount-range"
+                        title="Particle Amount"
+                        min={100}
+                        max={5000}
+                        step={100}
+                    />
+                    <Range
+                        id="scale-range"
+                        title="Scale"
+                        min={4}
+                        max={50}
+                        step={2}
+                    />
+                </Controls>
+            </FabDropdown>
         </Fab>
     </Canvas>
 

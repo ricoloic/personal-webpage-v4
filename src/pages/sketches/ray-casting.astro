@@ -4,22 +4,47 @@ import Checkbox from "../../components/inputs/Checkbox.astro";
 import Fab from "../../components/Fab.astro";
 import Canvas from "../../components/Canvas.astro";
 import Controls from "../../components/Controls.astro";
+import FabDropdown from "../../components/FabDropdown.astro";
+import MenuIcon from "../../components/icons/MenuIcon.astro";
+import ColorButton from "../../components/ColorButton.astro";
 ---
 
 <Layout title="Ray Casting">
     <Canvas id="ray-casting-canvas">
         <Fab slot="edit">
-            <Controls slot="controls">
-                <Checkbox id="log-framerate-checkbox" title="Log Framerate" />
-                <Checkbox id="cast-rays-checkbox" title="Cast Rays" />
-                <Checkbox id="cast-shadows-checkbox" title="Cast Shadows" />
-                <Checkbox
-                    id="cast-background-checkbox"
-                    title="Cast Background"
-                />
-                <Checkbox id="edit-mode-checkbox" title="Edit Mode" />
-                <Checkbox id="outline-checkbox" title="Outline" />
-            </Controls>
+            <FabDropdown id="color">
+                <div slot="button" id="color-pill" class="rounded-full"></div>
+
+                <div
+                    slot="dropdown"
+                    class="flex gap-2 max-w-full flex-wrap justify-between">
+                    <ColorButton name="red" color="#ff0000" />
+                    <ColorButton name="green" color="#00ff00" />
+                    <ColorButton name="yellow" color="#ffff00" />
+                    <ColorButton name="cyan" color="#00ffff" />
+                    <ColorButton name="magenta" color="#ff00ff" />
+                    <ColorButton name="lightcoral" color="#f08080" />
+                    <ColorButton name="greenyellow" color="#adff2f" />
+                    <ColorButton name="white" color="#ffffff" />
+                </div>
+            </FabDropdown>
+            <FabDropdown id="edit">
+                <MenuIcon slot="button" />
+                <Controls slot="dropdown">
+                    <Checkbox
+                        id="log-framerate-checkbox"
+                        title="Log Framerate"
+                    />
+                    <Checkbox id="cast-rays-checkbox" title="Cast Rays" />
+                    <Checkbox id="cast-shadows-checkbox" title="Cast Shadows" />
+                    <Checkbox
+                        id="cast-background-checkbox"
+                        title="Cast Background"
+                    />
+                    <Checkbox id="edit-mode-checkbox" title="Edit Mode" />
+                    <Checkbox id="outline-checkbox" title="Outline" />
+                </Controls>
+            </FabDropdown>
         </Fab>
     </Canvas>
 
@@ -31,6 +56,7 @@ import Controls from "../../components/Controls.astro";
     <script is:inline src="/js/utils/color.js"></script>
     <script is:inline src="/js/utils/draw.js"></script>
     <script is:inline src="/js/utils/url.js"></script>
+    <script is:inline src="/js/config/use-colors.js"></script>
     <!-- ENDSECTION: STATIC_IMPORTS -->
 
     <script is:inline>
@@ -43,10 +69,13 @@ import Controls from "../../components/Controls.astro";
             clicking: false,
             background: true,
             outline: false,
+            color: "#ffffff",
             displayShadow: true,
         };
         prefillConfig(config);
         setParamConfig(config);
+
+        const pColor = useColors(config);
 
         const eLogFramerateCheckbox = document.getElementById(
             "log-framerate-checkbox"
@@ -334,7 +363,9 @@ import Controls from "../../components/Controls.astro";
                 });
 
                 if (foundIntersections.length > 0) {
-                    ctx.fillStyle = `rgba(255, 255, 255, ${alfa ? "0.3" : 1})`;
+                    ctx.fillStyle = `rgba(${pColor.r}, ${pColor.g}, ${
+                        pColor.b
+                    }, ${alfa ? "0.3" : 1})`;
                     ctx.beginPath();
                     ctx.moveTo(
                         foundIntersections[0].x,

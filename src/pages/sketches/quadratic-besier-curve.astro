@@ -4,18 +4,26 @@ import Checkbox from "../../components/inputs/Checkbox.astro";
 import Fab from "../../components/Fab.astro";
 import Canvas from "../../components/Canvas.astro";
 import Controls from "../../components/Controls.astro";
+import FabDropdown from "../../components/FabDropdown.astro";
+import MenuIcon from "../../components/icons/MenuIcon.astro";
 ---
 
 <Layout title="Quadratic Besier Curve">
     <Canvas id="quadratic-besier-curve-canvas">
         <Fab slot="edit">
-            <Controls slot="controls">
-                <Checkbox id="log-framerate-checkbox" title="Log Framerate" />
-                <Checkbox
-                    id="show-control-lines-checkbox"
-                    title="Show Control Lines"
-                />
-            </Controls>
+            <FabDropdown id="edit">
+                <MenuIcon slot="button" />
+                <Controls slot="dropdown">
+                    <Checkbox
+                        id="log-framerate-checkbox"
+                        title="Log Framerate"
+                    />
+                    <Checkbox
+                        id="show-control-lines-checkbox"
+                        title="Show Control Lines"
+                    />
+                </Controls>
+            </FabDropdown>
         </Fab>
     </Canvas>
 

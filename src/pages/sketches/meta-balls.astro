@@ -5,29 +5,37 @@ import Range from "../../components/inputs/Range.astro";
 import Fab from "../../components/Fab.astro";
 import Canvas from "../../components/Canvas.astro";
 import Controls from "../../components/Controls.astro";
+import FabDropdown from "../../components/FabDropdown.astro";
+import MenuIcon from "../../components/icons/MenuIcon.astro";
 ---
 
 <Layout title="Meta Balls">
     <Canvas id="meta-balls-canvas">
         <Fab slot="edit">
-            <Controls slot="controls">
-                <Checkbox id="log-framerate-checkbox" title="Log Framerate" />
-                <Checkbox id="show-circles-checkbox" title="Show Circles" />
-                <Range
-                    id="cicle-amount-range"
-                    title="Circle Amount"
-                    min={2}
-                    max={20}
-                    step={1}
-                />
-                <Range
-                    id="scale-range"
-                    title="Scale"
-                    min={10}
-                    max={25}
-                    step={1}
-                />
-            </Controls>
+            <FabDropdown id="edit">
+                <MenuIcon slot="button" />
+                <Controls slot="dropdown">
+                    <Checkbox
+                        id="log-framerate-checkbox"
+                        title="Log Framerate"
+                    />
+                    <Checkbox id="show-circles-checkbox" title="Show Circles" />
+                    <Range
+                        id="cicle-amount-range"
+                        title="Circle Amount"
+                        min={2}
+                        max={20}
+                        step={1}
+                    />
+                    <Range
+                        id="scale-range"
+                        title="Scale"
+                        min={10}
+                        max={25}
+                        step={1}
+                    />
+                </Controls>
+            </FabDropdown>
         </Fab>
     </Canvas>
 

@@ -1,7 +1,10 @@
 ---
 import Canvas from "../../components/Canvas.astro";
+import ColorButton from "../../components/ColorButton.astro";
 import Controls from "../../components/Controls.astro";
 import Fab from "../../components/Fab.astro";
+import FabDropdown from "../../components/FabDropdown.astro";
+import MenuIcon from "../../components/icons/MenuIcon.astro";
 import Checkbox from "../../components/inputs/Checkbox.astro";
 import Layout from "../../layouts/Layout.astro";
 ---
@@ -9,9 +12,31 @@ import Layout from "../../layouts/Layout.astro";
 <Layout title="Line Follow">
     <Canvas id="line-follow-canvas">
         <Fab slot="edit">
-            <Controls slot="controls">
-                <Checkbox id="log-framerate-checkbox" title="Log Framerate" />
-            </Controls>
+            <FabDropdown id="color">
+                <div slot="button" id="color-pill" class="rounded-full"></div>
+
+                <div
+                    slot="dropdown"
+                    class="flex gap-2 max-w-full flex-wrap justify-between">
+                    <ColorButton name="red" color="#ff0000" />
+                    <ColorButton name="green" color="#00ff00" />
+                    <ColorButton name="yellow" color="#ffff00" />
+                    <ColorButton name="cyan" color="#00ffff" />
+                    <ColorButton name="magenta" color="#ff00ff" />
+                    <ColorButton name="lightcoral" color="#f08080" />
+                    <ColorButton name="greenyellow" color="#adff2f" />
+                    <ColorButton name="white" color="#ffffff" />
+                </div>
+            </FabDropdown>
+            <FabDropdown id="edit">
+                <MenuIcon slot="button" />
+                <Controls slot="dropdown">
+                    <Checkbox
+                        id="log-framerate-checkbox"
+                        title="Log Framerate"
+                    />
+                </Controls>
+            </FabDropdown>
         </Fab>
     </Canvas>
 
@@ -23,6 +48,7 @@ import Layout from "../../layouts/Layout.astro";
     <script is:inline src="/js/utils/color.js"></script>
     <script is:inline src="/js/utils/url.js"></script>
     <script is:inline src="/js/classes/vector.js"></script>
+    <script is:inline src="/js/config/use-colors.js"></script>
     <!-- ENDSECTION: STATIC_IMPORTS -->
 
     <script is:inline>
@@ -32,6 +58,7 @@ import Layout from "../../layouts/Layout.astro";
             pointsNumber: 40,
             friction: 0.5,
             baseWidth: 0.3,
+            color: "#ffffff",
             logFramerate: true,
         };
         prefillConfig(config);
@@ -48,6 +75,8 @@ import Layout from "../../layouts/Layout.astro";
             setParamConfig(config);
             if (!config.logFramerate) eFramerate.textContent = "";
         });
+
+        const pColor = useColors(config);
 
         const eMain = document.getElementById("canvas-wrapper");
         const eCanvas = document.getElementById("line-follow-canvas");
@@ -103,7 +132,7 @@ import Layout from "../../layouts/Layout.astro";
                 const yc = 0.5 * (trail[i].y + trail[i + 1].y);
                 ctx.quadraticCurveTo(trail[i].x, trail[i].y, xc, yc);
                 ctx.lineWidth = config.baseWidth * (config.pointsNumber - i);
-                ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
+                ctx.strokeStyle = `rgba(${pColor.r}, ${pColor.g}, ${pColor.b}, 0.1)`;
                 ctx.stroke();
                 // ctx.fillStyle = "rgba(255, 255, 255, 1)";
                 // fillCircle(ctx, trail[i].x, trail[i].y, 2);
