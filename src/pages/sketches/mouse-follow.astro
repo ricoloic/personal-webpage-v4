@@ -7,6 +7,8 @@ import Dropdown from "../../components/inputs/Dropdown.astro";
 import Fab from "../../components/Fab.astro";
 import Canvas from "../../components/Canvas.astro";
 import Controls from "../../components/Controls.astro";
+import FabDropdown from "../../components/FabDropdown.astro";
+import MenuIcon from "../../components/icons/MenuIcon.astro";
 
 const paletteNames = Object.keys(COLOR_PALETTES);
 const colorPaletteOptions = paletteNames.map((paletteName) => ({
@@ -18,31 +20,40 @@ const colorPaletteOptions = paletteNames.map((paletteName) => ({
 <Layout title="Mouse Follow">
     <Canvas id="mouse-follow-canvas">
         <Fab slot="edit">
-            <Controls slot="controls">
-                <Checkbox id="log-framerate-checkbox" title="Log Framerate" />
-                <Checkbox id="show-blob-checkbox" title="Show Blob" />
-                <Checkbox id="show-particles-checkbox" title="Show Particles" />
-                <Checkbox
-                    id="show-particle-border-checkbox"
-                    title="Show Particle Border"
-                />
-                <Checkbox
-                    id="show-particle-alfa-checkbox"
-                    title="Show Particle Alfa"
-                />
-                <Range
-                    id="particle-amount-range"
-                    title="Particle Amount"
-                    min={10}
-                    max={250}
-                    step={5}
-                />
-                <Dropdown
-                    id="color-palette-dropdown"
-                    title="Color Palette"
-                    options={colorPaletteOptions}
-                />
-            </Controls>
+            <FabDropdown id="edit">
+                <MenuIcon slot="button" />
+                <Controls slot="dropdown">
+                    <Checkbox
+                        id="log-framerate-checkbox"
+                        title="Log Framerate"
+                    />
+                    <Checkbox id="show-blob-checkbox" title="Show Blob" />
+                    <Checkbox
+                        id="show-particles-checkbox"
+                        title="Show Particles"
+                    />
+                    <Checkbox
+                        id="show-particle-border-checkbox"
+                        title="Show Particle Border"
+                    />
+                    <Checkbox
+                        id="show-particle-alfa-checkbox"
+                        title="Show Particle Alfa"
+                    />
+                    <Range
+                        id="particle-amount-range"
+                        title="Particle Amount"
+                        min={10}
+                        max={250}
+                        step={5}
+                    />
+                    <Dropdown
+                        id="color-palette-dropdown"
+                        title="Color Palette"
+                        options={colorPaletteOptions}
+                    />
+                </Controls>
+            </FabDropdown>
         </Fab>
     </Canvas>
 

@@ -5,23 +5,14 @@ import ShareIcon from "./icons/ShareIcon.astro";
 ---
 
 <div
-    id="edit-options"
-    class="absolute bottom-5 right-5 flex flex-col-reverse items-end gap-1">
+    id="fab-container"
+    class="absolute bottom-5 right-5 pl-5 flex flex-col-reverse items-end gap-1">
     <div
-        class="flex items-center justify-between rounded-full bg-zinc-800 p-2 max-w-max">
+        class="flex flex-wrap max-w-fit items-center justify-evenly rounded-full bg-zinc-800 p-2 gap-2">
         <FabButton name="share-button">
             <ShareIcon />
         </FabButton>
         <slot />
-        <FabButton name="edit-button">
-            <MenuIcon />
-        </FabButton>
-    </div>
-
-    <div
-        id="edit-dropdown"
-        class="hidden overflow-y-auto w-auto font-normal text-white bg-zinc-800 rounded-lg p-4 gap-2 flex flex-col">
-        <slot name="controls" />
     </div>
 </div>
 
@@ -29,7 +20,7 @@ import ShareIcon from "./icons/ShareIcon.astro";
     id="link-copied-alert"
     class="bg-transparent flex flex-col items-center justify-center fixed w-full z-50 p-3 hidden">
     <div
-        class="mx-auto leading-none h-min rounded-2xl flex items-center text-white bg-zinc-800 p-2 border-white border-2"
+        class="mx-auto leading-none h-min rounded-2xl flex items-center text-white bg-zinc-800 p-2"
         role="alert">
         <span class="font-semibold mx-2 text-left flex-auto">
             URL copied to clipboard!
@@ -45,32 +36,15 @@ import ShareIcon from "./icons/ShareIcon.astro";
 
 <script lang="js">
 window.addEventListener("load", function () {
-    const eEditDropdown = document.getElementById("edit-dropdown");
-    const eEditOtions = document.getElementById("edit-options");
+    const eContainer = document.getElementById("fab-container");
 
-    function handleCloseEditDropdown(event) {
-        let target = event.target;
-        while (target) {
-            if (target == eEditOtions) return;
-            target = target.parentNode;
-        }
+    const eDropdowns = document.querySelectorAll(
+        'div[data-group="fab-dropdown"]'
+    );
 
-        addClass(eEditDropdown, "hidden");
+    for (const elem of eDropdowns) {
+        eContainer.appendChild(elem);
     }
-
-    function handleToggleEditDropdown() {
-        if (findClassIndex(eEditDropdown, "hidden") === -1) {
-            addClass(eEditDropdown, "hidden");
-        } else {
-            removeClass(eEditDropdown, "hidden");
-        }
-    }
-
-    document
-        .querySelector('button[name="edit-button"]')
-        .addEventListener("click", handleToggleEditDropdown);
-
-    document.addEventListener("click", handleCloseEditDropdown);
 
     const eLinkAlert = document.getElementById("link-copied-alert");
 

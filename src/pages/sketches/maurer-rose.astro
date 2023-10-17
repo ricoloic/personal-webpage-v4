@@ -7,32 +7,40 @@ import Canvas from "../../components/Canvas.astro";
 import Controls from "../../components/Controls.astro";
 import FabButton from "../../components/FabButton.astro";
 import Range from "../../components/inputs/Range.astro";
+import FabDropdown from "../../components/FabDropdown.astro";
+import MenuIcon from "../../components/icons/MenuIcon.astro";
 ---
 
 <Layout title="Maurer Rose">
     <Canvas id="maurer-rose-canvas">
         <Fab slot="edit">
-            <Controls slot="controls">
-                <Checkbox id="log-framerate-checkbox" title="Log Framerate" />
-                <Checkbox
-                    id="color-highlight-checkbox"
-                    title="Color Highlight"
-                />
-                <Range
-                    id="degrees-range"
-                    title="Degrees"
-                    min={3}
-                    max={50}
-                    step={1}
-                />
-                <Range
-                    id="petal-amount-range"
-                    title="Petal Amount"
-                    min={3}
-                    max={50}
-                    step={1}
-                />
-            </Controls>
+            <FabDropdown id="edit">
+                <MenuIcon slot="button" />
+                <Controls slot="dropdown">
+                    <Checkbox
+                        id="log-framerate-checkbox"
+                        title="Log Framerate"
+                    />
+                    <Checkbox
+                        id="color-highlight-checkbox"
+                        title="Color Highlight"
+                    />
+                    <Range
+                        id="degrees-range"
+                        title="Degrees"
+                        min={3}
+                        max={50}
+                        step={1}
+                    />
+                    <Range
+                        id="petal-amount-range"
+                        title="Petal Amount"
+                        min={3}
+                        max={50}
+                        step={1}
+                    />
+                </Controls>
+            </FabDropdown>
         </Fab>
     </Canvas>
 

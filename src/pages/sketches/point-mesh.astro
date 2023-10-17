@@ -2,16 +2,56 @@
 import Canvas from "../../components/Canvas.astro";
 import Controls from "../../components/Controls.astro";
 import Fab from "../../components/Fab.astro";
+import FabDropdown from "../../components/FabDropdown.astro";
+import MenuIcon from "../../components/icons/MenuIcon.astro";
 import Checkbox from "../../components/inputs/Checkbox.astro";
+import Range from "../../components/inputs/Range.astro";
 import Layout from "../../layouts/Layout.astro";
+import ColorButton from "../../components/ColorButton.astro";
 ---
 
 <Layout title="Point Mesh">
     <Canvas id="point-mesh-canvas">
         <Fab slot="edit">
-            <Controls slot="controls">
-                <Checkbox id="log-framerate-checkbox" title="Log Framerate" />
-            </Controls>
+            <FabDropdown id="color">
+                <div slot="button" id="color-pill" class="rounded-full"></div>
+
+                <div
+                    slot="dropdown"
+                    class="flex gap-2 max-w-full flex-wrap justify-between">
+                    <ColorButton name="red" color="#ff0000" />
+                    <ColorButton name="green" color="#00ff00" />
+                    <ColorButton name="yellow" color="#ffff00" />
+                    <ColorButton name="cyan" color="#00ffff" />
+                    <ColorButton name="magenta" color="#ff00ff" />
+                    <ColorButton name="lightcoral" color="#f08080" />
+                    <ColorButton name="greenyellow" color="#adff2f" />
+                    <ColorButton name="white" color="#ffffff" />
+                </div>
+            </FabDropdown>
+            <FabDropdown id="edit">
+                <MenuIcon slot="button" />
+                <Controls slot="dropdown">
+                    <Checkbox
+                        id="log-framerate-checkbox"
+                        title="Log Framerate"
+                    />
+                    <Range
+                        id="point-amount-range"
+                        title="Point Amount"
+                        min={10}
+                        max={500}
+                        step={10}
+                    />
+                    <Range
+                        id="connection-distance-range"
+                        title="Connection Distance"
+                        min={20}
+                        max={300}
+                        step={10}
+                    />
+                </Controls>
+            </FabDropdown>
         </Fab>
     </Canvas>
 
@@ -24,163 +64,240 @@ import Layout from "../../layouts/Layout.astro";
     <script is:inline src="/js/utils/url.js"></script>
     <script is:inline src="/js/classes/vector.js"></script>
     <script is:inline src="/js/classes/quadtree.js"></script>
+    <script is:inline src="/js/config/use-colors.js"></script>
     <!-- ENDSECTION: STATIC_IMPORTS -->
 
     <script is:inline>
-        const config = {
-            logFramerate: true,
-        };
-        prefillConfig(config);
-        setParamConfig(config);
-
-        const eLogFramerateCheckbox = document.getElementById(
-            "log-framerate-checkbox"
-        );
-        const eFramerate = document.getElementById("framerate");
-
-        if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
-        eLogFramerateCheckbox.addEventListener("change", function () {
-            config.logFramerate = !config.logFramerate;
+        window.addEventListener("load", function () {
+            const config = {
+                pointAmount: 300,
+                connectionDistance: 95,
+                color: "#ffffff",
+                logFramerate: true,
+            };
+            prefillConfig(config);
             setParamConfig(config);
-            if (!config.logFramerate) eFramerate.textContent = "";
-        });
 
-        class Point {
-            constructor(initialPosition) {
-                this.position = initialPosition;
-                this.velocity = Vector.create(random(-1, 1), random(-1, 1)).mag(
-                    0.4
-                );
+            const pColor = useColors(config);
+
+            const eLogFramerateCheckbox = document.getElementById(
+                "log-framerate-checkbox"
+            );
+            const eFramerate = document.getElementById("framerate");
+            const ePointAmountRange =
+                document.getElementById("point-amount-range");
+            const ePointAmountLabel = document.querySelector(
+                'label[for="point-amount-range"]>span'
+            );
+            const eConnectionDistanceRange = document.getElementById(
+                "connection-distance-range"
+            );
+            const eConnectionDistanceLabel = document.querySelector(
+                'label[for="connection-distance-range"]>span'
+            );
+
+            if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
+            eLogFramerateCheckbox.addEventListener("change", function () {
+                config.logFramerate = !config.logFramerate;
+                if (!config.logFramerate) eFramerate.textContent = "";
+                setParamConfig(config);
+            });
+
+            ePointAmountRange.setAttribute("value", config.pointAmount);
+            ePointAmountLabel.textContent = config.pointAmount;
+            ePointAmountRange.addEventListener("change", function (event) {
+                config.pointAmount = parseInt(event.target.value, 10);
+                ePointAmountLabel.textContent = event.target.value;
+                setParamConfig(config);
+            });
+
+            eConnectionDistanceRange.setAttribute(
+                "value",
+                config.connectionDistance
+            );
+            eConnectionDistanceLabel.textContent = config.connectionDistance;
+            eConnectionDistanceRange.addEventListener(
+                "change",
+                function (event) {
+                    config.connectionDistance = parseInt(
+                        event.target.value,
+                        10
+                    );
+                    eConnectionDistanceLabel.textContent = event.target.value;
+                    setParamConfig(config);
+                }
+            );
+
+            class Point {
+                constructor(initialPosition) {
+                    this.position = initialPosition;
+                    this.velocity = Vector.create(
+                        random(-1, 1),
+                        random(-1, 1)
+                    ).mag(0.4);
+                }
+
+                bounce() {
+                    if (
+                        this.position.x <= 0 ||
+                        this.position.x >= eCanvas.width
+                    )
+                        this.velocity.x *= -1;
+                    if (
+                        this.position.y <= 0 ||
+                        this.position.y >= eCanvas.height
+                    )
+                        this.velocity.y *= -1;
+
+                    return this;
+                }
+
+                update() {
+                    this.position.add(this.velocity);
+                    return this;
+                }
+
+                connect(others, distance) {
+                    const connections = [];
+                    for (let i = 0; i < others.length; i++) {
+                        const space = others[i].position.dist(this.position);
+
+                        if (space <= distance && others[i] != this) {
+                            connections.push([this, others[i]]);
+                        }
+                    }
+                    return connections;
+                }
             }
 
-            bounce() {
-                if (this.position.x <= 0 || this.position.x >= eCanvas.width)
-                    this.velocity.x *= -1;
-                if (this.position.y <= 0 || this.position.y >= eCanvas.height)
-                    this.velocity.y *= -1;
+            class Mesh {
+                constructor(vertexAmount, connectDistance) {
+                    this.boundary = new Rectangle(
+                        eCanvas.width / 2,
+                        eCanvas.height / 2,
+                        eCanvas.width,
+                        eCanvas.height
+                    );
+                    this.connectDistance = connectDistance;
+                    this.vertices = [];
 
-                return this;
-            }
-
-            update() {
-                this.position.add(this.velocity);
-                return this;
-            }
-
-            connect(others, distance) {
-                const connections = [];
-                for (let i = 0; i < others.length; i++) {
-                    const space = others[i].position.dist(this.position);
-
-                    if (space <= distance && others[i] != this) {
-                        connections.push([this, others[i]]);
+                    for (let i = 0; i < vertexAmount; i++) {
+                        this.addVertext();
                     }
                 }
-                return connections;
-            }
-        }
 
-        class Mesh {
-            constructor(vextexAmount, connectDistance) {
-                this.boundary = new Rectangle(
-                    eCanvas.width / 2,
-                    eCanvas.height / 2,
-                    eCanvas.width,
-                    eCanvas.height
-                );
-                this.connectDistance = connectDistance;
-                this.vertices = [];
-
-                for (let i = 0; i < vextexAmount; i++) {
+                addVertext() {
                     const initialPosition = Vector.create(
                         random(eCanvas.width),
                         random(eCanvas.height)
                     );
                     this.vertices.push(new Point(initialPosition));
                 }
-            }
 
-            connect(ctx) {
-                const quadTree = new QuadTree(this.boundary, 4);
-                for (let i = 0; i < this.vertices.length; i++) {
-                    this.vertices[i].bounce().update();
-                    quadTree.insert(this.vertices[i]);
-                }
+                connect(ctx, vertexAmount, connectionDistance) {
+                    if (this.vertices.length > vertexAmount) {
+                        for (
+                            let i = this.vertices.length - 1;
+                            i >= vertexAmount;
+                            i--
+                        ) {
+                            this.vertices.pop();
+                        }
+                    } else if (this.vertices.length < vertexAmount) {
+                        for (
+                            let i = this.vertices.length;
+                            i < vertexAmount;
+                            i++
+                        ) {
+                            this.addVertext();
+                        }
+                    }
+                    this.connectDistance = connectionDistance;
 
-                const m = new Point(Vector.create(mouse.x, mouse.y));
-                quadTree.insert(m);
+                    const quadTree = new QuadTree(this.boundary, 4);
+                    for (let i = 0; i < this.vertices.length; i++) {
+                        this.vertices[i].bounce().update();
+                        quadTree.insert(this.vertices[i]);
+                    }
 
-                for (let i = 0; i < this.vertices.length; i++) {
-                    const range = new Rectangle(
-                        this.vertices[i].position.x,
-                        this.vertices[i].position.y,
-                        this.connectDistance,
-                        this.connectDistance
-                    );
+                    const m = new Point(Vector.create(mouse.x, mouse.y));
+                    quadTree.insert(m);
 
-                    const con = this.vertices[i].connect(
-                        quadTree.query(range),
-                        this.connectDistance
-                    );
-
-                    for (let j = 0; j < con.length; j++) {
-                        const a = con[j][0].position;
-                        const b = con[j][1].position;
-                        const alfa = map(
-                            dist(a.x, a.y, b.x, b.y),
-                            0,
+                    for (let i = 0; i < this.vertices.length; i++) {
+                        const range = new Rectangle(
+                            this.vertices[i].position.x,
+                            this.vertices[i].position.y,
                             this.connectDistance,
-                            1,
-                            0
+                            this.connectDistance
                         );
 
-                        ctx.strokeStyle = `rgba(255, 255, 255, ${alfa})`;
-                        strokeLine(ctx, a.x, a.y, b.x, b.y);
-                        ctx.stroke();
+                        const con = this.vertices[i].connect(
+                            quadTree.query(range),
+                            this.connectDistance
+                        );
+
+                        for (let j = 0; j < con.length; j++) {
+                            const a = con[j][0].position;
+                            const b = con[j][1].position;
+                            const alfa = map(
+                                dist(a.x, a.y, b.x, b.y),
+                                0,
+                                this.connectDistance,
+                                1,
+                                0
+                            );
+
+                            ctx.strokeStyle = `rgba(${pColor.r}, ${pColor.g}, ${pColor.b}, ${alfa})`;
+                            strokeLine(ctx, a.x, a.y, b.x, b.y);
+                            ctx.stroke();
+                        }
                     }
                 }
             }
-        }
 
-        const amount = 300;
-        const d = 95;
-        let mesh;
-        const eMain = document.getElementById("canvas-wrapper");
-        const eCanvas = document.getElementById("point-mesh-canvas");
-        const ctx = eCanvas.getContext("2d");
-        let halfWidth, halfHeight, halfMinimum;
-        const mouse = mousePosition(eCanvas);
+            let mesh;
+            const eMain = document.getElementById("canvas-wrapper");
+            const eCanvas = document.getElementById("point-mesh-canvas");
+            const ctx = eCanvas.getContext("2d");
+            let halfWidth, halfHeight, halfMinimum;
+            const mouse = mousePosition(eCanvas);
 
-        function initialize() {
-            eCanvas.width = eMain.offsetWidth;
-            eCanvas.height = eMain.offsetHeight;
+            function initialize() {
+                eCanvas.width = eMain.offsetWidth;
+                eCanvas.height = eMain.offsetHeight;
 
-            halfWidth = eCanvas.width / 2;
-            halfHeight = eCanvas.height / 2;
-            halfMinimum = min(halfWidth, halfHeight);
-            mesh = new Mesh(amount, d);
-            ctx.lineWidth = 1;
-        }
+                halfWidth = eCanvas.width / 2;
+                halfHeight = eCanvas.height / 2;
+                halfMinimum = min(halfWidth, halfHeight);
+                mesh = new Mesh(config.pointAmount, config.connectionDistance);
+                ctx.lineWidth = 1;
+            }
 
-        window.addEventListener("resize", initialize);
+            window.addEventListener("resize", initialize);
 
-        initialize();
+            initialize();
 
-        let framerate = 0;
-        function draw() {
-            framerate++;
+            let framerate = 0;
+            function draw() {
+                framerate++;
 
-            background(ctx, "#333333");
-            mesh.connect(ctx);
+                background(ctx, "#333333");
+                mesh.connect(
+                    ctx,
+                    config.pointAmount,
+                    config.connectionDistance
+                );
 
-            requestAnimationFrame(draw);
-        }
+                requestAnimationFrame(draw);
+            }
 
-        draw();
+            draw();
 
-        setInterval(function () {
-            if (config.logFramerate) eFramerate.textContent = `${framerate}fps`;
-            framerate = 0;
-        }, 1000);
+            setInterval(function () {
+                if (config.logFramerate)
+                    eFramerate.textContent = `${framerate}fps`;
+                framerate = 0;
+            }, 1000);
+        });
     </script>
 </Layout>

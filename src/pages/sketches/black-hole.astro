@@ -6,6 +6,8 @@ import Fab from "../../components/Fab.astro";
 import Canvas from "../../components/Canvas.astro";
 import Controls from "../../components/Controls.astro";
 import FabButton from "../../components/FabButton.astro";
+import FabDropdown from "../../components/FabDropdown.astro";
+import MenuIcon from "../../components/icons/MenuIcon.astro";
 ---
 
 <Layout title="Black Hole">
@@ -14,10 +16,16 @@ import FabButton from "../../components/FabButton.astro";
             <FabButton name="clear-button">
                 <span class="px-4">Clear</span>
             </FabButton>
-            <Controls slot="controls">
-                <Checkbox id="log-framerate-checkbox" title="Log Framerate" />
-                <Checkbox id="show-trail-checkbox" title="Show Trail" />
-            </Controls>
+            <FabDropdown id="edit">
+                <MenuIcon slot="button" />
+                <Controls slot="dropdown">
+                    <Checkbox
+                        id="log-framerate-checkbox"
+                        title="Log Framerate"
+                    />
+                    <Checkbox id="show-trail-checkbox" title="Show Trail" />
+                </Controls>
+            </FabDropdown>
         </Fab>
     </Canvas>
 

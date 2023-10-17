@@ -1,0 +1,50 @@
+---
+import FabButton from "./FabButton.astro";
+
+interface Props {
+    id: string;
+}
+
+const { id } = Astro.props;
+const buttonName = `${id}-button`;
+const dropdownId = `${id}-dropdown`;
+---
+
+<FabButton name={buttonName}>
+    <slot name="button" />
+</FabButton>
+
+<div
+    id={dropdownId}
+    data-group="fab-dropdown"
+    class="hidden overflow-y-auto w-auto font-normal text-white bg-zinc-800 rounded-lg p-4 gap-2 flex flex-col">
+    <slot name="dropdown" />
+</div>
+
+<script is:inline src="/js/utils/html.js"></script>
+
+<script lang="js" define:vars={{ buttonName, dropdownId }}>
+const eDropdown = document.getElementById(dropdownId);
+const eButton = document.querySelector(`button[name="${buttonName}"]`);
+
+function handleCloseDropdown(event) {
+    let target = event.target;
+    while (target) {
+        if (target == eDropdown || target == eButton) return;
+        target = target.parentNode;
+    }
+
+    addClass(eDropdown, "hidden");
+}
+
+function handleToggleDropdown() {
+    if (findClassIndex(eDropdown, "hidden") === -1) {
+        addClass(eDropdown, "hidden");
+    } else {
+        removeClass(eDropdown, "hidden");
+    }
+}
+
+eButton.addEventListener("click", handleToggleDropdown);
+document.addEventListener("click", handleCloseDropdown);
+</script>
