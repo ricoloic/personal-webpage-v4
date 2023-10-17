@@ -2,6 +2,7 @@
 import { Image } from "astro:assets";
 import siteIcon from "../assets/r-icon.png";
 import Link from "../components/Link.astro";
+import ShareAlert from "../components/ShareAlert.astro";
 
 interface Props {
     title: string;
@@ -188,6 +189,8 @@ const { title } = Astro.props;
                 </ul>
             </nav>
         </header>
+
+        <ShareAlert />
 
         <slot />
 

@@ -1,0 +1,36 @@
+---
+interface Option {
+    value: string;
+    label: string;
+}
+
+interface Props {
+    id: string;
+    name: string;
+    options: Option[];
+}
+
+const { id, name, options } = Astro.props;
+---
+
+<div id={id} class="flex flex-col gap-2">
+    {
+        options.map(({ value, label }, index) => {
+            const idRadio = `${id}-${index}`;
+            return (
+                <div class="flex items-center">
+                    <input
+                        id={idRadio}
+                        type="radio"
+                        value={value}
+                        name={name}
+                        class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 focus:ring-2 cursor-pointer"
+                    />
+                    <label for={idRadio} class="ml-2 cursor-pointer">
+                        {label}
+                    </label>
+                </div>
+            );
+        })
+    }
+</div>

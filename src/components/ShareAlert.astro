@@ -1,0 +1,48 @@
+<div
+    id="link-copied-alert"
+    class="bg-transparent flex flex-col items-center justify-center fixed w-full z-50 p-3 hidden">
+    <div
+        class="mx-auto leading-none h-min rounded-2xl flex items-center text-white bg-zinc-800 p-2"
+        role="alert">
+        <span class="font-semibold mx-2 text-left flex-auto">
+            URL copied to clipboard!
+        </span>
+        <button type="button" name="link-copied-alert-close-button">
+            <span class="sr-only">Close Button</span>
+            <i class="fa-regular fa-circle-xmark fa-lg"></i>
+        </button>
+    </div>
+</div>
+
+<script is:inline src="/js/utils/html.js"></script>
+
+<script lang="js" is:inline>
+const eLinkAlert = document.getElementById("link-copied-alert");
+function handleClickCloseLinkAlertButton() {
+    addClass(eLinkAlert, "hidden");
+}
+
+function initAlert() {
+    removeClass(eLinkAlert, "hidden");
+    setTimeout(handleClickCloseLinkAlertButton, 3000);
+}
+
+function copyUrl() {
+    navigator.clipboard.writeText(window.location.href).then(initAlert);
+}
+
+function handleClickShare() {
+    const data = {
+        title: document.title,
+        url: window.location.href,
+    };
+    console.log(data);
+    if (navigator.share)
+        navigator.share(data).then(initAlert).catch(copyUrl);
+    else copyUrl();
+}
+
+document
+    .querySelector('button[name="link-copied-alert-close-button"]')
+    .addEventListener("click", handleClickCloseLinkAlertButton);
+</script>
