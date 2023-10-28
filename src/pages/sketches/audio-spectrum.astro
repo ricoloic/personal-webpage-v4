@@ -167,7 +167,20 @@ const COLORS = {
                         id="log-framerate-checkbox"
                         title="Log Framerate"
                     />
-                    <Checkbox id="bluring-checkbox" title="Bluring" />
+                    <Range
+                        id="base-radius-range"
+                        title="Base Radius"
+                        min={0}
+                        max={200}
+                        step={1}
+                    />
+                    <Range
+                        id="blur-intensity-range"
+                        title="Bluring Intensity"
+                        min={0}
+                        max={2}
+                        step={0.1}
+                    />
                     <Range
                         id="scale-intensity-range"
                         title="Scaling Intensity"
@@ -248,10 +261,11 @@ const COLORS = {
         filled: false,
         palette: "pink",
         maxWave: 10,
-        bluring: true,
         shakeIntencity: 10,
         scaleIntensity: 1,
         waveDelay: 10,
+        blurIntensity: 1,
+        baseRadius: 100,
         logFramerate: true,
     };
     prefillConfig(config);
@@ -275,11 +289,14 @@ const COLORS = {
     const inputFreqPow = $("#freq-domain-range");
     const labelFreqPow = $('label[for="freq-domain-range"]>span');
     const inputFilled = $("#filled-checkbox");
-    const inputBluring = $("#bluring-checkbox");
+    const inputBlurIntencity = $("#blur-intensity-range");
+    const labelBlurIntencity = $('label[for="blur-intensity-range"]>span');
     const inputShakeIntencity = $("#shake-intensity-range");
     const labelShakeIntencity = $(
         'label[for="shake-intensity-range"]>span'
     );
+    const inputBaseRadius = $("#base-radius-range");
+    const labelBaseRadius = $('label[for="base-radius-range"]>span');
     const inputScaleIntencity = $("#scale-intensity-range");
     const labelScaleIntencity = $(
         'label[for="scale-intensity-range"]>span'
@@ -305,9 +322,19 @@ const COLORS = {
         setParamConfig(config);
     };
 
-    if (config.bluring) toggleCheckbox(inputBluring);
-    inputBluring.onchange = () => {
-        config.bluring = !config.bluring;
+    inputBaseRadius.setAttribute("value", config.baseRadius);
+    labelBaseRadius.textContent = config.baseRadius;
+    inputBaseRadius.onchange = (event) => {
+        labelBaseRadius.textContent = event.target.value;
+        config.baseRadius = parseFloat(event.target.value);
+        setParamConfig(config);
+    };
+
+    inputBlurIntencity.setAttribute("value", config.blurIntensity);
+    labelBlurIntencity.textContent = config.blurIntensity;
+    inputBlurIntencity.onchange = (event) => {
+        labelBlurIntencity.textContent = event.target.value;
+        config.blurIntensity = parseFloat(event.target.value);
         setParamConfig(config);
     };
 
@@ -744,7 +771,7 @@ const COLORS = {
                         {
                             filled: config.filled,
                             closed: true,
-                            baseRadius: 100,
+                            baseRadius: config.baseRadius,
                         }
                     );
                     j++;
@@ -753,14 +780,10 @@ const COLORS = {
                 ctx.setTransform(1, 0, 0, 1, offsetX, offsetY);
 
                 if (blurShader.uniforms.gain?.value != undefined) {
-                    if (config.bluring) {
-                        blurShader.uniforms.gain.value = Math.min(
-                            0.9,
-                            averageVolume
-                        );
-                    } else {
-                        blurShader.uniforms.gain.value = 0;
-                    }
+                    blurShader.uniforms.gain.value = Math.min(
+                        0.9,
+                        averageVolume * config.blurIntensity
+                    );
                 }
                 texture.needsUpdate = true;
                 renderer.render(scene, camera);
