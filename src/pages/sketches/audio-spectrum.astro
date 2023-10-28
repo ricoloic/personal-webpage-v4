@@ -14,6 +14,19 @@ import FabDropdown from "../../components/FabDropdown.astro";
 import ColorButton from "../../components/ColorButton.astro";
 
 const COLORS = {
+    tacha: [
+        "#3b1e0d",
+        "#683c1f",
+        "#7e4722",
+        "#b87827",
+        "#d1992f",
+        "#dab345",
+        "#dfc45f",
+        "#ebdd9c",
+        "#995a24",
+        "#f5efd0",
+        "#fcf9ee",
+    ],
     green: [
         "#062d17",
         "#15522e",
@@ -167,6 +180,10 @@ const COLORS = {
                         id="log-framerate-checkbox"
                         title="Log Framerate"
                     />
+                    <Checkbox
+                        id="reverse-colors-checkbox"
+                        title="Reverse Colors"
+                    />
                     <Range
                         id="base-radius-range"
                         title="Base Radius"
@@ -254,6 +271,7 @@ const COLORS = {
 
     <script is:inline define:vars={{ COLORS }}>
     const config = {
+        reverseColors: false,
         visualizerType: "mirroredCircle",
         minFreq: 10,
         maxFreq: 2300,
@@ -273,8 +291,14 @@ const COLORS = {
 
     let freqDomain = Math.pow(2, config.freqPow);
     let currentPalette = config.palette;
+    function reverseColors() {
+        for (const colorKey of Object.keys(COLORS))
+            COLORS[colorKey].reverse();
+    }
+    if (config.reverseColors) reverseColors();
 
     const inputLogFramerate = $("#log-framerate-checkbox");
+    const inputReverseColors = $("#reverse-colors-checkbox");
     const spanFramerate = $("#framerate");
     const divColorPill = $("#color-pill");
     const buttonTogglPlay = $('button[name="toggle"]');
@@ -319,6 +343,13 @@ const COLORS = {
     if (config.filled) toggleCheckbox(inputFilled);
     inputFilled.onchange = () => {
         config.filled = !config.filled;
+        setParamConfig(config);
+    };
+
+    if (config.reverseColors) toggleCheckbox(inputReverseColors);
+    inputReverseColors.onchange = () => {
+        config.reverseColors = !config.reverseColors;
+        reverseColors();
         setParamConfig(config);
     };
 
@@ -676,7 +707,7 @@ const COLORS = {
         };
     }
 
-    initializeAudio("/audio/Kirra.mp3");
+    initializeAudio("/audio/Hudson Lee & False Noise - Way Of Thought.mp3");
 
     inputUploadAudio.onchange = (event) => {
         if (event.target.files[0])
@@ -797,6 +828,6 @@ const COLORS = {
         framerate = 0;
     }, 1000);
 
-    draw();
+        draw();
     </script>
 </Layout>

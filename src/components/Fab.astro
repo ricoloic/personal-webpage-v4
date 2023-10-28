@@ -5,9 +5,10 @@ import ShareIcon from "./icons/ShareIcon.astro";
 
 <div
     id="fab-container"
+    style="max-height: calc(100% - 30px);"
     class="absolute bottom-5 right-5 pl-5 flex flex-col-reverse items-end gap-1">
     <div
-        class="flex flex-wrap max-w-fit items-center justify-evenly rounded-full bg-zinc-800 bg-opacity-80 p-2 gap-2">
+        class="flex flex-wrap max-w-fit max-h-full items-center justify-evenly rounded-full bg-zinc-800 bg-opacity-80 p-2 gap-2">
         <FabButton name="share-button">
             <ShareIcon />
         </FabButton>
