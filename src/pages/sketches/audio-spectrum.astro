@@ -122,7 +122,14 @@ const COLORS = {
 ---
 
 <Layout title="Audio Spectrum">
+    <script
+        slot="head-layout"
+        src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"
+    ></script>
+
     <Canvas id="audio-spectrum-canvas">
+        <div id="replace-me"></div>
+
         <Fab slot="edit">
             <FabButton name="toggle">
                 <span id="play-icon">
@@ -131,6 +138,14 @@ const COLORS = {
                 <span id="pause-icon" class="hidden">
                     <PauseIcon />
                 </span>
+            </FabButton>
+            <FabButton name="upload-audio">
+                <input
+                    type="file"
+                    class="hidden"
+                    id="input-upload-audio"
+                    accept="audio/mpeg, audio/mp4"
+                />Select Audio
             </FabButton>
             <FabDropdown id="color">
                 <div slot="button" id="color-pill" class="rounded-full"></div>
@@ -151,6 +166,21 @@ const COLORS = {
                     <Checkbox
                         id="log-framerate-checkbox"
                         title="Log Framerate"
+                    />
+                    <Checkbox id="bluring-checkbox" title="Bluring" />
+                    <Range
+                        id="scale-intensity-range"
+                        title="Scaling Intensity"
+                        min={0}
+                        max={2}
+                        step={0.25}
+                    />
+                    <Range
+                        id="shake-intensity-range"
+                        title="Shaking Intensity"
+                        min={0}
+                        max={20}
+                        step={1}
                     />
                     <Checkbox id="filled-checkbox" title="Filled" />
                     <Radio
@@ -183,6 +213,13 @@ const COLORS = {
                         step={1}
                     />
                     <Range
+                        id="wave-delay-range"
+                        title="Wave Delay"
+                        min={10}
+                        max={150}
+                        step={10}
+                    />
+                    <Range
                         id="freq-domain-range"
                         title="Frequency Domain"
                         min={6}
@@ -195,7 +232,6 @@ const COLORS = {
     </Canvas>
 
     <!-- SECTION: STATIC_IMPORTS -->
-    <script is:inline src="/js/utils/html.js"></script>
     <script is:inline src="/js/classes/vector.js"></script>
     <script is:inline src="/js/utils/core.js"></script>
     <script is:inline src="/js/utils/draw.js"></script>
@@ -204,406 +240,540 @@ const COLORS = {
     <!-- ENDSECTION: STATIC_IMPORTS -->
 
     <script is:inline define:vars={{ COLORS }}>
-        const config = {
-            visualizerType: "mirroredCircle",
-            minFreq: 10,
-            maxFreq: 1000,
-            freqPow: 11,
-            filled: false,
-            palette: "pink",
-            maxWave: 10,
-            logFramerate: true,
-        };
-        prefillConfig(config);
+    const config = {
+        visualizerType: "mirroredCircle",
+        minFreq: 10,
+        maxFreq: 2300,
+        freqPow: 11,
+        filled: false,
+        palette: "pink",
+        maxWave: 10,
+        bluring: true,
+        shakeIntencity: 10,
+        scaleIntensity: 1,
+        waveDelay: 10,
+        logFramerate: true,
+    };
+    prefillConfig(config);
+    setParamConfig(config);
+
+    let freqDomain = Math.pow(2, config.freqPow);
+    let currentPalette = config.palette;
+
+    const inputLogFramerate = $("#log-framerate-checkbox");
+    const spanFramerate = $("#framerate");
+    const divColorPill = $("#color-pill");
+    const buttonTogglPlay = $('button[name="toggle"]');
+    const spanPauseIcon = $("#pause-icon");
+    const spanPlayIcon = $("#play-icon");
+    const inputMinFreq = $("#min-freq-range");
+    const labelMinFreq = $('label[for="min-freq-range"]>span');
+    const inputMaxFreq = $("#max-freq-range");
+    const labelMaxFreq = $('label[for="max-freq-range"]>span');
+    const inputMaxWave = $("#max-wave-range");
+    const labelMaxWave = $('label[for="max-wave-range"]>span');
+    const inputFreqPow = $("#freq-domain-range");
+    const labelFreqPow = $('label[for="freq-domain-range"]>span');
+    const inputFilled = $("#filled-checkbox");
+    const inputBluring = $("#bluring-checkbox");
+    const inputShakeIntencity = $("#shake-intensity-range");
+    const labelShakeIntencity = $(
+        'label[for="shake-intensity-range"]>span'
+    );
+    const inputScaleIntencity = $("#scale-intensity-range");
+    const labelScaleIntencity = $(
+        'label[for="scale-intensity-range"]>span'
+    );
+    const inputUploadAudio = $("#input-upload-audio");
+    const inputWaveDelay = $("#wave-delay-range");
+    const labelWaveDelay = $('label[for="wave-delay-range"]>span');
+    const inputVisualizerTypes = $('input[name="visualizer-type"]');
+
+    $('button[name="upload-audio"]').onclick = () =>
+        inputUploadAudio.click();
+
+    if (config.logFramerate) toggleCheckbox(inputLogFramerate);
+    inputLogFramerate.onchange = () => {
+        config.logFramerate = !config.logFramerate;
+        if (!config.logFramerate) spanFramerate.textContent = "";
         setParamConfig(config);
+    };
 
-        let freqDomain = Math.pow(2, config.freqPow);
-        let currentPalette = config.palette;
+    if (config.filled) toggleCheckbox(inputFilled);
+    inputFilled.onchange = () => {
+        config.filled = !config.filled;
+        setParamConfig(config);
+    };
 
-        const eLogFramerateCheckbox = document.getElementById(
-            "log-framerate-checkbox"
-        );
-        const eFramerate = document.getElementById("framerate");
-        const eToggle = document.querySelector('button[name="toggle"]');
-        const iPauseIcon = document.getElementById("pause-icon");
-        const iPlayIcon = document.getElementById("play-icon");
-        const eFreqDomainDropdown = document.getElementById(
-            "freq-domain-dropdown"
-        );
-        const eFreqDomainOptions = document.querySelectorAll(
-            "#freq-domain-dropdown>option"
-        );
-        const eMinFreqRange = document.getElementById("min-freq-range");
-        const eMinFreqLabel = document.querySelector(
-            'label[for="min-freq-range"]>span'
-        );
-        const eMaxFreqRange = document.getElementById("max-freq-range");
-        const eMaxFreqLabel = document.querySelector(
-            'label[for="max-freq-range"]>span'
-        );
-        const eMaxWaveRange = document.getElementById("max-wave-range");
-        const eMaxWaveLabel = document.querySelector(
-            'label[for="max-wave-range"]>span'
-        );
-        const eFreqPowRange = document.getElementById("freq-domain-range");
-        const eFreqPowLabel = document.querySelector(
-            'label[for="freq-domain-range"]>span'
-        );
-        const eFilledCheckbox = document.getElementById("filled-checkbox");
-        const eVisualizerTypeRadios = document.querySelectorAll(
-            'input[name="visualizer-type"]'
-        );
+    if (config.bluring) toggleCheckbox(inputBluring);
+    inputBluring.onchange = () => {
+        config.bluring = !config.bluring;
+        setParamConfig(config);
+    };
 
-        if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
-        eLogFramerateCheckbox.addEventListener("change", function () {
-            config.logFramerate = !config.logFramerate;
-            setParamConfig(config);
-            if (!config.logFramerate) eFramerate.textContent = "";
-        });
+    inputScaleIntencity.setAttribute("value", config.scaleIntensity);
+    labelScaleIntencity.textContent = config.scaleIntensity;
+    inputScaleIntencity.onchange = (event) => {
+        labelScaleIntencity.textContent = event.target.value;
+        config.scaleIntensity = parseFloat(event.target.value);
+        setParamConfig(config);
+    };
 
-        if (config.filled) toggleCheckbox(eFilledCheckbox);
-        eFilledCheckbox.addEventListener("change", function () {
-            config.filled = !config.filled;
-            setParamConfig(config);
-        });
+    inputShakeIntencity.setAttribute("value", config.shakeIntencity);
+    labelShakeIntencity.textContent = config.shakeIntencity;
+    inputShakeIntencity.onchange = (event) => {
+        labelShakeIntencity.textContent = event.target.value;
+        config.shakeIntencity = parseFloat(event.target.value);
+        setParamConfig(config);
+    };
 
-        eMinFreqRange.setAttribute("value", config.minFreq);
-        eMinFreqLabel.textContent = config.minFreq;
-        eMinFreqRange.addEventListener("change", function (event) {
-            eMinFreqLabel.textContent = event.target.value;
-            config.minFreq = parseFloat(event.target.value);
-            setParamConfig(config);
-        });
-        eMaxFreqRange.setAttribute("value", config.maxFreq);
-        eMaxFreqLabel.textContent = config.maxFreq;
-        eMaxFreqRange.addEventListener("change", function (event) {
-            eMaxFreqLabel.textContent = event.target.value;
-            config.maxFreq = parseFloat(event.target.value);
-            setParamConfig(config);
-        });
-        eMaxWaveRange.setAttribute("value", config.maxWave);
-        eMaxWaveLabel.textContent = config.maxWave;
-        eMaxWaveRange.addEventListener("change", function (event) {
-            eMaxWaveLabel.textContent = event.target.value;
-            config.maxWave = parseFloat(event.target.value);
-            setParamConfig(config);
-        });
-        eFreqPowRange.setAttribute("value", config.freqPow);
-        eFreqPowLabel.textContent = freqDomain;
-        eFreqPowRange.addEventListener("change", function (event) {
-            config.freqPow = parseFloat(event.target.value);
-            freqDomain = Math.pow(2, config.freqPow);
-            eFreqPowLabel.textContent = freqDomain;
-            setParamConfig(config);
-        });
+    inputWaveDelay.setAttribute("value", config.waveDelay);
+    labelWaveDelay.textContent = config.waveDelay;
+    inputWaveDelay.onchange = (event) => {
+        labelWaveDelay.textContent = event.target.value;
+        config.waveDelay = parseFloat(event.target.value);
+        setParamConfig(config);
+    };
 
-        for (const elem of eVisualizerTypeRadios) {
-            if (elem.getAttribute("value") == config.visualizerType) {
-                toggleCheckbox(elem);
-            }
+    inputMinFreq.setAttribute("value", config.minFreq);
+    labelMinFreq.textContent = config.minFreq;
+    inputMinFreq.onchange = (event) => {
+        labelMinFreq.textContent = event.target.value;
+        config.minFreq = parseFloat(event.target.value);
+        setParamConfig(config);
+    };
+
+    inputMaxFreq.setAttribute("value", config.maxFreq);
+    labelMaxFreq.textContent = config.maxFreq;
+    inputMaxFreq.onchange = (event) => {
+        labelMaxFreq.textContent = event.target.value;
+        config.maxFreq = parseFloat(event.target.value);
+        setParamConfig(config);
+    };
+
+    inputMaxWave.setAttribute("value", config.maxWave);
+    labelMaxWave.textContent = config.maxWave;
+    inputMaxWave.onchange = (event) => {
+        labelMaxWave.textContent = event.target.value;
+        config.maxWave = parseFloat(event.target.value);
+        setParamConfig(config);
+    };
+
+    inputFreqPow.setAttribute("value", config.freqPow);
+    labelFreqPow.textContent = freqDomain;
+    inputFreqPow.onchange = (event) => {
+        config.freqPow = parseFloat(event.target.value);
+        freqDomain = Math.pow(2, config.freqPow);
+        labelFreqPow.textContent = freqDomain;
+        setParamConfig(config);
+    };
+
+    for (const elem of inputVisualizerTypes)
+        if (elem.getAttribute("value") == config.visualizerType)
+            toggleCheckbox(elem);
+    $("#visualizer-type-radio").onchange = (event) => {
+        config.visualizerType = event.target.value;
+        setParamConfig(config);
+    };
+
+    const eColorButtons = document.querySelectorAll(
+        'button[data-name="color-button"]'
+    );
+
+    divColorPill.setAttribute(
+        "style",
+        `background-color: ${COLORS[config.palette][5]};`
+    );
+    for (const elem of eColorButtons) {
+        elem.addEventListener("click", function () {
+            config.palette = elem.getAttribute("data-color-name");
+            currentPalette = config.palette;
+            divColorPill.setAttribute(
+                "style",
+                `background-color: ${COLORS[config.palette][5]};`
+            );
+            setParamConfig(config);
+        });
+    }
+
+    class Visualizer {
+        constructor(baseRadius = 100) {
+            this.incrementor = 0.001;
+            this.baseRadius = baseRadius;
         }
 
-        document
-            .getElementById("visualizer-type-radio")
-            .addEventListener("change", function (event) {
-                config.visualizerType = event.target.value;
-                setParamConfig(config);
-            });
-
-        const eColorPill = document.getElementById("color-pill");
-        const eColorButtons = document.querySelectorAll(
-            'button[data-name="color-button"]'
-        );
-
-        eColorPill.setAttribute(
-            "style",
-            `background-color: ${COLORS[config.palette][5]};`
-        );
-        for (const elem of eColorButtons) {
-            elem.addEventListener("click", function () {
-                config.palette = elem.getAttribute("data-color-name");
-                currentPalette = config.palette;
-                eColorPill.setAttribute(
-                    "style",
-                    `background-color: ${COLORS[config.palette][5]};`
-                );
-                setParamConfig(config);
-            });
-        }
-
-        class Visualizer {
-            constructor(baseRadius = 100) {
-                this.incrementor = 0.001;
-                this.baseRadius = baseRadius;
-            }
-
-            circle(
-                ctx,
-                freq,
-                {
-                    filled = false,
-                    closed = false,
-                    rMult = 1,
-                    baseRadius = this.baseRadius,
-                } = {
+        circle(
+            ctx,
+            freq,
+            {
+                filled = false,
+                closed = false,
+                rMult = 1,
+                baseRadius = this.baseRadius,
+            } = {
                     filled: false,
                     closed: false,
                     rMult: 1,
                     baseRadius: this.baseRadius,
                 }
+        ) {
+            ctx.beginPath();
+            ctx.moveTo(Math.cos(0) * freq[0], Math.sin(0) * freq[0]);
+            for (
+                let a = this.incrementor;
+                a < TWO_PI;
+                a += this.incrementor
             ) {
-                ctx.beginPath();
-                ctx.moveTo(Math.cos(0) * freq[0], Math.sin(0) * freq[0]);
-                for (
-                    let a = this.incrementor;
-                    a < TWO_PI;
-                    a += this.incrementor
-                ) {
-                    const i = Math.floor(map(a, 0, TWO_PI, 0, freq.length));
-                    const r = freq[i];
-                    const x = Math.cos(a) * (r * rMult + baseRadius);
-                    const y = Math.sin(a) * (r * rMult + baseRadius);
-                    ctx.lineTo(x, y);
-                }
-
-                if (closed) ctx.closePath();
-                if (filled) ctx.fill();
-                else ctx.stroke();
+                const i = Math.floor(map(a, 0, TWO_PI, 0, freq.length));
+                const r = freq[i];
+                const x = Math.cos(a) * (r * rMult + baseRadius);
+                const y = Math.sin(a) * (r * rMult + baseRadius);
+                ctx.lineTo(x, y);
             }
 
-            mirroredCircle(
-                ctx,
-                freq,
-                {
-                    filled = false,
-                    closed = false,
-                    rMult = 1,
-                    baseRadius = this.baseRadius,
-                } = {
+            if (closed) ctx.closePath();
+            if (filled) ctx.fill();
+            else ctx.stroke();
+        }
+
+        mirroredCircle(
+            ctx,
+            freq,
+            {
+                filled = false,
+                closed = false,
+                rMult = 1,
+                baseRadius = this.baseRadius,
+            } = {
                     filled: false,
                     closed: false,
                     rMult: 1,
                     baseRadius: this.baseRadius,
                 }
-            ) {
-                ctx.beginPath();
-                ctx.moveTo(
-                    Math.cos(0) * (freq[0] * rMult + baseRadius),
-                    Math.sin(0) * (freq[0] * rMult + baseRadius)
-                );
-                for (let a = this.incrementor; a < PI; a += this.incrementor) {
-                    const i = Math.floor(map(a, 0, PI, 0, freq.length));
-                    const r = freq[i];
-                    const x = Math.cos(a) * (r * rMult + baseRadius);
-                    const y = Math.sin(a) * (r * rMult + baseRadius);
-                    ctx.lineTo(x, y);
-                }
-                for (let a = PI; a >= 0; a -= this.incrementor) {
-                    const ar = map(a, PI, 0, PI, TWO_PI);
-                    const i = Math.floor(map(a, 0, PI, 0, freq.length));
-                    const r = freq[i];
-                    const x = Math.cos(ar) * (r * rMult + baseRadius);
-                    const y = Math.sin(ar) * (r * rMult + baseRadius);
-                    ctx.lineTo(x, y);
-                }
-
-                if (closed) ctx.closePath();
-                if (filled) ctx.fill();
-                else ctx.stroke();
+        ) {
+            ctx.beginPath();
+            ctx.moveTo(
+                Math.cos(0) * (freq[0] * rMult + baseRadius),
+                Math.sin(0) * (freq[0] * rMult + baseRadius)
+            );
+            for (let a = this.incrementor; a < PI; a += this.incrementor) {
+                const i = Math.floor(map(a, 0, PI, 0, freq.length));
+                const r = freq[i];
+                const x = Math.cos(a) * (r * rMult + baseRadius);
+                const y = Math.sin(a) * (r * rMult + baseRadius);
+                ctx.lineTo(x, y);
+            }
+            for (let a = PI; a >= 0; a -= this.incrementor) {
+                const ar = map(a, PI, 0, PI, TWO_PI);
+                const i = Math.floor(map(a, 0, PI, 0, freq.length));
+                const r = freq[i];
+                const x = Math.cos(ar) * (r * rMult + baseRadius);
+                const y = Math.sin(ar) * (r * rMult + baseRadius);
+                ctx.lineTo(x, y);
             }
 
-            points(
-                ctx,
-                freq,
-                { radius = 2, rMult = 1, baseRadius = this.baseRadius } = {
-                    radius: 2,
-                    rMult: 1,
-                    baseRadius: this.baseRadius,
-                }
-            ) {
-                for (let a = 0; a < TWO_PI; a += 0.01) {
-                    const i = Math.floor(map(a, 0, TWO_PI, 0, freq.length));
-                    const r = freq[i];
-                    const x = Math.cos(a) * (r * rMult + baseRadius);
-                    const y = Math.sin(a) * (r * rMult + baseRadius);
-                    ctx.fillRect(x, y, radius, radius);
-                }
-            }
+            if (closed) ctx.closePath();
+            if (filled) ctx.fill();
+            else ctx.stroke();
+        }
 
-            mirroredPoints(
-                ctx,
-                freq,
-                { radius = 2, rMult = 1, baseRadius = this.baseRadius } = {
-                    radius: 2,
-                    rMult: 1,
-                    baseRadius: this.baseRadius,
-                }
-            ) {
-                ctx.beginPath();
-                for (let a = 0; a < PI; a += 0.01) {
-                    const i = Math.floor(map(a, 0, PI, 0, freq.length));
-                    const r = freq[i];
-                    const x = Math.cos(a) * (r * rMult + baseRadius);
-                    const y = Math.sin(a) * (r * rMult + baseRadius);
-                    ctx.fillRect(x, y, radius, radius);
-                }
-                for (let a = PI; a >= 0; a -= 0.01) {
-                    const ar = map(a, PI, 0, PI, TWO_PI);
-                    const i = Math.floor(map(a, 0, PI, 0, freq.length));
-                    const r = freq[i];
-                    const x = Math.cos(ar) * (r * rMult + baseRadius);
-                    const y = Math.sin(ar) * (r * rMult + baseRadius);
-                    ctx.fillRect(x, y, radius, radius);
-                }
+        points(
+            ctx,
+            freq,
+            { radius = 2, rMult = 1, baseRadius = this.baseRadius } = {
+                radius: 2,
+                rMult: 1,
+                baseRadius: this.baseRadius,
+            }
+        ) {
+            for (let a = 0; a < TWO_PI; a += 0.01) {
+                const i = Math.floor(map(a, 0, TWO_PI, 0, freq.length));
+                const r = freq[i];
+                const x = Math.cos(a) * (r * rMult + baseRadius);
+                const y = Math.sin(a) * (r * rMult + baseRadius);
+                ctx.fillRect(x, y, radius, radius);
             }
         }
 
-        const eMain = document.getElementById("canvas-wrapper");
-        const eCanvas = document.getElementById("audio-spectrum-canvas");
-        const ctx = eCanvas.getContext("2d");
-        let halfWidth, halfHeight, halfMinimum;
-
-        function initialize() {
-            eCanvas.width = eMain.offsetWidth;
-            eCanvas.height = eMain.offsetHeight;
-
-            halfWidth = eCanvas.width / 2;
-            halfHeight = eCanvas.height / 2;
-            halfMinimum = min(halfWidth, halfHeight);
-            background(ctx, "#333333");
-        }
-
-        window.addEventListener("resize", initialize);
-
-        initialize();
-
-        const audioController = AudioController.create();
-        const toogleVisibility = () => {
-            if (findClassIndex(iPlayIcon, "hidden") !== -1) {
-                addClass(iPauseIcon, "hidden");
-                removeClass(iPlayIcon, "hidden");
-            } else {
-                addClass(iPlayIcon, "hidden");
-                removeClass(iPauseIcon, "hidden");
+        mirroredPoints(
+            ctx,
+            freq,
+            { radius = 2, rMult = 1, baseRadius = this.baseRadius } = {
+                radius: 2,
+                rMult: 1,
+                baseRadius: this.baseRadius,
             }
+        ) {
+            ctx.beginPath();
+            for (let a = 0; a < PI; a += 0.01) {
+                const i = Math.floor(map(a, 0, PI, 0, freq.length));
+                const r = freq[i];
+                const x = Math.cos(a) * (r * rMult + baseRadius);
+                const y = Math.sin(a) * (r * rMult + baseRadius);
+                ctx.fillRect(x, y, radius, radius);
+            }
+            for (let a = PI; a >= 0; a -= 0.01) {
+                const ar = map(a, PI, 0, PI, TWO_PI);
+                const i = Math.floor(map(a, 0, PI, 0, freq.length));
+                const r = freq[i];
+                const x = Math.cos(ar) * (r * rMult + baseRadius);
+                const y = Math.sin(ar) * (r * rMult + baseRadius);
+                ctx.fillRect(x, y, radius, radius);
+            }
+        }
+    }
+
+    const eMain = document.getElementById("canvas-wrapper");
+    const eCanvas = document.getElementById("audio-spectrum-canvas");
+    const ctx = eCanvas.getContext("2d");
+    let halfWidth,
+        halfHeight,
+        halfMinimum,
+        scene,
+        camera,
+        material,
+        texture,
+        blurShader,
+        renderer;
+
+    scene = new THREE.Scene();
+    camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    renderer = new THREE.WebGLRenderer();
+    document.getElementById("replace-me").replaceWith(renderer.domElement);
+    renderer.domElement.setAttribute(
+        "class",
+        "block absolute top-0 right-0 bottom-0 left-0"
+    );
+
+    function initialize() {
+        eCanvas.width = eMain.offsetWidth;
+        eCanvas.height = eMain.offsetHeight;
+
+        halfWidth = eCanvas.width / 2;
+        halfHeight = eCanvas.height / 2;
+        halfMinimum = min(halfWidth, halfHeight);
+        background(ctx, "#333333");
+
+        renderer.setSize(eMain.offsetWidth, eMain.offsetHeight);
+        texture = new THREE.CanvasTexture(eCanvas);
+        blurShader = {
+            uniforms: {
+                tDiffuse: { type: "t", value: texture },
+                resolution: { type: "v2", value: new THREE.Vector2() },
+                gain: { type: "f", value: 0 },
+            },
+            vertexShader: `
+                varying vec2 vUv;
+                void main() {
+                    vUv = uv;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                uniform sampler2D tDiffuse;
+                uniform vec2 resolution;
+                uniform float gain;
+                varying vec2 vUv;
+
+                void main() {
+                    vec4 sum = vec4(0.0);
+                    vec2 blurSize = gain * 1.5 / resolution;  // Scale blur size with gain
+                    int radius = int(gain * 2.);  // Scale loop radius with gain, you may want to cap this value to a maximum
+
+                    for (int i = -radius; i <= radius; i++) {
+                        for (int j = -radius; j <= radius; j++) {
+                            vec2 uv = vUv + vec2(j, i) * blurSize;
+                            sum += texture2D(tDiffuse, uv);
+                        }
+                    }
+
+                    gl_FragColor = sum / float((radius * 2 + 1) * (radius * 2 + 1));  // Adjust divisor based on total number of samples
+                }
+            `,
         };
+
+        material = new THREE.ShaderMaterial({
+            uniforms: blurShader.uniforms,
+            vertexShader: blurShader.vertexShader,
+            fragmentShader: blurShader.fragmentShader,
+        });
+
+        const geometry = new THREE.PlaneBufferGeometry(2, 2);
+        const mesh = new THREE.Mesh(geometry, material);
+        scene.add(mesh);
+        blurShader.uniforms.resolution.value.set(
+            eCanvas.width,
+            eCanvas.height
+        );
+    }
+
+    window.addEventListener("resize", initialize);
+
+    initialize();
+
+    let audioController;
+
+    const toogleVisibility = () => {
+        if (findClassIndex(spanPlayIcon, "hidden") !== -1) {
+            addClass(spanPauseIcon, "hidden");
+            removeClass(spanPlayIcon, "hidden");
+        } else {
+            addClass(spanPlayIcon, "hidden");
+            removeClass(spanPauseIcon, "hidden");
+        }
+    };
+
+    function initializeAudio(url) {
+        addClass(spanPauseIcon, "hidden");
+        removeClass(spanPlayIcon, "hidden");
+        audioController?.disconnect();
+        audioController = AudioController.create();
         audioController
-            .load("/audio/Kirra.mp3")
+            .load(url)
             .then((ac) => ac.initialize())
             .then(() => {
-                eCanvas.addEventListener("click", () => {
+                // renderer.domElement.onclick = () => {
+                //     audioController.toggle();
+                //     toogleVisibility();
+                // };
+
+                buttonTogglPlay.onclick = () => {
                     audioController.toggle();
                     toogleVisibility();
-                });
-
-                eToggle.addEventListener("click", () => {
-                    audioController.toggle();
-                    toogleVisibility();
-                });
-
-                window.addEventListener("keypress", (event) => {
-                    if (event.code == "Space") {
-                        audioController.toggle();
-                        toogleVisibility();
-                    }
-                });
+                };
             });
 
         audioController.onended = () => {
-            addClass(iPauseIcon, "hidden");
-            removeClass(iPlayIcon, "hidden");
+            addClass(spanPauseIcon, "hidden");
+            removeClass(spanPlayIcon, "hidden");
         };
+    }
 
-        const visualizer = new Visualizer(10);
+    initializeAudio("/audio/Kirra.mp3");
 
-        let framerate = 0;
+    inputUploadAudio.onchange = (event) => {
+        if (event.target.files[0])
+            initializeAudio(URL.createObjectURL(event.target.files[0]));
+    };
 
-        const frequencyOffset = 10;
-        const visualizerDelay = 10;
+    const visualizer = new Visualizer(10);
 
-        function draw() {
-            framerate++;
+    let framerate = 0;
 
-            if (audioController.initialized) {
+    const frequencyOffset = 10;
+    blurShader.uniforms.resolution.value.set(eCanvas.width, eCanvas.height);
+    function getAverageVolume(array) {
+        const values = array.reduce((sum, value) => sum + value, 0);
+        return values / array.length;
+    }
+
+    function draw() {
+        framerate++;
+
+        if (audioController.initialized) {
+            buildVisualizer(
+                COLORS[currentPalette],
+                config.waveDelay,
+                frequencyOffset
+            );
+        }
+        requestAnimationFrame(draw);
+    }
+
+    function buildVisualizer(
+        layerColors,
+        delay,
+        offsetFreq = 0,
+        frequenciesList = []
+    ) {
+        let baseDelay = delay;
+
+        if (frequenciesList.length == 0) {
+            baseDelay = 0;
+        }
+
+        setTimeout(() => {
+            const frequencies = audioController.analyzeFrequency({
+                fftSize: freqDomain,
+                minFrequency: config.minFreq,
+                maxFrequency: config.maxFreq + offsetFreq,
+            });
+
+            if (!frequencies) return;
+
+            frequenciesList.push(frequencies);
+
+            const maxIteration = Math.min(
+                layerColors.length,
+                config.maxWave
+            );
+            if (frequenciesList.length != maxIteration) {
                 buildVisualizer(
-                    COLORS[currentPalette],
-                    visualizerDelay,
-                    frequencyOffset
+                    layerColors,
+                    delay,
+                    offsetFreq,
+                    frequenciesList
                 );
-            }
+            } else {
+                background(ctx, "#333333");
+                ctx.translate(halfWidth, halfHeight);
 
-            requestAnimationFrame(draw);
-        }
+                const averageVolume =
+                    getAverageVolume(frequenciesList[0]) / 255;
+                const scalling =
+                    1 + (averageVolume / 3) * config.scaleIntensity;
+                ctx.scale(scalling, scalling);
+                const shaking = (averageVolume / 2) * config.shakeIntencity;
+                const offsetX = (Math.random() - 0.5) * shaking;
+                const offsetY = (Math.random() - 0.5) * shaking;
+                ctx.rotate(TWO_PI - PI / 2);
 
-        function buildVisualizer(
-            layerColors,
-            delay,
-            offsetFreq = 0,
-            frequenciesList = []
-        ) {
-            let baseDelay = delay;
+                const start =
+                    frequenciesList.length === layerColors.length
+                        ? 0
+                        : layerColors.length - frequenciesList.length;
 
-            if (frequenciesList.length == 0) {
-                baseDelay = 0;
-            }
+                let j = 0;
+                for (let i = start; i < layerColors.length; i++) {
+                    ctx.fillStyle = layerColors[i];
+                    ctx.strokeStyle = layerColors[i];
 
-            setTimeout(() => {
-                const frequencies = audioController.analyzeFrequency({
-                    fftSize: freqDomain,
-                    minFrequency: config.minFreq,
-                    maxFrequency: config.maxFreq + offsetFreq,
-                });
-
-                frequenciesList.push(frequencies);
-
-                const maxIteration = Math.min(
-                    layerColors.length,
-                    config.maxWave
-                );
-                if (frequenciesList.length != maxIteration) {
-                    buildVisualizer(
-                        layerColors,
-                        delay,
-                        offsetFreq,
-                        frequenciesList
+                    visualizer[config.visualizerType](
+                        ctx,
+                        frequenciesList[j],
+                        {
+                            filled: config.filled,
+                            closed: true,
+                            baseRadius: 100,
+                        }
                     );
-                } else {
-                    background(ctx, "#333333");
-                    ctx.translate(halfWidth, halfHeight);
-                    ctx.rotate(TWO_PI - PI / 2);
-
-                    const start =
-                        frequenciesList.length === layerColors.length
-                            ? 0
-                            : layerColors.length - frequenciesList.length;
-
-                    let j = 0;
-                    for (let i = start; i < layerColors.length; i++) {
-                        ctx.fillStyle = layerColors[i];
-                        ctx.strokeStyle = layerColors[i];
-
-                        visualizer[config.visualizerType](
-                            ctx,
-                            frequenciesList[j],
-                            {
-                                filled: config.filled,
-                                closed: true,
-                                baseRadius: 100,
-                            }
-                        );
-                        j++;
-                    }
-
-                    ctx.setTransform(1, 0, 0, 1, 0, 0);
+                    j++;
                 }
-            }, baseDelay);
-        }
 
-        setInterval(function () {
-            if (config.logFramerate) eFramerate.textContent = `${framerate}fps`;
-            framerate = 0;
-        }, 1000);
+                ctx.setTransform(1, 0, 0, 1, offsetX, offsetY);
 
-        draw();
+                if (blurShader.uniforms.gain?.value != undefined) {
+                    if (config.bluring) {
+                        blurShader.uniforms.gain.value = Math.min(
+                            0.9,
+                            averageVolume
+                        );
+                    } else {
+                        blurShader.uniforms.gain.value = 0;
+                    }
+                }
+                texture.needsUpdate = true;
+                renderer.render(scene, camera);
+            }
+        }, baseDelay);
+    }
+
+    setInterval(function () {
+        if (config.logFramerate)
+            spanFramerate.textContent = `${framerate}fps`;
+        framerate = 0;
+    }, 1000);
+
+    draw();
     </script>
 </Layout>

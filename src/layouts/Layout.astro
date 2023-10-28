@@ -65,6 +65,8 @@ const { title } = Astro.props;
 
         <title>{title}</title>
 
+        <slot name="head-layout" />
+
         <style is:global>
             html,
             body {
@@ -87,6 +89,7 @@ const { title } = Astro.props;
                 height: calc(100% - 0.5rem);
             }
         </style>
+        <script is:inline src="/js/utils/html.js"></script>
     </head>
 
     <body class="relative flex flex-col">
@@ -193,8 +196,6 @@ const { title } = Astro.props;
         <ShareAlert />
 
         <slot />
-
-        <script is:inline src="/js/utils/html.js"></script>
 
         <script>
             const eHomeLink = document.getElementById("home-link");

@@ -70,7 +70,6 @@ import ColorButton from "../../components/ColorButton.astro";
     </Canvas>
 
     <!-- SECTION: STATIC_IMPORTS -->
-    <script is:inline src="/js/utils/html.js"></script>
     <script is:inline src="/js/utils/draw.js"></script>
     <script is:inline src="/js/utils/core.js"></script>
     <script is:inline src="/js/utils/color.js"></script>
@@ -80,138 +79,138 @@ import ColorButton from "../../components/ColorButton.astro";
     <!-- ENDSECTION: STATIC_IMPORTS -->
 
     <script is:inline>
-        const config = {
-            amountOfPoints: 200,
-            multiplier: 2,
-            radius: 0,
-            transparency: 60,
-            lineThickness: 2,
-            color: "#ffffff",
-            logFramerate: true,
-        };
-        prefillConfig(config);
+    const config = {
+        amountOfPoints: 200,
+        multiplier: 2,
+        radius: 0,
+        transparency: 60,
+        lineThickness: 2,
+        color: "#ffffff",
+        logFramerate: true,
+    };
+    prefillConfig(config);
+    setParamConfig(config);
+
+    const eLogFramerateCheckbox = document.getElementById(
+        "log-framerate-checkbox"
+    );
+    const eFramerate = document.getElementById("framerate");
+    const ePointAmountRange = document.getElementById("point-amount-range");
+    const ePointAmountLabel = document.querySelector(
+        'label[for="point-amount-range"]>span'
+    );
+    const eMultiplierRange = document.getElementById("multiplier-range");
+    const eMultiplierLabel = document.querySelector(
+        'label[for="multiplier-range"]>span'
+    );
+    const eTransparencyRange =
+        document.getElementById("transparency-range");
+    const eTransparencyLabel = document.querySelector(
+        'label[for="transparency-range"]>span'
+    );
+    const eLineThicknessRange = document.getElementById(
+        "line-thickness-range"
+    );
+    const eLineThicknessLabel = document.querySelector(
+        'label[for="line-thickness-range"]>span'
+    );
+
+    useColors(config);
+
+    if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
+    eLogFramerateCheckbox.addEventListener("change", function () {
+        config.logFramerate = !config.logFramerate;
         setParamConfig(config);
+        if (!config.logFramerate) eFramerate.textContent = "";
+    });
 
-        const eLogFramerateCheckbox = document.getElementById(
-            "log-framerate-checkbox"
-        );
-        const eFramerate = document.getElementById("framerate");
-        const ePointAmountRange = document.getElementById("point-amount-range");
-        const ePointAmountLabel = document.querySelector(
-            'label[for="point-amount-range"]>span'
-        );
-        const eMultiplierRange = document.getElementById("multiplier-range");
-        const eMultiplierLabel = document.querySelector(
-            'label[for="multiplier-range"]>span'
-        );
-        const eTransparencyRange =
-            document.getElementById("transparency-range");
-        const eTransparencyLabel = document.querySelector(
-            'label[for="transparency-range"]>span'
-        );
-        const eLineThicknessRange = document.getElementById(
-            "line-thickness-range"
-        );
-        const eLineThicknessLabel = document.querySelector(
-            'label[for="line-thickness-range"]>span'
-        );
+    eMultiplierRange.setAttribute("value", config.multiplier);
+    eMultiplierLabel.textContent = config.multiplier;
+    eMultiplierRange.addEventListener("change", function (event) {
+        config.multiplier = parseInt(event.target.value, 10);
+        eMultiplierLabel.textContent = event.target.value;
+        setParamConfig(config);
+    });
 
-        useColors(config);
+    ePointAmountRange.setAttribute("value", config.amountOfPoints);
+    ePointAmountLabel.textContent = config.amountOfPoints;
+    ePointAmountRange.addEventListener("change", function (event) {
+        config.amountOfPoints = parseInt(event.target.value, 10);
+        ePointAmountLabel.textContent = event.target.value;
+        setParamConfig(config);
+    });
 
-        if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
-        eLogFramerateCheckbox.addEventListener("change", function () {
-            config.logFramerate = !config.logFramerate;
-            setParamConfig(config);
-            if (!config.logFramerate) eFramerate.textContent = "";
-        });
+    eTransparencyRange.setAttribute("value", config.transparency);
+    eTransparencyLabel.textContent = config.transparency;
+    eTransparencyRange.addEventListener("change", function (event) {
+        config.transparency = parseInt(event.target.value, 10);
+        eTransparencyLabel.textContent = event.target.value;
+        setParamConfig(config);
+    });
 
-        eMultiplierRange.setAttribute("value", config.multiplier);
-        eMultiplierLabel.textContent = config.multiplier;
-        eMultiplierRange.addEventListener("change", function (event) {
-            config.multiplier = parseInt(event.target.value, 10);
-            eMultiplierLabel.textContent = event.target.value;
-            setParamConfig(config);
-        });
+    eLineThicknessRange.setAttribute("value", config.lineThickness);
+    eLineThicknessLabel.textContent = config.lineThickness;
+    eLineThicknessRange.addEventListener("change", function (event) {
+        config.lineThickness = parseInt(event.target.value, 10);
+        eLineThicknessLabel.textContent = event.target.value;
+        setParamConfig(config);
+    });
 
-        ePointAmountRange.setAttribute("value", config.amountOfPoints);
-        ePointAmountLabel.textContent = config.amountOfPoints;
-        ePointAmountRange.addEventListener("change", function (event) {
-            config.amountOfPoints = parseInt(event.target.value, 10);
-            ePointAmountLabel.textContent = event.target.value;
-            setParamConfig(config);
-        });
+    const eMain = document.getElementById("canvas-wrapper");
+    const eCanvas = document.getElementById("times-table-canvas");
+    eCanvas.width = eMain.offsetWidth;
+    eCanvas.height = eMain.offsetHeight;
+    let halfWidth = eCanvas.width / 2,
+        halfHeight = eCanvas.height / 2;
+    let radius = min(halfWidth, halfHeight) - 50;
 
-        eTransparencyRange.setAttribute("value", config.transparency);
-        eTransparencyLabel.textContent = config.transparency;
-        eTransparencyRange.addEventListener("change", function (event) {
-            config.transparency = parseInt(event.target.value, 10);
-            eTransparencyLabel.textContent = event.target.value;
-            setParamConfig(config);
-        });
-
-        eLineThicknessRange.setAttribute("value", config.lineThickness);
-        eLineThicknessLabel.textContent = config.lineThickness;
-        eLineThicknessRange.addEventListener("change", function (event) {
-            config.lineThickness = parseInt(event.target.value, 10);
-            eLineThicknessLabel.textContent = event.target.value;
-            setParamConfig(config);
-        });
-
-        const eMain = document.getElementById("canvas-wrapper");
-        const eCanvas = document.getElementById("times-table-canvas");
+    window.addEventListener("resize", function () {
         eCanvas.width = eMain.offsetWidth;
         eCanvas.height = eMain.offsetHeight;
-        let halfWidth = eCanvas.width / 2,
-            halfHeight = eCanvas.height / 2;
-        let radius = min(halfWidth, halfHeight) - 50;
+        halfWidth = eCanvas.width / 2;
+        halfHeight = eCanvas.height / 2;
+        radius = min(halfWidth, halfHeight) - 50;
+    });
 
-        window.addEventListener("resize", function () {
-            eCanvas.width = eMain.offsetWidth;
-            eCanvas.height = eMain.offsetHeight;
-            halfWidth = eCanvas.width / 2;
-            halfHeight = eCanvas.height / 2;
-            radius = min(halfWidth, halfHeight) - 50;
-        });
+    const ctx = eCanvas.getContext("2d");
+    ctx.lineCap = "round";
 
-        const ctx = eCanvas.getContext("2d");
-        ctx.lineCap = "round";
+    function calculatePositionFromIteration(iteration) {
+        const angle = map(iteration, 0, config.amountOfPoints, 0, TWO_PI);
+        return Vector.create(
+            Math.cos(angle) * radius + halfWidth,
+            Math.sin(angle) * radius + halfHeight
+        );
+    }
 
-        function calculatePositionFromIteration(iteration) {
-            const angle = map(iteration, 0, config.amountOfPoints, 0, TWO_PI);
-            return Vector.create(
-                Math.cos(angle) * radius + halfWidth,
-                Math.sin(angle) * radius + halfHeight
-            );
+    let framerate = 0;
+
+    function draw() {
+        framerate++;
+
+        background(ctx, "#333333");
+
+        for (let i = 0; i < config.amountOfPoints; i++) {
+            const thint = (config.transparency / 16)
+                .toString(16)
+                .replaceAll(".", "")
+                .padStart(2, "0");
+            ctx.strokeStyle = `${config.color}${thint}`;
+            ctx.lineWidth = config.lineThickness;
+            const point1 = calculatePositionFromIteration(i);
+            const j = (i * config.multiplier) % config.amountOfPoints;
+            const point2 = calculatePositionFromIteration(j);
+
+            strokeLine(ctx, point1.x, point1.y, point2.x, point2.y);
         }
+        requestAnimationFrame(draw);
+    }
 
-        let framerate = 0;
+    setInterval(function () {
+        if (config.logFramerate) eFramerate.textContent = `${framerate}fps`;
+        framerate = 0;
+    }, 1000);
 
-        function draw() {
-            framerate++;
-
-            background(ctx, "#333333");
-
-            for (let i = 0; i < config.amountOfPoints; i++) {
-                const thint = (config.transparency / 16)
-                    .toString(16)
-                    .replaceAll(".", "")
-                    .padStart(2, "0");
-                ctx.strokeStyle = `${config.color}${thint}`;
-                ctx.lineWidth = config.lineThickness;
-                const point1 = calculatePositionFromIteration(i);
-                const j = (i * config.multiplier) % config.amountOfPoints;
-                const point2 = calculatePositionFromIteration(j);
-
-                strokeLine(ctx, point1.x, point1.y, point2.x, point2.y);
-            }
-            requestAnimationFrame(draw);
-        }
-
-        setInterval(function () {
-            if (config.logFramerate) eFramerate.textContent = `${framerate}fps`;
-            framerate = 0;
-        }, 1000);
-
-        draw();
+    draw();
     </script>
 </Layout>
