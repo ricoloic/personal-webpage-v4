@@ -330,6 +330,13 @@ class AudioController {
         return dataArray.subarray(startIndex, endIndex);
     }
 
+    disconnect() {
+        this.analyser?.disconnect();
+        this.convolver?.disconnect();
+        this.gain?.disconnect();
+        this.source?.disconnect();
+    }
+
     static create(...args) {
         try {
             return new AudioController(...args);

@@ -21,8 +21,6 @@ const dropdownId = `${id}-dropdown`;
     <slot name="dropdown" />
 </div>
 
-<script is:inline src="/js/utils/html.js"></script>
-
 <script lang="js" define:vars={{ buttonName, dropdownId }}>
 const eDropdown = document.getElementById(dropdownId);
 const eButton = document.querySelector(`button[name="${buttonName}"]`);

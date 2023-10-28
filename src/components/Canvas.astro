@@ -16,5 +16,7 @@ const { id } = Astro.props;
     <canvas id={id} class="block absolute top-0 right-0 bottom-0 left-0"
     ></canvas>
 
+    <slot />
+
     <slot name="edit" />
 </main>
