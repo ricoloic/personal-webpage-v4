@@ -9,7 +9,9 @@ import FabDropdown from "../../components/FabDropdown.astro";
 import MenuIcon from "../../components/icons/MenuIcon.astro";
 ---
 
-<Layout title="Flocking">
+<Layout
+    title="Flocking"
+    previewImage="https://rico.studio/assets/website-previews/flocking.png">
     <Canvas id="flocking-canvas">
         <Fab slot="edit">
             <FabDropdown id="edit">
@@ -71,474 +73,474 @@ import MenuIcon from "../../components/icons/MenuIcon.astro";
     <!-- ENDSECTION: STATIC_IMPORTS -->
 
     <script is:inline>
-        class Boid {
-            constructor(width, height) {
-                this.position = Vector.create(
-                    Math.floor(random(width)),
-                    Math.floor(random(height))
-                );
-                this.velocity = Vector.create(random(-1, 1), random(-1, 1)).mag(
-                    4
-                );
-                this.acceleration = Vector.create();
-                this.maxForce = 0.3;
-                this.size = 3;
-                this.doubleSize = this.size * 2;
-                this.halfSize = this.size / 2;
+    class Boid {
+        constructor(width, height) {
+            this.position = Vector.create(
+                Math.floor(random(width)),
+                Math.floor(random(height))
+            );
+            this.velocity = Vector.create(random(-1, 1), random(-1, 1)).mag(
+                4
+            );
+            this.acceleration = Vector.create();
+            this.maxForce = 0.3;
+            this.size = 3;
+            this.doubleSize = this.size * 2;
+            this.halfSize = this.size / 2;
+        }
+
+        applyForce(force) {
+            this.acceleration.add(force);
+            return this;
+        }
+
+        update(maxSpeed) {
+            this.velocity.add(this.acceleration).mag(maxSpeed);
+            this.position.add(this.velocity);
+            this.acceleration.mult(0);
+            return this;
+        }
+
+        wrap(minimum, maximum) {
+            if (this.position.x > maximum.x) {
+                this.position.x = minimum.x;
+            } else if (this.position.x < minimum.x) {
+                this.position.x = maximum.x;
             }
 
-            applyForce(force) {
-                this.acceleration.add(force);
-                return this;
+            if (this.position.y > maximum.y) {
+                this.position.y = minimum.y;
+            } else if (this.position.y < minimum.y) {
+                this.position.y = maximum.y;
             }
 
-            update(maxSpeed) {
-                this.velocity.add(this.acceleration).mag(maxSpeed);
-                this.position.add(this.velocity);
-                this.acceleration.mult(0);
-                return this;
-            }
+            return this;
+        }
 
-            wrap(minimum, maximum) {
-                if (this.position.x > maximum.x) {
-                    this.position.x = minimum.x;
-                } else if (this.position.x < minimum.x) {
-                    this.position.x = maximum.x;
-                }
+        flock(boids, forces) {
+            const steering1 = Vector.create();
+            const steering2 = Vector.create();
+            const steering3 = Vector.create();
+            let total1 = 0;
+            let total2 = 0;
+            let total3 = 0;
 
-                if (this.position.y > maximum.y) {
-                    this.position.y = minimum.y;
-                } else if (this.position.y < minimum.y) {
-                    this.position.y = maximum.y;
-                }
+            for (const other of boids) {
+                if (other !== this) {
+                    const distance = Vector.dist(
+                        other.position,
+                        this.position
+                    );
 
-                return this;
-            }
-
-            flock(boids, forces) {
-                const steering1 = Vector.create();
-                const steering2 = Vector.create();
-                const steering3 = Vector.create();
-                let total1 = 0;
-                let total2 = 0;
-                let total3 = 0;
-
-                for (const other of boids) {
-                    if (other !== this) {
-                        const distance = Vector.dist(
-                            other.position,
-                            this.position
+                    if (distance < 45) {
+                        steering1.add(other.velocity);
+                        total1 += 1;
+                    }
+                    if (distance < 30) {
+                        steering2.add(other.position);
+                        total2 += 1;
+                    }
+                    if (distance < 35) {
+                        steering3.add(
+                            Vector.sub(this.position, other.position).div(
+                                distance
+                            )
                         );
-
-                        if (distance < 45) {
-                            steering1.add(other.velocity);
-                            total1 += 1;
-                        }
-                        if (distance < 30) {
-                            steering2.add(other.position);
-                            total2 += 1;
-                        }
-                        if (distance < 35) {
-                            steering3.add(
-                                Vector.sub(this.position, other.position).div(
-                                    distance
-                                )
-                            );
-                            total3 += 1;
-                        }
+                        total3 += 1;
                     }
                 }
-
-                if (total1 > 0) {
-                    steering1
-                        .div(total1)
-                        .sub(this.velocity)
-                        .limit(this.maxForce)
-                        .mult(forces.alignmentForce);
-                }
-                if (total2 > 0) {
-                    steering2
-                        .div(total2)
-                        .sub(this.position)
-                        .sub(this.velocity)
-                        .limit(this.maxForce)
-                        .mult(forces.cohesionForce);
-                }
-                if (total3 > 0) {
-                    steering3
-                        .div(total3)
-                        .sub(this.velocity)
-                        .limit(this.maxForce)
-                        .mult(forces.separationForce);
-                }
-                this.applyForce(steering1);
-                this.applyForce(steering2);
-                this.applyForce(steering3);
-                return this;
             }
 
-            show(ctx) {
-                ctx.fillStyle = "#ffffff";
-                ctx.translate(this.position.x, this.position.y);
-                ctx.rotate(this.velocity.heading());
-                fillTriangle(
-                    ctx,
-                    0,
-                    0 + this.halfSize,
-                    0,
-                    0 - this.halfSize,
-                    0 + this.doubleSize,
-                    0
-                );
-                ctx.resetTransform();
-                return this;
+            if (total1 > 0) {
+                steering1
+                    .div(total1)
+                    .sub(this.velocity)
+                    .limit(this.maxForce)
+                    .mult(forces.alignmentForce);
             }
+            if (total2 > 0) {
+                steering2
+                    .div(total2)
+                    .sub(this.position)
+                    .sub(this.velocity)
+                    .limit(this.maxForce)
+                    .mult(forces.cohesionForce);
+            }
+            if (total3 > 0) {
+                steering3
+                    .div(total3)
+                    .sub(this.velocity)
+                    .limit(this.maxForce)
+                    .mult(forces.separationForce);
+            }
+            this.applyForce(steering1);
+            this.applyForce(steering2);
+            this.applyForce(steering3);
+            return this;
         }
 
-        class Rectangle {
-            constructor(x, y, w, h) {
-                // from center
-                this.x = x;
-                this.y = y;
-
-                // half-length
-                this.w = w;
-                this.h = h;
-            }
-
-            intersects(range) {
-                return !(
-                    range.x - range.w > this.x + this.w ||
-                    range.x + range.w < this.x - this.w ||
-                    range.y - range.h > this.y + this.h ||
-                    range.y + range.h < this.y - this.h
-                );
-            }
-
-            // check if any x, y are in the rectangle or on the exact edge
-            contains(point) {
-                return (
-                    point.x >= this.x - this.w &&
-                    point.x <= this.x + this.w &&
-                    point.y >= this.y - this.h &&
-                    point.y <= this.y + this.h
-                );
-            }
-
-            // return a new rectangle of a given region
-            subdivide(region) {
-                switch (region) {
-                    case "ne":
-                        return new Rectangle(
-                            this.x + this.w / 2,
-                            this.y - this.h / 2,
-                            this.w / 2,
-                            this.h / 2
-                        );
-                    case "nw":
-                        return new Rectangle(
-                            this.x - this.w / 2,
-                            this.y - this.h / 2,
-                            this.w / 2,
-                            this.h / 2
-                        );
-                    case "se":
-                        return new Rectangle(
-                            this.x + this.w / 2,
-                            this.y + this.h / 2,
-                            this.w / 2,
-                            this.h / 2
-                        );
-                    case "sw":
-                        return new Rectangle(
-                            this.x - this.w / 2,
-                            this.y + this.h / 2,
-                            this.w / 2,
-                            this.h / 2
-                        );
-                }
-            }
-        }
-
-        class QuadTree {
-            constructor(boundary = new Rectangle(0, 0, 0, 0), capacity = 4) {
-                // Rectangle class
-                this.boundary = boundary;
-
-                // the max number of points in a section
-                this.capacity = capacity;
-
-                // list of points in the quad
-                this.boids = [];
-
-                // if the quad as been divided into other quads
-                this.divided = false;
-
-                this.northeast = null;
-                this.northwest = null;
-                this.southeast = null;
-                this.southwest = null;
-            }
-
-            // divide the quad into 4 region like quad
-            // northeast, northwest, southeast, southwest
-            subdivide() {
-                const b = this.boundary;
-
-                this.northeast = new QuadTree(b.subdivide("ne"), this.capacity);
-                this.northwest = new QuadTree(b.subdivide("nw"), this.capacity);
-                this.southeast = new QuadTree(b.subdivide("se"), this.capacity);
-                this.southwest = new QuadTree(b.subdivide("sw"), this.capacity);
-
-                this.divided = true;
-            }
-
-            // adds a point like object to the quad
-            // or if the quad is at max capacity divide it
-            // and insert it in the corresponding region
-            // point = point.x && point.y
-            insert(boid) {
-                if (!this.boundary.contains(boid.position)) return false;
-
-                if (this.boids.length < this.capacity) {
-                    this.boids.push(boid);
-                    return true;
-                }
-                if (!this.divided) this.subdivide();
-
-                if (this.northeast?.insert(boid)) return true;
-                if (this.northwest?.insert(boid)) return true;
-                if (this.southeast?.insert(boid)) return true;
-                if (this.southwest?.insert(boid)) return true;
-            }
-
-            // query the points like object in a given range and returns them
-            query(range, found = []) {
-                if (!this.boundary.intersects(range)) return found;
-                for (let i = 0; i < this.boids.length; i += 1)
-                    if (range.contains(this.boids[i].position))
-                        found.push(this.boids[i]);
-
-                if (this.divided) {
-                    this.northeast?.query(range, found);
-                    this.northwest?.query(range, found);
-                    this.southwest?.query(range, found);
-                    this.southeast?.query(range, found);
-                }
-
-                return found;
-            }
-
-            show(ctx) {
-                ctx.lineWidth = 1;
-                ctx.strokeStyle = "#ffffff";
-                ctx.beginPath();
-                ctx.moveTo(
-                    this.boundary.x - this.boundary.w,
-                    this.boundary.y - this.boundary.h
-                );
-                ctx.lineTo(
-                    this.boundary.x + this.boundary.w,
-                    this.boundary.y - this.boundary.h
-                );
-                ctx.lineTo(
-                    this.boundary.x + this.boundary.w,
-                    this.boundary.y + this.boundary.h
-                );
-                ctx.lineTo(
-                    this.boundary.x - this.boundary.w,
-                    this.boundary.y + this.boundary.h
-                );
-                ctx.closePath();
-                ctx.stroke();
-                if (this.divided) {
-                    this.northeast?.show(ctx);
-                    this.northwest?.show(ctx);
-                    this.southeast?.show(ctx);
-                    this.southwest?.show(ctx);
-                }
-            }
-        }
-
-        const config = {
-            logFramerate: true,
-            maxBoidSpeed: 3,
-            alignmentForce: 0.5,
-            cohesionForce: 0.2,
-            separationForce: 3,
-            displayQuadTree: false,
-            boidAmount: 250,
-        };
-        prefillConfig(config);
-        setParamConfig(config);
-
-        const eLogFramerateCheckbox = document.getElementById(
-            "log-framerate-checkbox"
-        );
-        const eFramerate = document.getElementById("framerate");
-        const eDisplayQuadtreeCheckbox = document.getElementById(
-            "display-quadtree-checkbox"
-        );
-        const eMaxBoidSpeedRange = document.getElementById(
-            "max-boid-speed-range"
-        );
-        const eMaxBoidSpeedLabel = document.querySelector(
-            'label[for="max-boid-speed-range"]>span'
-        );
-        const eCohesionForceRange = document.getElementById(
-            "cohesion-force-range"
-        );
-        const eCohesionForceLabel = document.querySelector(
-            'label[for="cohesion-force-range"]>span'
-        );
-        const eAlignmentForceRange = document.getElementById(
-            "alignment-force-range"
-        );
-        const eAlignmentForceLabel = document.querySelector(
-            'label[for="alignment-force-range"]>span'
-        );
-        const eSeparationForceRange = document.getElementById(
-            "separation-force-range"
-        );
-        const eSeparationForceLabel = document.querySelector(
-            'label[for="separation-force-range"]>span'
-        );
-        const eBoidAmountRange = document.getElementById("boid-amount-range");
-        const eBoidAmountLabel = document.querySelector(
-            'label[for="boid-amount-range"]>span'
-        );
-
-        if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
-        eLogFramerateCheckbox.addEventListener("change", function () {
-            config.logFramerate = !config.logFramerate;
-            setParamConfig(config);
-            if (!config.logFramerate) eFramerate.textContent = "";
-        });
-
-        if (config.displayQuadTree) toggleCheckbox(eDisplayQuadtreeCheckbox);
-        eDisplayQuadtreeCheckbox.addEventListener("change", function () {
-            config.displayQuadTree = !config.displayQuadTree;
-            setParamConfig(config);
-        });
-
-        eMaxBoidSpeedRange.setAttribute("value", config.maxBoidSpeed);
-        eMaxBoidSpeedLabel.textContent = config.maxBoidSpeed;
-        eMaxBoidSpeedRange.addEventListener("change", function (event) {
-            eMaxBoidSpeedLabel.textContent = event.target.value;
-            config.maxBoidSpeed = parseFloat(event.target.value);
-            setParamConfig(config);
-        });
-
-        eBoidAmountRange.setAttribute("value", config.boidAmount);
-        eBoidAmountLabel.textContent = config.boidAmount;
-        eBoidAmountRange.addEventListener("change", function (event) {
-            eBoidAmountLabel.textContent = event.target.value;
-            config.boidAmount = parseFloat(event.target.value);
-            setParamConfig(config);
-        });
-
-        eSeparationForceRange.setAttribute("value", config.separationForce);
-        eSeparationForceLabel.textContent = config.separationForce;
-        eSeparationForceRange.addEventListener("change", function (event) {
-            eSeparationForceLabel.textContent = event.target.value;
-            config.separationForce = parseFloat(event.target.value);
-            setParamConfig(config);
-        });
-
-        eCohesionForceRange.setAttribute("value", config.cohesionForce);
-        eCohesionForceLabel.textContent = config.cohesionForce;
-        eCohesionForceRange.addEventListener("change", function (event) {
-            eCohesionForceLabel.textContent = event.target.value;
-            config.cohesionForce = parseFloat(event.target.value);
-            setParamConfig(config);
-        });
-
-        eAlignmentForceRange.setAttribute("value", config.alignmentForce);
-        eAlignmentForceLabel.textContent = config.alignmentForce;
-        eAlignmentForceRange.addEventListener("change", function (event) {
-            eAlignmentForceLabel.textContent = event.target.value;
-            config.alignmentForce = parseFloat(event.target.value);
-            setParamConfig(config);
-        });
-
-        const eMain = document.getElementById("canvas-wrapper");
-        const eCanvas = document.getElementById("flocking-canvas");
-
-        const maximumSize = Vector.create();
-        const minimumSize = Vector.create();
-        const ctx = eCanvas.getContext("2d");
-
-        const boids = [];
-        let boundary = new Rectangle(0, 0, 0, 0);
-
-        function initialize() {
-            eCanvas.width = eMain.offsetWidth;
-            eCanvas.height = eMain.offsetHeight;
-            boundary = new Rectangle(
-                eCanvas.width / 2,
-                eCanvas.height / 2,
-                eCanvas.width,
-                eCanvas.height
-            );
-            maximumSize.set(eCanvas.width, eCanvas.height);
+        show(ctx) {
             ctx.fillStyle = "#ffffff";
+            ctx.translate(this.position.x, this.position.y);
+            ctx.rotate(this.velocity.heading());
+            fillTriangle(
+                ctx,
+                0,
+                0 + this.halfSize,
+                0,
+                0 - this.halfSize,
+                0 + this.doubleSize,
+                0
+            );
+            ctx.resetTransform();
+            return this;
+        }
+    }
+
+    class Rectangle {
+        constructor(x, y, w, h) {
+            // from center
+            this.x = x;
+            this.y = y;
+
+            // half-length
+            this.w = w;
+            this.h = h;
         }
 
-        window.addEventListener("resize", initialize);
-
-        initialize();
-
-        for (let i = 0; i < config.boidAmount; i += 1)
-            boids.push(new Boid(eCanvas.width, eCanvas.height));
-
-        let framerate = 0;
-        function draw() {
-            framerate++;
-
-            background(ctx, "#333333");
-
-            if (config.boidAmount > boids.length) {
-                boids.push(new Boid());
-            } else if (config.boidAmount < boids.length) {
-                boids.splice(0, 1);
-            }
-
-            const quadTree = new QuadTree(boundary, 4);
-
-            for (let i = 0; i < boids.length; i++) {
-                quadTree.insert(boids[i]);
-            }
-
-            if (config.displayQuadTree) quadTree.show(ctx);
-
-            for (let i = 0; i < boids.length; i++) {
-                const range = new Rectangle(
-                    boids[i].position.x,
-                    boids[i].position.y,
-                    50,
-                    50
-                );
-
-                const forces = {
-                    alignmentForce: config.alignmentForce,
-                    cohesionForce: config.cohesionForce,
-                    separationForce: config.separationForce,
-                };
-
-                boids[i]
-                    .flock(quadTree.query(range), forces)
-                    .wrap(minimumSize, maximumSize)
-                    .update(config.maxBoidSpeed)
-                    .show(ctx);
-            }
-            requestAnimationFrame(draw);
+        intersects(range) {
+            return !(
+                range.x - range.w > this.x + this.w ||
+                range.x + range.w < this.x - this.w ||
+                range.y - range.h > this.y + this.h ||
+                range.y + range.h < this.y - this.h
+            );
         }
 
-        setInterval(function () {
-            if (config.logFramerate) eFramerate.textContent = `${framerate}fps`;
-            framerate = 0;
-        }, 1000);
+        // check if any x, y are in the rectangle or on the exact edge
+        contains(point) {
+            return (
+                point.x >= this.x - this.w &&
+                point.x <= this.x + this.w &&
+                point.y >= this.y - this.h &&
+                point.y <= this.y + this.h
+            );
+        }
 
-        draw();
+        // return a new rectangle of a given region
+        subdivide(region) {
+            switch (region) {
+                case "ne":
+                    return new Rectangle(
+                        this.x + this.w / 2,
+                        this.y - this.h / 2,
+                        this.w / 2,
+                        this.h / 2
+                    );
+                case "nw":
+                    return new Rectangle(
+                        this.x - this.w / 2,
+                        this.y - this.h / 2,
+                        this.w / 2,
+                        this.h / 2
+                    );
+                case "se":
+                    return new Rectangle(
+                        this.x + this.w / 2,
+                        this.y + this.h / 2,
+                        this.w / 2,
+                        this.h / 2
+                    );
+                case "sw":
+                    return new Rectangle(
+                        this.x - this.w / 2,
+                        this.y + this.h / 2,
+                        this.w / 2,
+                        this.h / 2
+                    );
+            }
+        }
+    }
+
+    class QuadTree {
+        constructor(boundary = new Rectangle(0, 0, 0, 0), capacity = 4) {
+            // Rectangle class
+            this.boundary = boundary;
+
+            // the max number of points in a section
+            this.capacity = capacity;
+
+            // list of points in the quad
+            this.boids = [];
+
+            // if the quad as been divided into other quads
+            this.divided = false;
+
+            this.northeast = null;
+            this.northwest = null;
+            this.southeast = null;
+            this.southwest = null;
+        }
+
+        // divide the quad into 4 region like quad
+        // northeast, northwest, southeast, southwest
+        subdivide() {
+            const b = this.boundary;
+
+            this.northeast = new QuadTree(b.subdivide("ne"), this.capacity);
+            this.northwest = new QuadTree(b.subdivide("nw"), this.capacity);
+            this.southeast = new QuadTree(b.subdivide("se"), this.capacity);
+            this.southwest = new QuadTree(b.subdivide("sw"), this.capacity);
+
+            this.divided = true;
+        }
+
+        // adds a point like object to the quad
+        // or if the quad is at max capacity divide it
+        // and insert it in the corresponding region
+        // point = point.x && point.y
+        insert(boid) {
+            if (!this.boundary.contains(boid.position)) return false;
+
+            if (this.boids.length < this.capacity) {
+                this.boids.push(boid);
+                return true;
+            }
+            if (!this.divided) this.subdivide();
+
+            if (this.northeast?.insert(boid)) return true;
+            if (this.northwest?.insert(boid)) return true;
+            if (this.southeast?.insert(boid)) return true;
+            if (this.southwest?.insert(boid)) return true;
+        }
+
+        // query the points like object in a given range and returns them
+        query(range, found = []) {
+            if (!this.boundary.intersects(range)) return found;
+            for (let i = 0; i < this.boids.length; i += 1)
+                if (range.contains(this.boids[i].position))
+                    found.push(this.boids[i]);
+
+            if (this.divided) {
+                this.northeast?.query(range, found);
+                this.northwest?.query(range, found);
+                this.southwest?.query(range, found);
+                this.southeast?.query(range, found);
+            }
+
+            return found;
+        }
+
+        show(ctx) {
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = "#ffffff";
+            ctx.beginPath();
+            ctx.moveTo(
+                this.boundary.x - this.boundary.w,
+                this.boundary.y - this.boundary.h
+            );
+            ctx.lineTo(
+                this.boundary.x + this.boundary.w,
+                this.boundary.y - this.boundary.h
+            );
+            ctx.lineTo(
+                this.boundary.x + this.boundary.w,
+                this.boundary.y + this.boundary.h
+            );
+            ctx.lineTo(
+                this.boundary.x - this.boundary.w,
+                this.boundary.y + this.boundary.h
+            );
+            ctx.closePath();
+            ctx.stroke();
+            if (this.divided) {
+                this.northeast?.show(ctx);
+                this.northwest?.show(ctx);
+                this.southeast?.show(ctx);
+                this.southwest?.show(ctx);
+            }
+        }
+    }
+
+    const config = {
+        logFramerate: true,
+        maxBoidSpeed: 3,
+        alignmentForce: 0.5,
+        cohesionForce: 0.2,
+        separationForce: 3,
+        displayQuadTree: false,
+        boidAmount: 250,
+    };
+    prefillConfig(config);
+    setParamConfig(config);
+
+    const eLogFramerateCheckbox = document.getElementById(
+        "log-framerate-checkbox"
+    );
+    const eFramerate = document.getElementById("framerate");
+    const eDisplayQuadtreeCheckbox = document.getElementById(
+        "display-quadtree-checkbox"
+    );
+    const eMaxBoidSpeedRange = document.getElementById(
+        "max-boid-speed-range"
+    );
+    const eMaxBoidSpeedLabel = document.querySelector(
+        'label[for="max-boid-speed-range"]>span'
+    );
+    const eCohesionForceRange = document.getElementById(
+        "cohesion-force-range"
+    );
+    const eCohesionForceLabel = document.querySelector(
+        'label[for="cohesion-force-range"]>span'
+    );
+    const eAlignmentForceRange = document.getElementById(
+        "alignment-force-range"
+    );
+    const eAlignmentForceLabel = document.querySelector(
+        'label[for="alignment-force-range"]>span'
+    );
+    const eSeparationForceRange = document.getElementById(
+        "separation-force-range"
+    );
+    const eSeparationForceLabel = document.querySelector(
+        'label[for="separation-force-range"]>span'
+    );
+    const eBoidAmountRange = document.getElementById("boid-amount-range");
+    const eBoidAmountLabel = document.querySelector(
+        'label[for="boid-amount-range"]>span'
+    );
+
+    if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
+    eLogFramerateCheckbox.addEventListener("change", function () {
+        config.logFramerate = !config.logFramerate;
+        setParamConfig(config);
+        if (!config.logFramerate) eFramerate.textContent = "";
+    });
+
+    if (config.displayQuadTree) toggleCheckbox(eDisplayQuadtreeCheckbox);
+    eDisplayQuadtreeCheckbox.addEventListener("change", function () {
+        config.displayQuadTree = !config.displayQuadTree;
+        setParamConfig(config);
+    });
+
+    eMaxBoidSpeedRange.setAttribute("value", config.maxBoidSpeed);
+    eMaxBoidSpeedLabel.textContent = config.maxBoidSpeed;
+    eMaxBoidSpeedRange.addEventListener("change", function (event) {
+        eMaxBoidSpeedLabel.textContent = event.target.value;
+        config.maxBoidSpeed = parseFloat(event.target.value);
+        setParamConfig(config);
+    });
+
+    eBoidAmountRange.setAttribute("value", config.boidAmount);
+    eBoidAmountLabel.textContent = config.boidAmount;
+    eBoidAmountRange.addEventListener("change", function (event) {
+        eBoidAmountLabel.textContent = event.target.value;
+        config.boidAmount = parseFloat(event.target.value);
+        setParamConfig(config);
+    });
+
+    eSeparationForceRange.setAttribute("value", config.separationForce);
+    eSeparationForceLabel.textContent = config.separationForce;
+    eSeparationForceRange.addEventListener("change", function (event) {
+        eSeparationForceLabel.textContent = event.target.value;
+        config.separationForce = parseFloat(event.target.value);
+        setParamConfig(config);
+    });
+
+    eCohesionForceRange.setAttribute("value", config.cohesionForce);
+    eCohesionForceLabel.textContent = config.cohesionForce;
+    eCohesionForceRange.addEventListener("change", function (event) {
+        eCohesionForceLabel.textContent = event.target.value;
+        config.cohesionForce = parseFloat(event.target.value);
+        setParamConfig(config);
+    });
+
+    eAlignmentForceRange.setAttribute("value", config.alignmentForce);
+    eAlignmentForceLabel.textContent = config.alignmentForce;
+    eAlignmentForceRange.addEventListener("change", function (event) {
+        eAlignmentForceLabel.textContent = event.target.value;
+        config.alignmentForce = parseFloat(event.target.value);
+        setParamConfig(config);
+    });
+
+    const eMain = document.getElementById("canvas-wrapper");
+    const eCanvas = document.getElementById("flocking-canvas");
+
+    const maximumSize = Vector.create();
+    const minimumSize = Vector.create();
+    const ctx = eCanvas.getContext("2d");
+
+    const boids = [];
+    let boundary = new Rectangle(0, 0, 0, 0);
+
+    function initialize() {
+        eCanvas.width = eMain.offsetWidth;
+        eCanvas.height = eMain.offsetHeight;
+        boundary = new Rectangle(
+            eCanvas.width / 2,
+            eCanvas.height / 2,
+            eCanvas.width,
+            eCanvas.height
+        );
+        maximumSize.set(eCanvas.width, eCanvas.height);
+        ctx.fillStyle = "#ffffff";
+    }
+
+    window.addEventListener("resize", initialize);
+
+    initialize();
+
+    for (let i = 0; i < config.boidAmount; i += 1)
+        boids.push(new Boid(eCanvas.width, eCanvas.height));
+
+    let framerate = 0;
+    function draw() {
+        framerate++;
+
+        background(ctx, "#333333");
+
+        if (config.boidAmount > boids.length) {
+            boids.push(new Boid());
+        } else if (config.boidAmount < boids.length) {
+            boids.splice(0, 1);
+        }
+
+        const quadTree = new QuadTree(boundary, 4);
+
+        for (let i = 0; i < boids.length; i++) {
+            quadTree.insert(boids[i]);
+        }
+
+        if (config.displayQuadTree) quadTree.show(ctx);
+
+        for (let i = 0; i < boids.length; i++) {
+            const range = new Rectangle(
+                boids[i].position.x,
+                boids[i].position.y,
+                50,
+                50
+            );
+
+            const forces = {
+                alignmentForce: config.alignmentForce,
+                cohesionForce: config.cohesionForce,
+                separationForce: config.separationForce,
+            };
+
+            boids[i]
+                .flock(quadTree.query(range), forces)
+                .wrap(minimumSize, maximumSize)
+                .update(config.maxBoidSpeed)
+                .show(ctx);
+        }
+        requestAnimationFrame(draw);
+    }
+
+    setInterval(function () {
+        if (config.logFramerate) eFramerate.textContent = `${framerate}fps`;
+        framerate = 0;
+    }, 1000);
+
+    draw();
     </script>
 </Layout>

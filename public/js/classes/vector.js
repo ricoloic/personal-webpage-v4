@@ -75,6 +75,15 @@ class Vector {
         return vec.copy().sub(this).magnitute();
     }
 
+    lerp(target, amount) {
+        amount = Math.max(0, Math.min(1, amount));
+
+        this.x = this.x + (target.x - this.x) * amount;
+        this.y = this.y + (target.y - this.y) * amount;
+
+        return this;
+    }
+
     static create(...args) {
         return new Vector(...args);
     }

@@ -10,7 +10,9 @@ import FabDropdown from "../../components/FabDropdown.astro";
 import MenuIcon from "../../components/icons/MenuIcon.astro";
 ---
 
-<Layout title="Black Hole">
+<Layout
+    title="Black Hole"
+    previewImage="https://rico.studio/assets/website-previews/black-hole.png">
     <Canvas id="black-hole-canvas">
         <Fab slot="edit">
             <FabButton name="clear-button">
@@ -37,156 +39,156 @@ import MenuIcon from "../../components/icons/MenuIcon.astro";
     <!-- ENDSECTION: STATIC_IMPORTS -->
 
     <script is:inline>
-        const config = {
-            logFramerate: true,
-            trailLife: 25,
-            showTrail: true,
-        };
-        prefillConfig(config);
+    const config = {
+        logFramerate: true,
+        trailLife: 25,
+        showTrail: true,
+    };
+    prefillConfig(config);
+    setParamConfig(config);
+
+    const eLogFramerateCheckbox = document.getElementById(
+        "log-framerate-checkbox"
+    );
+    const eFramerate = document.getElementById("framerate");
+    const eShowTrailCheckbox = document.getElementById(
+        "show-trail-checkbox"
+    );
+
+    if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
+    eLogFramerateCheckbox.addEventListener("change", function () {
+        config.logFramerate = !config.logFramerate;
         setParamConfig(config);
+        if (!config.logFramerate) eFramerate.textContent = "";
+    });
 
-        const eLogFramerateCheckbox = document.getElementById(
-            "log-framerate-checkbox"
-        );
-        const eFramerate = document.getElementById("framerate");
-        const eShowTrailCheckbox = document.getElementById(
-            "show-trail-checkbox"
-        );
+    if (config.showTrail) toggleCheckbox(eShowTrailCheckbox);
+    eShowTrailCheckbox.addEventListener("change", function () {
+        config.showTrail = !config.showTrail;
+        setParamConfig(config);
+    });
 
-        if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
-        eLogFramerateCheckbox.addEventListener("change", function () {
-            config.logFramerate = !config.logFramerate;
-            setParamConfig(config);
-            if (!config.logFramerate) eFramerate.textContent = "";
+    document
+        .querySelector('button[name="clear-button"]')
+        .addEventListener("click", function () {
+            particles.splice(0, particles.length);
         });
 
-        if (config.showTrail) toggleCheckbox(eShowTrailCheckbox);
-        eShowTrailCheckbox.addEventListener("change", function () {
-            config.showTrail = !config.showTrail;
-            setParamConfig(config);
-        });
-
-        document
-            .querySelector('button[name="clear-button"]')
-            .addEventListener("click", function () {
-                particles.splice(0, particles.length);
-            });
-
-        class Particle {
-            constructor(
-                position = Vector.create(),
-                radius = 5,
-                velocity = Vector.create(0, 1)
-            ) {
-                this.position = position;
-                this.velocity = velocity.mag(3);
-                this.acceleration = Vector.create();
-                this.radius = radius;
-                this.trail = [];
-            }
-
-            applyForce(force) {
-                this.acceleration.add(force);
-                return this;
-            }
-
-            update() {
-                this.velocity.add(this.acceleration);
-                this.position.add(this.velocity);
-                this.acceleration.mult(0);
-                return this;
-            }
-
-            show(ctx) {
-                fillCircle(ctx, this.position.x, this.position.y, this.radius);
-                return this;
-            }
-
-            showTrail(ctx, trailLength = 300) {
-                if (this.trail.length > trailLength) this.trail.splice(0, 1);
-                this.trail.push(this.position.copy());
-
-                if (this.trail.length === 0) return this;
-                ctx.beginPath();
-                ctx.moveTo(this.trail[0].x, this.trail[0].y);
-                for (let i = 1; i < this.trail.length; i++)
-                    ctx.lineTo(this.trail[i].x, this.trail[i].y);
-                ctx.stroke();
-                return this;
-            }
+    class Particle {
+        constructor(
+            position = Vector.create(),
+            radius = 5,
+            velocity = Vector.create(0, 1)
+        ) {
+            this.position = position;
+            this.velocity = velocity.mag(3);
+            this.acceleration = Vector.create();
+            this.radius = radius;
+            this.trail = [];
         }
 
-        const eMain = document.getElementById("canvas-wrapper");
-        const eCanvas = document.getElementById("black-hole-canvas");
-        const ctx = eCanvas.getContext("2d");
-
-        const particles = [];
-        const blackHole = Vector.create();
-        let halfWidth, halfHeight, halfMinimum;
-
-        function initialize() {
-            eCanvas.width = eMain.offsetWidth;
-            eCanvas.height = eMain.offsetHeight;
-
-            halfWidth = eCanvas.width / 2;
-            halfHeight = eCanvas.height / 2;
-            halfMinimum = min(halfWidth, halfHeight);
-
-            blackHole.set(halfWidth, halfHeight);
+        applyForce(force) {
+            this.acceleration.add(force);
+            return this;
         }
 
-        window.addEventListener("resize", initialize);
-
-        initialize();
-
-        for (let i = 0; i <= 5; i += 1) {
-            const a = map(i, 0, 5, 0, TWO_PI);
-            const x = Math.cos(a) * halfMinimum + halfWidth;
-            const y = Math.sin(a) * halfMinimum + halfHeight;
-            particles.push(new Particle(Vector.create(x, y), 10));
+        update() {
+            this.velocity.add(this.acceleration);
+            this.position.add(this.velocity);
+            this.acceleration.mult(0);
+            return this;
         }
 
-        eCanvas.addEventListener("click", function (event) {
-            const rect = eCanvas.getBoundingClientRect();
-            particles.push(
-                new Particle(
-                    Vector.create(
-                        event.clientX - rect.left,
-                        event.clientY - rect.top
-                    ),
-                    10
-                )
+        show(ctx) {
+            fillCircle(ctx, this.position.x, this.position.y, this.radius);
+            return this;
+        }
+
+        showTrail(ctx, trailLength = 300) {
+            if (this.trail.length > trailLength) this.trail.splice(0, 1);
+            this.trail.push(this.position.copy());
+
+            if (this.trail.length === 0) return this;
+            ctx.beginPath();
+            ctx.moveTo(this.trail[0].x, this.trail[0].y);
+            for (let i = 1; i < this.trail.length; i++)
+                ctx.lineTo(this.trail[i].x, this.trail[i].y);
+            ctx.stroke();
+            return this;
+        }
+    }
+
+    const eMain = document.getElementById("canvas-wrapper");
+    const eCanvas = document.getElementById("black-hole-canvas");
+    const ctx = eCanvas.getContext("2d");
+
+    const particles = [];
+    const blackHole = Vector.create();
+    let halfWidth, halfHeight, halfMinimum;
+
+    function initialize() {
+        eCanvas.width = eMain.offsetWidth;
+        eCanvas.height = eMain.offsetHeight;
+
+        halfWidth = eCanvas.width / 2;
+        halfHeight = eCanvas.height / 2;
+        halfMinimum = min(halfWidth, halfHeight);
+
+        blackHole.set(halfWidth, halfHeight);
+    }
+
+    window.addEventListener("resize", initialize);
+
+    initialize();
+
+    for (let i = 0; i <= 5; i += 1) {
+        const a = map(i, 0, 5, 0, TWO_PI);
+        const x = Math.cos(a) * halfMinimum + halfWidth;
+        const y = Math.sin(a) * halfMinimum + halfHeight;
+        particles.push(new Particle(Vector.create(x, y), 10));
+    }
+
+    eCanvas.addEventListener("click", function (event) {
+        const rect = eCanvas.getBoundingClientRect();
+        particles.push(
+            new Particle(
+                Vector.create(
+                    event.clientX - rect.left,
+                    event.clientY - rect.top
+                ),
+                10
+            )
+        );
+    });
+
+    let framerate = 0;
+    function draw() {
+        framerate++;
+
+        background(ctx, "#333333");
+
+        ctx.fillStyle = "#ffffff";
+        ctx.strokeStyle = "#ffffff";
+        ctx.strokeWidth = 1;
+        for (let i = 0; i < particles.length; i += 1) {
+            const force = Vector.sub(blackHole, particles[i].position).mag(
+                0.7
             );
-        });
-
-        let framerate = 0;
-        function draw() {
-            framerate++;
-
-            background(ctx, "#333333");
-
-            ctx.fillStyle = "#ffffff";
-            ctx.strokeStyle = "#ffffff";
-            ctx.strokeWidth = 1;
-            for (let i = 0; i < particles.length; i += 1) {
-                const force = Vector.sub(blackHole, particles[i].position).mag(
-                    0.7
-                );
-                particles[i].applyForce(force).update().show(ctx);
-                if (config.showTrail)
-                    particles[i].showTrail(ctx, config.trailLife);
-            }
-
-            ctx.fillStyle = "#ff6347";
-            fillCircle(ctx, blackHole.x, blackHole.y, 25);
-            requestAnimationFrame(draw);
+            particles[i].applyForce(force).update().show(ctx);
+            if (config.showTrail)
+                particles[i].showTrail(ctx, config.trailLife);
         }
 
-        setInterval(function () {
-            if (config.logFramerate) eFramerate.textContent = `${framerate}fps`;
-            framerate = 0;
-        }, 1000);
+        ctx.fillStyle = "#ff6347";
+        fillCircle(ctx, blackHole.x, blackHole.y, 25);
+        requestAnimationFrame(draw);
+    }
 
-        draw();
+    setInterval(function () {
+        if (config.logFramerate) eFramerate.textContent = `${framerate}fps`;
+        framerate = 0;
+    }, 1000);
+
+    draw();
     </script>
 </Layout>

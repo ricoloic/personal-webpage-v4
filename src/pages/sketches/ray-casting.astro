@@ -9,7 +9,9 @@ import MenuIcon from "../../components/icons/MenuIcon.astro";
 import ColorButton from "../../components/ColorButton.astro";
 ---
 
-<Layout title="Ray Casting">
+<Layout
+    title="Ray Casting"
+    previewImage="https://rico.studio/assets/website-previews/ray-casting.png">
     <Canvas id="ray-casting-canvas">
         <Fab slot="edit">
             <FabDropdown id="color">
@@ -59,518 +61,517 @@ import ColorButton from "../../components/ColorButton.astro";
     <!-- ENDSECTION: STATIC_IMPORTS -->
 
     <script is:inline>
-        const config = {
-            logFramerate: true,
-            editing: false,
-            autoMove: false,
-            snapNode: false,
-            casting: false,
-            clicking: false,
-            background: true,
-            outline: false,
-            color: "#ffffff",
-            displayShadow: true,
-        };
-        prefillConfig(config);
+    const config = {
+        logFramerate: true,
+        editing: false,
+        autoMove: false,
+        snapNode: false,
+        casting: false,
+        clicking: false,
+        background: true,
+        outline: false,
+        color: "#ffffff",
+        displayShadow: true,
+    };
+    prefillConfig(config);
+    setParamConfig(config);
+
+    const pColor = useColors(config);
+
+    const eLogFramerateCheckbox = document.getElementById(
+        "log-framerate-checkbox"
+    );
+    const eFramerate = document.getElementById("framerate");
+    const eCastRaysCheckbox = document.getElementById("cast-rays-checkbox");
+    const eCastShadowsCheckbox = document.getElementById(
+        "cast-shadows-checkbox"
+    );
+    const eCastBackgroundCheckbox = document.getElementById(
+        "cast-background-checkbox"
+    );
+    const eEditModeCheckbox = document.getElementById("edit-mode-checkbox");
+    const eOutlineCheckbox = document.getElementById("outline-checkbox");
+
+    if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
+    eLogFramerateCheckbox.addEventListener("change", function () {
+        config.logFramerate = !config.logFramerate;
         setParamConfig(config);
+        if (!config.logFramerate) eFramerate.textContent = "";
+    });
 
-        const pColor = useColors(config);
+    if (config.casting) toggleCheckbox(eCastRaysCheckbox);
+    eCastRaysCheckbox.addEventListener("change", function () {
+        config.casting = !config.casting;
+        setParamConfig(config);
+    });
 
-        const eLogFramerateCheckbox = document.getElementById(
-            "log-framerate-checkbox"
-        );
-        const eFramerate = document.getElementById("framerate");
-        const eCastRaysCheckbox = document.getElementById("cast-rays-checkbox");
-        const eCastShadowsCheckbox = document.getElementById(
-            "cast-shadows-checkbox"
-        );
-        const eCastBackgroundCheckbox = document.getElementById(
-            "cast-background-checkbox"
-        );
-        const eEditModeCheckbox = document.getElementById("edit-mode-checkbox");
-        const eOutlineCheckbox = document.getElementById("outline-checkbox");
+    if (config.background) toggleCheckbox(eCastBackgroundCheckbox);
+    eCastBackgroundCheckbox.addEventListener("change", function () {
+        config.background = !config.background;
+        setParamConfig(config);
+    });
 
-        if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
-        eLogFramerateCheckbox.addEventListener("change", function () {
-            config.logFramerate = !config.logFramerate;
-            setParamConfig(config);
-            if (!config.logFramerate) eFramerate.textContent = "";
-        });
+    if (config.displayShadow) toggleCheckbox(eCastShadowsCheckbox);
+    eCastShadowsCheckbox.addEventListener("change", function () {
+        config.displayShadow = !config.displayShadow;
+        setParamConfig(config);
+    });
 
-        if (config.casting) toggleCheckbox(eCastRaysCheckbox);
-        eCastRaysCheckbox.addEventListener("change", function () {
-            config.casting = !config.casting;
-            setParamConfig(config);
-        });
+    if (config.editing) toggleCheckbox(eEditModeCheckbox);
+    eEditModeCheckbox.addEventListener("change", function () {
+        config.editing = !config.editing;
+        setParamConfig(config);
+    });
 
-        if (config.background) toggleCheckbox(eCastBackgroundCheckbox);
-        eCastBackgroundCheckbox.addEventListener("change", function () {
-            config.background = !config.background;
-            setParamConfig(config);
-        });
+    if (config.outline) toggleCheckbox(eOutlineCheckbox);
+    eOutlineCheckbox.addEventListener("change", function () {
+        config.outline = !config.outline;
+        setParamConfig(config);
+    });
 
-        if (config.displayShadow) toggleCheckbox(eCastShadowsCheckbox);
-        eCastShadowsCheckbox.addEventListener("change", function () {
-            config.displayShadow = !config.displayShadow;
-            setParamConfig(config);
-        });
+    const SHADOW_DIST = 25;
+    const SHADOW_AMOUNT = 5;
 
-        if (config.editing) toggleCheckbox(eEditModeCheckbox);
-        eEditModeCheckbox.addEventListener("change", function () {
-            config.editing = !config.editing;
-            setParamConfig(config);
-        });
+    class Point extends Vector {
+        constructor(x = 0, y = 0) {
+            super(x, y);
+            this.moving = false;
+        }
 
-        if (config.outline) toggleCheckbox(eOutlineCheckbox);
-        eOutlineCheckbox.addEventListener("change", function () {
-            config.outline = !config.outline;
-            setParamConfig(config);
-        });
+        hovering(mouse) {
+            return dist(this.x, this.y, mouse.x, mouse.y) < 15;
+        }
 
-        const SHADOW_DIST = 25;
-        const SHADOW_AMOUNT = 5;
+        show(ctx, mouse) {
+            ctx.fillStyle = this.hovering(mouse) ? "darkred" : "tomato";
+            fillCircle(ctx, this.x, this.y, 15);
 
-        class Point extends Vector {
-            constructor(x = 0, y = 0) {
-                super(x, y);
-                this.moving = false;
-            }
+            if (this.moving) this.set(mouse.x, mouse.y);
+        }
+    }
 
-            hovering(mouse) {
-                return dist(this.x, this.y, mouse.x, mouse.y) < 15;
-            }
+    class PointAngle extends Point {
+        constructor(point, angle) {
+            super(point.x, point.y);
+            this.angle = angle;
+        }
+    }
 
-            show(ctx, mouse) {
-                ctx.fillStyle = this.hovering(mouse) ? "darkred" : "tomato";
-                fillCircle(ctx, this.x, this.y, 15);
+    class Line {
+        constructor(point1, point2) {
+            this.point1 = point1;
+            this.point2 = point2;
+        }
 
-                if (this.moving) this.set(mouse.x, mouse.y);
+        show(ctx, editing, mouse) {
+            ctx.strokeWidth = 2;
+            ctx.strokeStyle = "#ffffff";
+            if (config.outline)
+                strokeLine(
+                    ctx,
+                    this.point1.x,
+                    this.point1.y,
+                    this.point2.x,
+                    this.point2.y
+                );
+            if (editing) {
+                this.point1.show(ctx, mouse);
+                this.point2.show(ctx, mouse);
             }
         }
 
-        class PointAngle extends Point {
-            constructor(point, angle) {
-                super(point.x, point.y);
-                this.angle = angle;
+        getLines() {
+            return [this];
+        }
+
+        getPoints() {
+            return [this.point1, this.point2];
+        }
+    }
+
+    class Box {
+        constructor(point1, point2, point3, point4) {
+            this.line1 = new Line(point1, point2);
+            this.line2 = new Line(point2, point3);
+            this.line3 = new Line(point3, point4);
+            this.line4 = new Line(point4, point1);
+        }
+
+        show(ctx, editing, mouse) {
+            this.line1.show(ctx, editing, mouse);
+            this.line2.show(ctx, editing, mouse);
+            this.line3.show(ctx, editing, mouse);
+            this.line4.show(ctx, editing, mouse);
+        }
+
+        getLines() {
+            return [this.line1, this.line2, this.line3, this.line4];
+        }
+
+        getPoints() {
+            return [
+                this.line1.point1,
+                this.line1.point2,
+                this.line2.point1,
+                this.line2.point2,
+                this.line3.point1,
+                this.line3.point2,
+                this.line4.point1,
+                this.line4.point2,
+            ];
+        }
+    }
+
+    class Boundary {
+        constructor(center, radius, pointAmount = 2) {
+            this.points = [];
+            this.lines = [];
+            this.pointAmount = pointAmount;
+
+            for (let i = 0; i < this.pointAmount; i++) {
+                const a = map(i, 0, this.pointAmount, 0, TWO_PI);
+                const x = Math.cos(a) * radius + center.x;
+                const y = Math.sin(a) * radius + center.y;
+                this.points.push(new Point(x, y));
+            }
+
+            for (let i = 0; i < this.pointAmount; i++) {
+                this.lines.push(
+                    new Line(
+                        this.points[i],
+                        this.points[
+                        i - 1 === -1 ? this.pointAmount - 1 : i - 1
+                        ]
+                    )
+                );
             }
         }
 
-        class Line {
-            constructor(point1, point2) {
-                this.point1 = point1;
-                this.point2 = point2;
-            }
-
-            show(ctx, editing, mouse) {
-                ctx.strokeWidth = 2;
-                ctx.strokeStyle = "#ffffff";
-                if (config.outline)
-                    strokeLine(
-                        ctx,
-                        this.point1.x,
-                        this.point1.y,
-                        this.point2.x,
-                        this.point2.y
-                    );
-                if (editing) {
-                    this.point1.show(ctx, mouse);
-                    this.point2.show(ctx, mouse);
-                }
-            }
-
-            getLines() {
-                return [this];
-            }
-
-            getPoints() {
-                return [this.point1, this.point2];
-            }
+        show(ctx, editing, mouse) {
+            for (let i = 0; i < this.lines.length; i++)
+                this.lines[i].show(ctx, editing, mouse);
         }
 
-        class Box {
-            constructor(point1, point2, point3, point4) {
-                this.line1 = new Line(point1, point2);
-                this.line2 = new Line(point2, point3);
-                this.line3 = new Line(point3, point4);
-                this.line4 = new Line(point4, point1);
-            }
+        getLines() {
+            return this.lines;
+        }
+    }
 
-            show(ctx, editing, mouse) {
-                this.line1.show(ctx, editing, mouse);
-                this.line2.show(ctx, editing, mouse);
-                this.line3.show(ctx, editing, mouse);
-                this.line4.show(ctx, editing, mouse);
-            }
-
-            getLines() {
-                return [this.line1, this.line2, this.line3, this.line4];
-            }
-
-            getPoints() {
-                return [
-                    this.line1.point1,
-                    this.line1.point2,
-                    this.line2.point1,
-                    this.line2.point2,
-                    this.line3.point1,
-                    this.line3.point2,
-                    this.line4.point1,
-                    this.line4.point2,
-                ];
-            }
+    class Ray {
+        constructor(origin, angle) {
+            this.origin = origin;
+            this.angle = angle;
+            this.direction = Vector.fromAngle(angle);
         }
 
-        class Boundary {
-            constructor(center, radius, pointAmount = 2) {
-                this.points = [];
-                this.lines = [];
-                this.pointAmount = pointAmount;
+        cast(line) {
+            const t = Ray.calculateT(
+                line.point1.x,
+                line.point1.y,
+                line.point2.x,
+                line.point2.y,
+                this.origin.x,
+                this.origin.y,
+                this.origin.x + this.direction.x,
+                this.origin.y + this.direction.y
+            );
 
-                for (let i = 0; i < this.pointAmount; i++) {
-                    const a = map(i, 0, this.pointAmount, 0, TWO_PI);
-                    const x = Math.cos(a) * radius + center.x;
-                    const y = Math.sin(a) * radius + center.y;
-                    this.points.push(new Point(x, y));
-                }
+            const u = Ray.calculateU(
+                line.point1.x,
+                line.point1.y,
+                line.point2.x,
+                line.point2.y,
+                this.origin.x,
+                this.origin.y,
+                this.origin.x + this.direction.x,
+                this.origin.y + this.direction.y
+            );
 
-                for (let i = 0; i < this.pointAmount; i++) {
-                    this.lines.push(
-                        new Line(
-                            this.points[i],
-                            this.points[
-                                i - 1 === -1 ? this.pointAmount - 1 : i - 1
-                            ]
-                        )
-                    );
-                }
-            }
+            const intersectBoundary = t > 0 && t < 1 && u > 0;
 
-            show(ctx, editing, mouse) {
-                for (let i = 0; i < this.lines.length; i++)
-                    this.lines[i].show(ctx, editing, mouse);
-            }
-
-            getLines() {
-                return this.lines;
-            }
-        }
-
-        class Ray {
-            constructor(origin, angle) {
-                this.origin = origin;
-                this.angle = angle;
-                this.direction = Vector.fromAngle(angle);
-            }
-
-            cast(line) {
-                const t = Ray.calculateT(
+            if (intersectBoundary) {
+                return Ray.calculateIntersection(
                     line.point1.x,
                     line.point1.y,
                     line.point2.x,
                     line.point2.y,
-                    this.origin.x,
-                    this.origin.y,
-                    this.origin.x + this.direction.x,
-                    this.origin.y + this.direction.y
+                    t
                 );
+            }
+            return null;
+        }
 
-                const u = Ray.calculateU(
-                    line.point1.x,
-                    line.point1.y,
-                    line.point2.x,
-                    line.point2.y,
-                    this.origin.x,
-                    this.origin.y,
-                    this.origin.x + this.direction.x,
-                    this.origin.y + this.direction.y
+        static calculateIntersection(x1, y1, x2, y2, t) {
+            const x = x1 + t * (x2 - x1);
+            const y = y1 + t * (y2 - y1);
+            return Vector.create(x, y);
+        }
+
+        static calculateU(x1, y1, x2, y2, x3, y3, x4, y4) {
+            const denominator =
+                (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+            if (denominator == 0) {
+                return -1;
+            }
+            const numerator = (x1 - x3) * (y1 - y2) - (y1 - y3) * (x1 - x2);
+            return numerator / denominator;
+        }
+
+        static calculateT(x1, y1, x2, y2, x3, y3, x4, y4) {
+            const denominator =
+                (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+            if (denominator == 0) {
+                return -1;
+            }
+            const numerator = (x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4);
+            return numerator / denominator;
+        }
+    }
+
+    class Caster {
+        constructor(position) {
+            this.position = position;
+        }
+
+        setPosition(x, y) {
+            this.position.set(x, y);
+        }
+
+        castRays(ctx, lines) {
+            const rays = this.makeRays(lines);
+            const foundIntersections = this.findIntersections(rays, lines);
+
+            ctx.strokeStyle = "#ffffff";
+            ctx.strokeWidth = 2;
+            for (let i = 0; i < foundIntersections.length; i++) {
+                strokeLine(
+                    ctx,
+                    this.position.x,
+                    this.position.y,
+                    foundIntersections[i].x,
+                    foundIntersections[i].y
                 );
-
-                const intersectBoundary = t > 0 && t < 1 && u > 0;
-
-                if (intersectBoundary) {
-                    return Ray.calculateIntersection(
-                        line.point1.x,
-                        line.point1.y,
-                        line.point2.x,
-                        line.point2.y,
-                        t
-                    );
-                }
-                return null;
-            }
-
-            static calculateIntersection(x1, y1, x2, y2, t) {
-                const x = x1 + t * (x2 - x1);
-                const y = y1 + t * (y2 - y1);
-                return Vector.create(x, y);
-            }
-
-            static calculateU(x1, y1, x2, y2, x3, y3, x4, y4) {
-                const denominator =
-                    (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
-                if (denominator == 0) {
-                    return -1;
-                }
-                const numerator = (x1 - x3) * (y1 - y2) - (y1 - y3) * (x1 - x2);
-                return numerator / denominator;
-            }
-
-            static calculateT(x1, y1, x2, y2, x3, y3, x4, y4) {
-                const denominator =
-                    (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
-                if (denominator == 0) {
-                    return -1;
-                }
-                const numerator = (x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4);
-                return numerator / denominator;
             }
         }
 
-        class Caster {
-            constructor(position) {
-                this.position = position;
-            }
+        castBackground(ctx, lines, alfa = false) {
+            const rays = this.makeRays(lines);
+            const foundIntersections = this.findIntersections(
+                rays,
+                lines
+            ).sort(function (a, b) {
+                return a.angle - b.angle;
+            });
 
-            setPosition(x, y) {
-                this.position.set(x, y);
-            }
-
-            castRays(ctx, lines) {
-                const rays = this.makeRays(lines);
-                const foundIntersections = this.findIntersections(rays, lines);
-
-                ctx.strokeStyle = "#ffffff";
-                ctx.strokeWidth = 2;
-                for (let i = 0; i < foundIntersections.length; i++) {
-                    strokeLine(
-                        ctx,
-                        this.position.x,
-                        this.position.y,
+            if (foundIntersections.length > 0) {
+                ctx.fillStyle = `rgba(${pColor.r}, ${pColor.g}, ${pColor.b
+                    }, ${alfa ? "0.3" : 1})`;
+                ctx.beginPath();
+                ctx.moveTo(
+                    foundIntersections[0].x,
+                    foundIntersections[0].y
+                );
+                for (let i = 1; i < foundIntersections.length; i++) {
+                    ctx.lineTo(
                         foundIntersections[i].x,
                         foundIntersections[i].y
                     );
                 }
+                ctx.closePath();
+                ctx.fill();
             }
+        }
 
-            castBackground(ctx, lines, alfa = false) {
-                const rays = this.makeRays(lines);
-                const foundIntersections = this.findIntersections(
-                    rays,
-                    lines
-                ).sort(function (a, b) {
-                    return a.angle - b.angle;
-                });
+        castOriginPoint(ctx) {
+            ctx.fillStyle = "tomato";
+            fillCircle(ctx, this.position.x, this.position.y, 5);
+        }
 
-                if (foundIntersections.length > 0) {
-                    ctx.fillStyle = `rgba(${pColor.r}, ${pColor.g}, ${
-                        pColor.b
-                    }, ${alfa ? "0.3" : 1})`;
-                    ctx.beginPath();
-                    ctx.moveTo(
-                        foundIntersections[0].x,
-                        foundIntersections[0].y
-                    );
-                    for (let i = 1; i < foundIntersections.length; i++) {
-                        ctx.lineTo(
-                            foundIntersections[i].x,
-                            foundIntersections[i].y
-                        );
-                    }
-                    ctx.closePath();
-                    ctx.fill();
-                }
-            }
+        findIntersections(rays, lines) {
+            const foundIntersections = [];
 
-            castOriginPoint(ctx) {
-                ctx.fillStyle = "tomato";
-                fillCircle(ctx, this.position.x, this.position.y, 5);
-            }
+            for (let i = 0; i < rays.length; i++) {
+                let closest = null;
+                let min = Infinity;
 
-            findIntersections(rays, lines) {
-                const foundIntersections = [];
+                for (let j = 0; j < lines.length; j++) {
+                    const intersection = rays[i].cast(lines[j]);
 
-                for (let i = 0; i < rays.length; i++) {
-                    let closest = null;
-                    let min = Infinity;
-
-                    for (let j = 0; j < lines.length; j++) {
-                        const intersection = rays[i].cast(lines[j]);
-
-                        if (intersection != null) {
-                            const distance = this.position.dist(intersection);
-                            if (distance < min) {
-                                min = distance;
-                                closest = intersection;
-                            }
+                    if (intersection != null) {
+                        const distance = this.position.dist(intersection);
+                        if (distance < min) {
+                            min = distance;
+                            closest = intersection;
                         }
                     }
-
-                    if (closest != null) {
-                        foundIntersections.push(
-                            new PointAngle(closest, rays[i].angle)
-                        );
-                    }
                 }
 
-                return foundIntersections;
-            }
-
-            makeRays(lines) {
-                const rays = [];
-
-                for (let i = 0; i < lines.length; i++) {
-                    const angles = [];
-                    const displacement = 0.001;
-
-                    const a = Vector.sub(lines[i].point1, this.position)
-                        .normalize()
-                        .heading();
-                    angles.push(a);
-                    angles.push(a + displacement);
-                    angles.push(a - displacement);
-
-                    const b = Vector.sub(lines[i].point2, this.position)
-                        .normalize()
-                        .heading();
-                    angles.push(b);
-                    angles.push(b + displacement);
-                    angles.push(b - displacement);
-
-                    for (let j = 0; j < angles.length; j++) {
-                        rays.push(new Ray(this.position, angles[j]));
-                    }
-                }
-
-                return rays;
-            }
-        }
-
-        class CasterContainer {
-            constructor(origin) {
-                this.caster = new Caster(origin);
-                this.shadows = [];
-
-                for (let i = 0; i < SHADOW_AMOUNT; i += 1) {
-                    this.shadows[i] = new Caster(origin.copy());
-                }
-            }
-
-            castRays(ctx, lines) {
-                this.caster.castRays(ctx, lines);
-            }
-
-            castBackground(ctx, lines, displayShadow) {
-                this.caster.castBackground(ctx, lines, displayShadow);
-
-                if (displayShadow) {
-                    for (let i = 0; i < this.shadows.length; i++) {
-                        this.shadows[i].castBackground(ctx, lines, true);
-                    }
-                    for (let i = 0; i < this.shadows.length; i++) {
-                        this.shadows[i].castOriginPoint(ctx);
-                    }
-                }
-
-                this.caster.castOriginPoint(ctx);
-            }
-
-            setPosition(x, y) {
-                this.caster.setPosition(x, y);
-
-                for (let i = 0; i < this.shadows.length; i++) {
-                    const a = map(i, 0, this.shadows.length, 0, TWO_PI);
-                    this.shadows[i].setPosition(
-                        x + Math.sin(a) * SHADOW_DIST,
-                        y + Math.cos(a) * SHADOW_DIST
+                if (closest != null) {
+                    foundIntersections.push(
+                        new PointAngle(closest, rays[i].angle)
                     );
                 }
             }
+
+            return foundIntersections;
         }
 
-        const eMain = document.getElementById("canvas-wrapper");
-        const eCanvas = document.getElementById("ray-casting-canvas");
-        const ctx = eCanvas.getContext("2d");
+        makeRays(lines) {
+            const rays = [];
 
-        const mouse = mousePosition(eCanvas);
-        const center = Vector.create();
-        const caster = new CasterContainer(Vector.create());
-        let halfWidth, halfHeight, halfMinimum;
-        let canvasBoundary;
+            for (let i = 0; i < lines.length; i++) {
+                const angles = [];
+                const displacement = 0.001;
 
-        function initialize() {
-            eCanvas.width = eMain.offsetWidth;
-            eCanvas.height = eMain.offsetHeight;
+                const a = Vector.sub(lines[i].point1, this.position)
+                    .normalize()
+                    .heading();
+                angles.push(a);
+                angles.push(a + displacement);
+                angles.push(a - displacement);
 
-            canvasBoundary = new Box(
-                Point.create(0, 0),
-                Point.create(eCanvas.width, 0),
-                Point.create(eCanvas.width, eCanvas.height),
-                Point.create(0, eCanvas.height)
-            );
+                const b = Vector.sub(lines[i].point2, this.position)
+                    .normalize()
+                    .heading();
+                angles.push(b);
+                angles.push(b + displacement);
+                angles.push(b - displacement);
 
-            halfWidth = eCanvas.width / 2;
-            halfHeight = eCanvas.height / 2;
-            halfMinimum = min(halfWidth, halfHeight);
-
-            center.set(halfWidth, halfHeight);
-        }
-
-        window.addEventListener("resize", initialize);
-
-        initialize();
-
-        const boundaries = [new Boundary(center, halfMinimum / 5, 5)];
-
-        let framerate = 0;
-        function draw() {
-            framerate++;
-
-            background(ctx, "#333333");
-
-            caster.setPosition(mouse.x, mouse.y);
-
-            let lines = [];
-            for (let i = 0; i < boundaries.length; i++) {
-                lines = lines.concat(boundaries[i].getLines());
+                for (let j = 0; j < angles.length; j++) {
+                    rays.push(new Ray(this.position, angles[j]));
+                }
             }
 
-            const tempLines = canvasBoundary.getLines().concat(lines);
+            return rays;
+        }
+    }
 
-            if (config.casting) caster.castRays(ctx, tempLines);
-            if (config.background)
-                caster.castBackground(ctx, tempLines, config.displayShadow);
+    class CasterContainer {
+        constructor(origin) {
+            this.caster = new Caster(origin);
+            this.shadows = [];
 
-            for (let i = 0; i < boundaries.length; i++) {
-                boundaries[i].show(ctx, config.editing, mouse);
+            for (let i = 0; i < SHADOW_AMOUNT; i += 1) {
+                this.shadows[i] = new Caster(origin.copy());
             }
-            requestAnimationFrame(draw);
         }
 
-        setInterval(function () {
-            if (config.logFramerate) eFramerate.textContent = `${framerate}fps`;
-            framerate = 0;
-        }, 1000);
-
-        draw();
-
-        function startEdit(position) {
-            mouse.x = position.x;
-            mouse.y = position.y;
-            for (let i = boundaries.length; i > 0; i--)
-                for (let j = boundaries[i - 1].points.length; j > 0; j--)
-                    if (boundaries[i - 1].points[j - 1].hovering(position)) {
-                        boundaries[i - 1].points[j - 1].moving = true;
-                        if (!config.snapNode) return;
-                    }
+        castRays(ctx, lines) {
+            this.caster.castRays(ctx, lines);
         }
 
-        function stopEdit() {
-            for (let i = boundaries.length; i > 0; i--)
-                for (let j = boundaries[i - 1].points.length; j > 0; j--)
-                    boundaries[i - 1].points[j - 1].moving = false;
+        castBackground(ctx, lines, displayShadow) {
+            this.caster.castBackground(ctx, lines, displayShadow);
+
+            if (displayShadow) {
+                for (let i = 0; i < this.shadows.length; i++) {
+                    this.shadows[i].castBackground(ctx, lines, true);
+                }
+                for (let i = 0; i < this.shadows.length; i++) {
+                    this.shadows[i].castOriginPoint(ctx);
+                }
+            }
+
+            this.caster.castOriginPoint(ctx);
         }
 
-        startClick(eCanvas, startEdit);
-        stopClick(eCanvas, stopEdit);
+        setPosition(x, y) {
+            this.caster.setPosition(x, y);
+
+            for (let i = 0; i < this.shadows.length; i++) {
+                const a = map(i, 0, this.shadows.length, 0, TWO_PI);
+                this.shadows[i].setPosition(
+                    x + Math.sin(a) * SHADOW_DIST,
+                    y + Math.cos(a) * SHADOW_DIST
+                );
+            }
+        }
+    }
+
+    const eMain = document.getElementById("canvas-wrapper");
+    const eCanvas = document.getElementById("ray-casting-canvas");
+    const ctx = eCanvas.getContext("2d");
+
+    const mouse = mousePosition(eCanvas);
+    const center = Vector.create();
+    const caster = new CasterContainer(Vector.create());
+    let halfWidth, halfHeight, halfMinimum;
+    let canvasBoundary;
+
+    function initialize() {
+        eCanvas.width = eMain.offsetWidth;
+        eCanvas.height = eMain.offsetHeight;
+
+        canvasBoundary = new Box(
+            Point.create(0, 0),
+            Point.create(eCanvas.width, 0),
+            Point.create(eCanvas.width, eCanvas.height),
+            Point.create(0, eCanvas.height)
+        );
+
+        halfWidth = eCanvas.width / 2;
+        halfHeight = eCanvas.height / 2;
+        halfMinimum = min(halfWidth, halfHeight);
+
+        center.set(halfWidth, halfHeight);
+    }
+
+    window.addEventListener("resize", initialize);
+
+    initialize();
+
+    const boundaries = [new Boundary(center, halfMinimum / 5, 5)];
+
+    let framerate = 0;
+    function draw() {
+        framerate++;
+
+        background(ctx, "#333333");
+
+        caster.setPosition(mouse.x, mouse.y);
+
+        let lines = [];
+        for (let i = 0; i < boundaries.length; i++) {
+            lines = lines.concat(boundaries[i].getLines());
+        }
+
+        const tempLines = canvasBoundary.getLines().concat(lines);
+
+        if (config.casting) caster.castRays(ctx, tempLines);
+        if (config.background)
+            caster.castBackground(ctx, tempLines, config.displayShadow);
+
+        for (let i = 0; i < boundaries.length; i++) {
+            boundaries[i].show(ctx, config.editing, mouse);
+        }
+        requestAnimationFrame(draw);
+    }
+
+    setInterval(function () {
+        if (config.logFramerate) eFramerate.textContent = `${framerate}fps`;
+        framerate = 0;
+    }, 1000);
+
+    draw();
+
+    function startEdit(position) {
+        mouse.x = position.x;
+        mouse.y = position.y;
+        for (let i = boundaries.length; i > 0; i--)
+            for (let j = boundaries[i - 1].points.length; j > 0; j--)
+                if (boundaries[i - 1].points[j - 1].hovering(position)) {
+                    boundaries[i - 1].points[j - 1].moving = true;
+                    if (!config.snapNode) return;
+                }
+    }
+
+    function stopEdit() {
+        for (let i = boundaries.length; i > 0; i--)
+            for (let j = boundaries[i - 1].points.length; j > 0; j--)
+                boundaries[i - 1].points[j - 1].moving = false;
+    }
+
+    startClick(eCanvas, startEdit);
+    stopClick(eCanvas, stopEdit);
     </script>
 </Layout>
