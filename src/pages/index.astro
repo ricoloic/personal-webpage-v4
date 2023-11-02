@@ -16,7 +16,8 @@ import audioSpectrumImage from "../assets/previews/audio-spectrum-preview.png";
 import lineFollowImage from "../assets/previews/line-follow-preview.png";
 import pointMeshImage from "../assets/previews/point-mesh-preview.png";
 import maurerRoseImage from "../assets/previews/maurer-rose-preview.png";
-import ShareAlert from "../components/ShareAlert.astro";
+import audioCirclesImage from "../assets/previews/audio-circles-preview.png";
+import audioHexagonImage from "../assets/previews/audio-hexagon-preview.png";
 
 const ageDifMs = Date.now() - new Date("2002-09-23").getTime();
 const ageDate = new Date(ageDifMs); // milliseconds from epoch
@@ -195,6 +196,18 @@ const age = Math.abs(ageDate.getUTCFullYear() - 1970);
                     title="Maurer Rose"
                     alt="The maurer rose sketch"
                 />
+                <SketchCard
+                    image={audioCirclesImage}
+                    route="/sketches/audio-circles"
+                    title="Audio Circles"
+                    alt="The audio circles sketch"
+                />
+                <SketchCard
+                    image={audioHexagonImage}
+                    route="/sketches/audio-hexagon"
+                    title="Audio Hexagon"
+                    alt="The audio hexagon sketch"
+                />
             </div>
         </section>
 
@@ -224,8 +237,8 @@ const age = Math.abs(ageDate.getUTCFullYear() - 1970);
     </main>
 
     <script is:inline>
-        document
-            .querySelector('button[name="share-button"]')
-            .addEventListener("click", handleClickShare);
+    document
+        .querySelector('button[name="share-button"]')
+        .addEventListener("click", handleClickShare);
     </script>
 </Layout>

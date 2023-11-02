@@ -185,6 +185,10 @@ const { title } = Astro.props;
                                         title="Maurer Rose"
                                         href="/sketches/maurer-rose"
                                     />
+                                    <Link
+                                        title="Audio Circles"
+                                        href="/sketches/audio-circles"
+                                    />
                                 </ul>
                             </li>
                         </ul>
@@ -197,43 +201,43 @@ const { title } = Astro.props;
 
         <slot />
 
-        <script>
-            const eHomeLink = document.getElementById("home-link");
+        <script lang="js">
+        const eHomeLink = document.getElementById("home-link");
 
-            if (window.location.pathname === "/") {
-                eHomeLink.setAttribute("aria-current", "page");
-            } else {
-                eHomeLink.setAttribute("aria-current", "");
+        if (window.location.pathname === "/") {
+            eHomeLink.setAttribute("aria-current", "page");
+        } else {
+            eHomeLink.setAttribute("aria-current", "");
+        }
+
+        const eSketchDropdown =
+            document.getElementById("sketches-dropdown");
+
+        function handleCloseSketchDropdown(event) {
+            const eSketchesLinks =
+                document.getElementById("sketches-links");
+            let target = event.target;
+            while (target) {
+                if (target == eSketchesLinks) return;
+                target = target.parentNode;
             }
 
-            const eSketchDropdown =
-                document.getElementById("sketches-dropdown");
+            addClass(eSketchDropdown, "hidden");
+        }
 
-            function handleCloseSketchDropdown(event) {
-                const eSketchesLinks =
-                    document.getElementById("sketches-links");
-                let target = event.target;
-                while (target) {
-                    if (target == eSketchesLinks) return;
-                    target = target.parentNode;
-                }
-
+        function handleToggleSketchDropdown() {
+            if (findClassIndex(eSketchDropdown, "hidden") === -1) {
                 addClass(eSketchDropdown, "hidden");
+            } else {
+                removeClass(eSketchDropdown, "hidden");
             }
+        }
 
-            function handleToggleSketchDropdown() {
-                if (findClassIndex(eSketchDropdown, "hidden") === -1) {
-                    addClass(eSketchDropdown, "hidden");
-                } else {
-                    removeClass(eSketchDropdown, "hidden");
-                }
-            }
+        document
+            .querySelector('button[name="sketches-button"]')
+            .addEventListener("click", handleToggleSketchDropdown);
 
-            document
-                .querySelector('button[name="sketches-button"]')
-                .addEventListener("click", handleToggleSketchDropdown);
-
-            document.addEventListener("click", handleCloseSketchDropdown);
+        document.addEventListener("click", handleCloseSketchDropdown);
         </script>
     </body>
 </html>

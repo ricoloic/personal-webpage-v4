@@ -2,11 +2,11 @@ const PI = Math.PI;
 const TWO_PI = Math.PI * 2;
 
 function random(min = undefined, max = undefined) {
-    if (!min) return Math.random();
+    if (min == undefined) return Math.random();
 
     if (Array.isArray(min)) return min[Math.floor(Math.random() * min.length)];
 
-    if (!max) return Math.random() * min;
+    if (max == undefined) return Math.random() * min;
 
     return Math.random() * (max - min) + min;
 }

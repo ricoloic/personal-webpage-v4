@@ -180,6 +180,7 @@ const COLORS = {
                         id="log-framerate-checkbox"
                         title="Log Framerate"
                     />
+                    <Checkbox id="show-snow-checkbox" title="Show Snow" />
                     <Checkbox
                         id="reverse-colors-checkbox"
                         title="Reverse Colors"
@@ -266,12 +267,14 @@ const COLORS = {
     <script is:inline src="/js/utils/core.js"></script>
     <script is:inline src="/js/utils/draw.js"></script>
     <script is:inline src="/js/utils/url.js"></script>
+    <script is:inline src="/js/utils/mouse.js"></script>
     <script is:inline src="/js/classes/audio-controller.js"></script>
     <!-- ENDSECTION: STATIC_IMPORTS -->
 
     <script is:inline define:vars={{ COLORS }}>
     const config = {
         reverseColors: false,
+        showSnow: false,
         visualizerType: "mirroredCircle",
         minFreq: 10,
         maxFreq: 2300,
@@ -299,6 +302,7 @@ const COLORS = {
 
     const inputLogFramerate = $("#log-framerate-checkbox");
     const inputReverseColors = $("#reverse-colors-checkbox");
+    const inputShowSnow = $("#show-snow-checkbox");
     const spanFramerate = $("#framerate");
     const divColorPill = $("#color-pill");
     const buttonTogglPlay = $('button[name="toggle"]');
@@ -343,6 +347,12 @@ const COLORS = {
     if (config.filled) toggleCheckbox(inputFilled);
     inputFilled.onchange = () => {
         config.filled = !config.filled;
+        setParamConfig(config);
+    };
+
+    if (config.showSnow) toggleCheckbox(inputShowSnow);
+    inputShowSnow.onchange = () => {
+        config.showSnow = !config.showSnow;
         setParamConfig(config);
     };
 
@@ -454,44 +464,75 @@ const COLORS = {
         });
     }
 
+    class Particle {
+        constructor(positionX, positionY) {
+            this.initialPosition = Vector.create(positionX, positionY);
+            this.position = this.initialPosition.copy();
+            this.velocity = Vector.create(random(-1, 1), random(-1, 1));
+            this.movingSpeed = random(1);
+            this.life = 0;
+            this.maxLife = random(100, 250);
+            this.acceleration = Vector.create();
+        }
+
+        isOutside(min, max) {
+            const isOutsideLeft = this.position.y < min.x;
+            const isOutsideRight = this.position.x > max.x;
+            const isOutsideTop = this.position.y < min.y;
+            const isOutsideBottom = this.position.y > max.y;
+            return (
+                isOutsideRight ||
+                isOutsideLeft ||
+                isOutsideTop ||
+                isOutsideBottom
+            );
+        }
+
+        update(min, max, force, m) {
+            this.acceleration.add(Vector.sub(m, this.position));
+            this.acceleration.mag(0.02);
+            this.velocity.mult(force);
+            this.velocity.add(this.acceleration).limit(6);
+            this.position.add(this.velocity);
+            this.life += 1;
+            this.acceleration.mult(0);
+
+            if (this.isOutside(min, max) || this.life > this.maxLife) {
+                this.position.set(this.initialPosition);
+
+                this.life = 0;
+                this.acceleration.add(Vector.sub(m, this.position));
+                this.acceleration.mag(0.02);
+                this.velocity.set(this.acceleration.x, this.acceleration.y);
+                this.velocity.limit(7);
+            }
+
+            return this;
+        }
+
+        show(ctx, size) {
+            if (this.life > this.maxLife - 10) {
+                fillCircle(
+                    ctx,
+                    this.position.x,
+                    this.position.y,
+                    map(this.life, this.maxLife - 10, this.maxLife, size, 0)
+                );
+            } else {
+                fillCircle(
+                    ctx,
+                    this.position.x,
+                    this.position.y,
+                    map(this.life, 0, this.maxLife, 0, size)
+                );
+            }
+        }
+    }
+
     class Visualizer {
         constructor(baseRadius = 100) {
             this.incrementor = 0.001;
             this.baseRadius = baseRadius;
-        }
-
-        circle(
-            ctx,
-            freq,
-            {
-                filled = false,
-                closed = false,
-                rMult = 1,
-                baseRadius = this.baseRadius,
-            } = {
-                    filled: false,
-                    closed: false,
-                    rMult: 1,
-                    baseRadius: this.baseRadius,
-                }
-        ) {
-            ctx.beginPath();
-            ctx.moveTo(Math.cos(0) * freq[0], Math.sin(0) * freq[0]);
-            for (
-                let a = this.incrementor;
-                a < TWO_PI;
-                a += this.incrementor
-            ) {
-                const i = Math.floor(map(a, 0, TWO_PI, 0, freq.length));
-                const r = freq[i];
-                const x = Math.cos(a) * (r * rMult + baseRadius);
-                const y = Math.sin(a) * (r * rMult + baseRadius);
-                ctx.lineTo(x, y);
-            }
-
-            if (closed) ctx.closePath();
-            if (filled) ctx.fill();
-            else ctx.stroke();
         }
 
         mirroredCircle(
@@ -535,24 +576,6 @@ const COLORS = {
             else ctx.stroke();
         }
 
-        points(
-            ctx,
-            freq,
-            { radius = 2, rMult = 1, baseRadius = this.baseRadius } = {
-                radius: 2,
-                rMult: 1,
-                baseRadius: this.baseRadius,
-            }
-        ) {
-            for (let a = 0; a < TWO_PI; a += 0.01) {
-                const i = Math.floor(map(a, 0, TWO_PI, 0, freq.length));
-                const r = freq[i];
-                const x = Math.cos(a) * (r * rMult + baseRadius);
-                const y = Math.sin(a) * (r * rMult + baseRadius);
-                ctx.fillRect(x, y, radius, radius);
-            }
-        }
-
         mirroredPoints(
             ctx,
             freq,
@@ -584,15 +607,19 @@ const COLORS = {
     const eMain = document.getElementById("canvas-wrapper");
     const eCanvas = document.getElementById("audio-spectrum-canvas");
     const ctx = eCanvas.getContext("2d");
+
     let halfWidth,
         halfHeight,
-        halfMinimum,
         scene,
         camera,
         material,
         texture,
         blurShader,
         renderer;
+    const min = Vector.create(0, 0);
+    const max = Vector.create();
+    const particleAmount = 80;
+    const particles = Array.from({ length: particleAmount });
 
     scene = new THREE.Scene();
     camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
@@ -609,7 +636,7 @@ const COLORS = {
 
         halfWidth = eCanvas.width / 2;
         halfHeight = eCanvas.height / 2;
-        halfMinimum = min(halfWidth, halfHeight);
+        max.set(eCanvas.width, eCanvas.height);
         background(ctx, "#333333");
 
         renderer.setSize(eMain.offsetWidth, eMain.offsetHeight);
@@ -663,6 +690,13 @@ const COLORS = {
             eCanvas.width,
             eCanvas.height
         );
+
+        for (let i = 0; i < particles.length; i++) {
+            particles[i] = new Particle(
+                random(0, eCanvas.width),
+                random(0, eCanvas.height)
+            );
+        }
     }
 
     window.addEventListener("resize", initialize);
@@ -714,6 +748,9 @@ const COLORS = {
             initializeAudio(URL.createObjectURL(event.target.files[0]));
     };
 
+    const mouse = Vector.create();
+    mousePosition(renderer.domElement, mouse);
+
     const visualizer = new Visualizer(10);
 
     let framerate = 0;
@@ -732,6 +769,7 @@ const COLORS = {
             buildVisualizer(
                 COLORS[currentPalette],
                 config.waveDelay,
+                mouse,
                 frequencyOffset
             );
         }
@@ -741,6 +779,7 @@ const COLORS = {
     function buildVisualizer(
         layerColors,
         delay,
+        mouseP,
         offsetFreq = 0,
         frequenciesList = []
     ) {
@@ -769,15 +808,27 @@ const COLORS = {
                 buildVisualizer(
                     layerColors,
                     delay,
+                    mouseP,
                     offsetFreq,
                     frequenciesList
                 );
             } else {
                 background(ctx, "#333333");
-                ctx.translate(halfWidth, halfHeight);
 
                 const averageVolume =
                     getAverageVolume(frequenciesList[0]) / 255;
+                if (config.showSnow) {
+                    const snowForceMultiplier = 1 + averageVolume / 10;
+                    for (let i = 0; i < particles.length; i++) {
+                        ctx.fillStyle = "#ffffff";
+                        particles[i]
+                            .update(min, max, snowForceMultiplier, mouseP)
+                            .show(ctx, 4 * snowForceMultiplier);
+                    }
+                }
+
+                ctx.translate(halfWidth, halfHeight);
+
                 const scalling =
                     1 + (averageVolume / 3) * config.scaleIntensity;
                 ctx.scale(scalling, scalling);
@@ -828,6 +879,6 @@ const COLORS = {
         framerate = 0;
     }, 1000);
 
-        draw();
+    draw();
     </script>
 </Layout>
