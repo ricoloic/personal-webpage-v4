@@ -1,0 +1,450 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Checkbox from "../../components/inputs/Checkbox.astro";
+import Range from "../../components/inputs/Range.astro";
+import Fab from "../../components/Fab.astro";
+import Canvas from "../../components/Canvas.astro";
+import Controls from "../../components/Controls.astro";
+import FabButton from "../../components/FabButton.astro";
+import PlayIcon from "../../components/icons/PlayIcon.astro";
+import PauseIcon from "../../components/icons/PauseIcon.astro";
+import MenuIcon from "../../components/icons/MenuIcon.astro";
+import FabDropdown from "../../components/FabDropdown.astro";
+import ColorButton from "../../components/ColorButton.astro";
+
+const COLORS = {
+    tacha: [
+        "#3b1e0d",
+        "#683c1f",
+        "#7e4722",
+        "#b87827",
+        "#d1992f",
+        "#dab345",
+        "#dfc45f",
+        "#ebdd9c",
+        "#995a24",
+        "#f5efd0",
+        "#fcf9ee",
+    ],
+    green: [
+        "#062d17",
+        "#15522e",
+        "#176435",
+        "#167f3f",
+        "#18a14c",
+        "#24c362",
+        "#3cd978",
+        "#87eeae",
+        "#bcf6d1",
+        "#dcfce8",
+        "#f0fdf4",
+    ],
+    pink: [
+        "#4d0a30",
+        "#7f1c55",
+        "#981c63",
+        "#b71f78",
+        "#d42e94",
+        "#e54bb1",
+        "#ef77ca",
+        "#f6abe1",
+        "#f9d1ef",
+        "#fbe8f6",
+        "#fdf2fa",
+    ],
+    darkpurple: [
+        "#2f2d3e",
+        "#474462",
+        "#57527b",
+        "#656095",
+        "#6e6ca4",
+        "#7e7fb3",
+        "#979bc3",
+        "#b9bcd7",
+        "#d6d8e7",
+        "#e8e9f1",
+        "#f5f6f9",
+    ],
+    firefly: [
+        "#05282b",
+        "#154a4c",
+        "#135a5c",
+        "#127173",
+        "#118e90",
+        "#19b3b2",
+        "#32cfcb",
+        "#62e6de",
+        "#9cf3eb",
+        "#cdfaf5",
+        "#f0fdfb",
+    ],
+    kokoda: [
+        "#1b1c17",
+        "#363730",
+        "#3d3e36",
+        "#494b40",
+        "#5e6050",
+        "#6e705e",
+        "#959784",
+        "#b2b3a3",
+        "#d0d0c6",
+        "#e5e6e1",
+        "#f4f4f1",
+    ],
+    yellow: [
+        "#252c07",
+        "#475116",
+        "#545f15",
+        "#697813",
+        "#8b9d13",
+        "#b3c51d",
+        "#d1e040",
+        "#e3ed69",
+        "#f0f6a0",
+        "#f8facd",
+        "#fdfde8",
+    ],
+    cerise: [
+        "#420f1b",
+        "#77243b",
+        "#8b263e",
+        "#a52b45",
+        "#c73f58",
+        "#da596a",
+        "#e78590",
+        "#f0b1b7",
+        "#f7d4d7",
+        "#fbe8e8",
+        "#fdf3f4",
+    ],
+    blue: [
+        "#0a2b47",
+        "#10436a",
+        "#0c5080",
+        "#095d9b",
+        "#0976c0",
+        "#1695e1",
+        "#3faef1",
+        "#82c9f7",
+        "#a6d7f9",
+        "#e1f0fd",
+        "#f1f8fe",
+    ],
+};
+---
+
+<Layout title="Audio Hexagon">
+    <Canvas id="audio-hexagon-canvas">
+        <Fab slot="edit">
+            <FabButton name="toggle">
+                <span id="play-icon">
+                    <PlayIcon />
+                </span>
+                <span id="pause-icon" class="hidden">
+                    <PauseIcon />
+                </span>
+            </FabButton>
+            <FabButton name="upload-audio">
+                <input
+                    type="file"
+                    class="hidden"
+                    id="input-upload-audio"
+                    accept="audio/mpeg, audio/mp4"
+                />Select Audio
+            </FabButton>
+            <FabDropdown id="color">
+                <div slot="button" id="color-pill" class="rounded-full"></div>
+
+                <div
+                    slot="dropdown"
+                    class="flex gap-2 max-w-full flex-wrap justify-between">
+                    {
+                        Object.entries(COLORS).map(([key, value]) => (
+                            <ColorButton name={key} color={value[5]} />
+                        ))
+                    }
+                </div>
+            </FabDropdown>
+            <FabDropdown id="edit">
+                <MenuIcon slot="button" />
+                <Controls slot="dropdown">
+                    <Checkbox
+                        id="log-framerate-checkbox"
+                        title="Log Framerate"
+                    />
+                    <Range
+                        id="radius-range"
+                        title="Radius"
+                        min={10}
+                        max={300}
+                        step={10}
+                    />
+                </Controls>
+            </FabDropdown>
+        </Fab>
+    </Canvas>
+
+    <!-- SECTION: STATIC_IMPORTS -->
+    <script is:inline src="/js/classes/vector.js"></script>
+    <script is:inline src="/js/utils/core.js"></script>
+    <script is:inline src="/js/utils/draw.js"></script>
+    <script is:inline src="/js/utils/url.js"></script>
+    <script is:inline src="/js/utils/mouse.js"></script>
+    <script is:inline src="/js/externals/noise.js"></script>
+    <script is:inline src="/js/classes/audio-controller.js"></script>
+    <!-- ENDSECTION: STATIC_IMPORTS -->
+
+    <script is:inline define:vars={{ COLORS }}>
+    const config = {
+        palette: "firefly",
+        radius: 200,
+        logFramerate: true,
+    };
+    prefillConfig(config);
+    setParamConfig(config);
+
+    let currentPalette = config.palette;
+
+    const inputLogFramerate = $("#log-framerate-checkbox");
+    const spanFramerate = $("#framerate");
+    const buttonTogglPlay = $('button[name="toggle"]');
+    const spanPauseIcon = $("#pause-icon");
+    const spanPlayIcon = $("#play-icon");
+    const inputUploadAudio = $("#input-upload-audio");
+    const divColorPill = $("#color-pill");
+    const buttonsColors = document.querySelectorAll(
+        'button[data-name="color-button"]'
+    );
+    const inputRadius = $("#radius-range");
+    const labelRadius = $('label[for="radius-range"]>span');
+
+    inputRadius.setAttribute("value", config.radius);
+    labelRadius.textContent = config.radius;
+    inputRadius.onchange = (event) => {
+        labelRadius.textContent = event.target.value;
+        config.radius = parseFloat(event.target.value);
+        setParamConfig(config);
+    };
+
+    $('button[name="upload-audio"]').onclick = () =>
+        inputUploadAudio.click();
+
+    if (config.logFramerate) toggleCheckbox(inputLogFramerate);
+    inputLogFramerate.onchange = () => {
+        config.logFramerate = !config.logFramerate;
+        if (!config.logFramerate) spanFramerate.textContent = "";
+        setParamConfig(config);
+    };
+
+    divColorPill.setAttribute(
+        "style",
+        `background-color: ${COLORS[currentPalette][5]};`
+    );
+    for (const elem of buttonsColors) {
+        elem.addEventListener("click", function () {
+            config.palette = elem.getAttribute("data-color-name");
+            currentPalette = config.palette;
+            divColorPill.setAttribute(
+                "style",
+                `background-color: ${COLORS[currentPalette][5]};`
+            );
+            setParamConfig(config);
+        });
+    }
+
+    const main = document.getElementById("canvas-wrapper");
+    const canvas = document.getElementById("audio-hexagon-canvas");
+    const ctx = canvas.getContext("2d");
+    let halfWidth,
+        halfHeight,
+        audioController,
+        framerate = 0;
+    const frequencyDomain = 2048;
+
+    function initialize() {
+        canvas.width = main.offsetWidth;
+        canvas.height = main.offsetHeight;
+
+        halfWidth = canvas.width / 2;
+        halfHeight = canvas.height / 2;
+    }
+
+    initialize();
+    window.onresize = initialize;
+
+    function getAverageVolume(array) {
+        const values = array.reduce((sum, value) => sum + value, 0);
+        return values / array.length;
+    }
+
+    function draw() {
+        framerate++;
+        background(ctx, "#333333");
+
+        if (audioController?.initialized) {
+            const frequencies = audioController.analyzeFrequency({
+                fftSize: frequencyDomain,
+            });
+            let frequencyInterval = Math.floor(frequencies.length / 6);
+            let lower = frequencies.length - frequencyInterval,
+                upper = frequencies.length;
+
+            const angles = [];
+
+            for (let i = 0; i < 6; i++) {
+                angles.push(map(i, 0, 6, 0, TWO_PI));
+            }
+
+            for (let i = 0; i < angles.length; i++) {
+                const startAngle = angles[i];
+                const endAngle = angles[i + 1 == angles.length ? 0 : i + 1];
+                const startX =
+                    Math.cos(startAngle) * config.radius + halfWidth;
+                const startY =
+                    Math.sin(startAngle) * config.radius + halfHeight;
+                const endX = Math.cos(endAngle) * config.radius + halfWidth;
+                const endY =
+                    Math.sin(endAngle) * config.radius + halfHeight;
+                const volume = frequencies.subarray(lower, upper);
+
+                lower -= frequencyInterval;
+                upper -= frequencyInterval;
+
+                let dx = endX - startX;
+                let dy = endY - startY;
+                let perpX = dy;
+                let perpY = -dx;
+                let length = Math.sqrt(perpX * perpX + perpY * perpY);
+                perpX /= length;
+                perpY /= length;
+
+                let divider = 6;
+                const size = volume.length;
+                let dividedSize = size / divider;
+                for (let j = 0; j < dividedSize; j++) {
+                    const index = j * divider;
+                    const volumeAtIndex = volume[size - index];
+                    let t = index / (size - 1);
+                    let x = startX + t * dx;
+                    let y = startY + t * dy;
+                    let perpEndX = x + perpX * volumeAtIndex;
+                    let perpEndY = y + perpY * volumeAtIndex;
+
+                    ctx.strokeStyle = COLORS[currentPalette][5];
+                    ctx.lineWidth = 5;
+                    strokeLine(ctx, x, y, perpEndX, perpEndY);
+                }
+
+                ctx.beginPath();
+                for (let j = 0; j < dividedSize; j++) {
+                    const index = j * divider;
+                    const volumeAtIndex = volume[size - index] * 0.2 + 14;
+                    let t = index / (size - 1);
+                    let x = startX + t * dx;
+                    let y = startY + t * dy;
+                    let perpEndX = x + perpX * volumeAtIndex;
+                    let perpEndY = y + perpY * volumeAtIndex;
+
+                    if (j == 0) ctx.moveTo(perpEndX, perpEndY);
+                    else ctx.lineTo(perpEndX, perpEndY);
+                }
+                ctx.strokeStyle = COLORS[currentPalette][2];
+                ctx.lineWidth = 4;
+                ctx.lineCap = "round";
+                ctx.stroke();
+
+                for (let j = 0; j < dividedSize; j++) {
+                    const index = j * divider;
+                    const volumeAtIndex = volume[size - index] + 7;
+                    let t = index / (size - 1);
+                    let x = startX + t * dx;
+                    let y = startY + t * dy;
+                    let perpEndX = x + perpX * volumeAtIndex;
+                    let perpEndY = y + perpY * volumeAtIndex;
+                    ctx.fillStyle =
+                        COLORS[currentPalette][
+                        COLORS[currentPalette].length - 4
+                        ];
+                    fillCircle(ctx, perpEndX, perpEndY, 3);
+                }
+            }
+
+            frequencyInterval = Math.floor(
+                frequencies.length / COLORS[currentPalette].length
+            );
+            lower = frequencies.length - frequencyInterval;
+            upper = frequencies.length;
+            for (let i = 0; i < COLORS[currentPalette].length; i++) {
+                const volume = getAverageVolume(
+                    frequencies.subarray(lower, upper)
+                );
+                lower -= frequencyInterval;
+                upper -= frequencyInterval;
+
+                ctx.fillStyle = COLORS[currentPalette][i];
+                ctx.beginPath();
+                const realRadius =
+                    (config.radius - i * 10) * map(volume, 0, 255, 1, 0.2);
+                for (let j = 0; j < 6; j++) {
+                    const a = map(j, 0, 6, 0, TWO_PI);
+                    let x = Math.cos(a) * realRadius + halfWidth;
+                    let y = Math.sin(a) * realRadius + halfHeight;
+
+                    if (j == 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.closePath();
+                ctx.fill();
+            }
+        }
+
+        requestAnimationFrame(draw);
+    }
+
+    setInterval(function () {
+        if (config.logFramerate)
+            spanFramerate.textContent = `${framerate}fps`;
+        framerate = 0;
+    }, 1000);
+
+    draw();
+
+    const toogleVisibility = () => {
+        if (findClassIndex(spanPlayIcon, "hidden") !== -1) {
+            addClass(spanPauseIcon, "hidden");
+            removeClass(spanPlayIcon, "hidden");
+        } else {
+            addClass(spanPlayIcon, "hidden");
+            removeClass(spanPauseIcon, "hidden");
+        }
+    };
+
+    function initializeAudio(url) {
+        addClass(spanPauseIcon, "hidden");
+        removeClass(spanPlayIcon, "hidden");
+        audioController?.disconnect();
+        audioController = AudioController.create();
+        audioController
+            .load(url)
+            .then((ac) => ac.initialize())
+            .then(() => {
+                buttonTogglPlay.onclick = () => {
+                    audioController.toggle();
+                    toogleVisibility();
+                };
+            });
+
+        audioController.onended = () => {
+            addClass(spanPauseIcon, "hidden");
+            removeClass(spanPlayIcon, "hidden");
+        };
+    }
+
+    initializeAudio("/audio/Hudson Lee & False Noise - Way Of Thought.mp3");
+
+    inputUploadAudio.onchange = (event) => {
+        if (event.target.files[0])
+            initializeAudio(URL.createObjectURL(event.target.files[0]));
+    };
+    </script>
+</Layout>

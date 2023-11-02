@@ -1,18 +1,17 @@
-function mousePosition(canvas) {
-    const position = { x: 0, y: 0 };
-
-    canvas.addEventListener("mousemove", function (event) {
+function mousePosition(canvas, position = { x: 0, y: 0 }) {
+    canvas.addEventListener("mousemove", (event) => {
         const rect = canvas.getBoundingClientRect();
+        console.log(position);
         position.x = event.clientX - rect.left;
         position.y = event.clientY - rect.top;
+        console.log(position);
     });
-    canvas.addEventListener("touchmove", function (event) {
+    canvas.addEventListener("touchmove", (event) => {
         event.preventDefault();
         const rect = canvas.getBoundingClientRect();
         position.x = event.touches[0].pageX - rect.left;
         position.y = event.touches[0].pageY - rect.top;
     });
-
     return position;
 }
 
