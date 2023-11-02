@@ -9,7 +9,9 @@ import Checkbox from "../../components/inputs/Checkbox.astro";
 import Layout from "../../layouts/Layout.astro";
 ---
 
-<Layout title="Line Follow">
+<Layout
+    title="Line Follow"
+    previewImage="https://rico.studio/assets/website-previews/line-follow.png">
     <Canvas id="line-follow-canvas">
         <Fab slot="edit">
             <FabDropdown id="color">
@@ -51,102 +53,102 @@ import Layout from "../../layouts/Layout.astro";
     <!-- ENDSECTION: STATIC_IMPORTS -->
 
     <script is:inline>
-        // SECTION: CONFIG
-        const config = {
-            spring: 0.4,
-            pointsNumber: 40,
-            friction: 0.5,
-            baseWidth: 0.3,
-            color: "#ffffff",
-            logFramerate: true,
-        };
-        prefillConfig(config);
+    // SECTION: CONFIG
+    const config = {
+        spring: 0.4,
+        pointsNumber: 40,
+        friction: 0.5,
+        baseWidth: 0.3,
+        color: "#ffffff",
+        logFramerate: true,
+    };
+    prefillConfig(config);
+    setParamConfig(config);
+
+    const eLogFramerateCheckbox = document.getElementById(
+        "log-framerate-checkbox"
+    );
+    const eFramerate = document.getElementById("framerate");
+
+    if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
+    eLogFramerateCheckbox.addEventListener("change", function () {
+        config.logFramerate = !config.logFramerate;
         setParamConfig(config);
+        if (!config.logFramerate) eFramerate.textContent = "";
+    });
 
-        const eLogFramerateCheckbox = document.getElementById(
-            "log-framerate-checkbox"
-        );
-        const eFramerate = document.getElementById("framerate");
+    const pColor = useColors(config);
 
-        if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
-        eLogFramerateCheckbox.addEventListener("change", function () {
-            config.logFramerate = !config.logFramerate;
-            setParamConfig(config);
-            if (!config.logFramerate) eFramerate.textContent = "";
-        });
+    const eMain = document.getElementById("canvas-wrapper");
+    const eCanvas = document.getElementById("line-follow-canvas");
+    eCanvas.width = eMain.offsetWidth;
+    eCanvas.height = eMain.offsetHeight;
 
-        const pColor = useColors(config);
-
-        const eMain = document.getElementById("canvas-wrapper");
-        const eCanvas = document.getElementById("line-follow-canvas");
+    window.addEventListener("resize", function () {
         eCanvas.width = eMain.offsetWidth;
         eCanvas.height = eMain.offsetHeight;
+    });
 
-        window.addEventListener("resize", function () {
-            eCanvas.width = eMain.offsetWidth;
-            eCanvas.height = eMain.offsetHeight;
-        });
+    const ctx = eCanvas.getContext("2d");
+    const mouse = mousePosition(eCanvas);
+    const trail = Array.from({ length: config.pointsNumber });
 
-        const ctx = eCanvas.getContext("2d");
-        const mouse = mousePosition(eCanvas);
-        const trail = Array.from({ length: config.pointsNumber });
+    ctx.lineWidth = 1;
 
-        ctx.lineWidth = 1;
+    let framerate = 0;
 
-        let framerate = 0;
+    for (let i = 0; i < trail.length; i++) {
+        trail[i] = {
+            x: mouse.x,
+            y: mouse.y,
+            dx: 0,
+            dy: 0,
+        };
+    }
+
+    function draw(t) {
+        framerate++;
+
+        background(ctx, "#333333");
 
         for (let i = 0; i < trail.length; i++) {
-            trail[i] = {
-                x: mouse.x,
-                y: mouse.y,
-                dx: 0,
-                dy: 0,
-            };
+            const p = trail[i];
+            const prev = i === 0 ? mouse : trail[i - 1];
+            const spring = i === 0 ? 0.4 * config.spring : config.spring;
+
+            p.dx += (prev.x - p.x) * spring;
+            p.dy += (prev.y - p.y) * spring;
+            p.dx *= config.friction;
+            p.dy *= config.friction;
+
+            p.x += p.dx;
+            p.y += p.dy;
         }
 
-        function draw(t) {
-            framerate++;
+        ctx.beginPath();
+        ctx.moveTo(trail[0].x, trail[0].y);
 
-            background(ctx, "#333333");
-
-            for (let i = 0; i < trail.length; i++) {
-                const p = trail[i];
-                const prev = i === 0 ? mouse : trail[i - 1];
-                const spring = i === 0 ? 0.4 * config.spring : config.spring;
-
-                p.dx += (prev.x - p.x) * spring;
-                p.dy += (prev.y - p.y) * spring;
-                p.dx *= config.friction;
-                p.dy *= config.friction;
-
-                p.x += p.dx;
-                p.y += p.dy;
-            }
-
-            ctx.beginPath();
-            ctx.moveTo(trail[0].x, trail[0].y);
-
-            for (let i = 1; i < trail.length - 1; i++) {
-                const xc = 0.5 * (trail[i].x + trail[i + 1].x);
-                const yc = 0.5 * (trail[i].y + trail[i + 1].y);
-                ctx.quadraticCurveTo(trail[i].x, trail[i].y, xc, yc);
-                ctx.lineWidth = config.baseWidth * (config.pointsNumber - i);
-                ctx.strokeStyle = `rgba(${pColor.r}, ${pColor.g}, ${pColor.b}, 0.1)`;
-                ctx.stroke();
-                // ctx.fillStyle = "rgba(255, 255, 255, 1)";
-                // fillCircle(ctx, trail[i].x, trail[i].y, 2);
-            }
-
-            ctx.lineTo(trail[trail.length - 1].x, trail[trail.length - 1].y);
+        for (let i = 1; i < trail.length - 1; i++) {
+            const xc = 0.5 * (trail[i].x + trail[i + 1].x);
+            const yc = 0.5 * (trail[i].y + trail[i + 1].y);
+            ctx.quadraticCurveTo(trail[i].x, trail[i].y, xc, yc);
+            ctx.lineWidth = config.baseWidth * (config.pointsNumber - i);
+            ctx.strokeStyle = `rgba(${pColor.r}, ${pColor.g}, ${pColor.b}, 0.1)`;
             ctx.stroke();
-            requestAnimationFrame(draw);
+            // ctx.fillStyle = "rgba(255, 255, 255, 1)";
+            // fillCircle(ctx, trail[i].x, trail[i].y, 2);
         }
 
-        setInterval(function () {
-            if (config.logFramerate) eFramerate.textContent = `${framerate}fps`;
-            framerate = 0;
-        }, 1000);
+        ctx.lineTo(trail[trail.length - 1].x, trail[trail.length - 1].y);
+        ctx.stroke();
+        requestAnimationFrame(draw);
+    }
 
-        draw();
+    setInterval(function () {
+        if (config.logFramerate) eFramerate.textContent = `${framerate}fps`;
+        framerate = 0;
+    }, 1000);
+
+    draw();
     </script>
 </Layout>

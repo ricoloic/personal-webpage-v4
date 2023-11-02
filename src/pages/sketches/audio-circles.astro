@@ -132,7 +132,9 @@ const COLORS = {
 };
 ---
 
-<Layout title="Audio Circles">
+<Layout
+    title="Audio Circles"
+    previewImage="https://rico.studio/assets/website-previews/audio-circles.png">
     <Canvas id="audio-circles-canvas">
         <Fab slot="edit">
             <FabButton name="toggle">
@@ -374,5 +376,5 @@ const COLORS = {
         if (event.target.files[0])
             initializeAudio(URL.createObjectURL(event.target.files[0]));
     };
-    </script>
+        </script>
 </Layout>

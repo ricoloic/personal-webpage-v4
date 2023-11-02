@@ -17,7 +17,9 @@ const colorPaletteOptions = paletteNames.map((paletteName) => ({
 }));
 ---
 
-<Layout title="Mouse Follow">
+<Layout
+    title="Mouse Follow"
+    previewImage="https://rico.studio/assets/website-previews/mouse-follow.png">
     <Canvas id="mouse-follow-canvas">
         <Fab slot="edit">
             <FabDropdown id="edit">
@@ -67,211 +69,211 @@ const colorPaletteOptions = paletteNames.map((paletteName) => ({
     <!-- ENDSECTION: STATIC_IMPORTS -->
 
     <script is:inline define:vars={{ COLOR_PALETTES }}>
-        const config = {
-            showBlob: true,
-            showParticles: true,
-            showParticleBorder: false,
-            showParticleAlfa: false,
-            particleAmount: 70,
-            colorPalette: "happy",
-            logFramerate: true,
-        };
-        prefillConfig(config);
+    const config = {
+        showBlob: true,
+        showParticles: true,
+        showParticleBorder: false,
+        showParticleAlfa: false,
+        particleAmount: 70,
+        colorPalette: "happy",
+        logFramerate: true,
+    };
+    prefillConfig(config);
+    setParamConfig(config);
+
+    const eLogFramerateCheckbox = document.getElementById(
+        "log-framerate-checkbox"
+    );
+    const eFramerate = document.getElementById("framerate");
+    const eShowBlobCheckbox = document.getElementById("show-blob-checkbox");
+    const eShowParticlesCheckbox = document.getElementById(
+        "show-particles-checkbox"
+    );
+    const eShowParticleBorderCheckbox = document.getElementById(
+        "show-particle-border-checkbox"
+    );
+    const eShowParticleAlfaCheckbox = document.getElementById(
+        "show-particle-alfa-checkbox"
+    );
+    const eParticleAmountRange = document.getElementById(
+        "particle-amount-range"
+    );
+    const eParticleAmountLabel = document.querySelector(
+        'label[for="particle-amount-range"]>span'
+    );
+    const eColorPaletteDropdown = document.getElementById(
+        "color-palette-dropdown"
+    );
+    const eColorPaletteOptions = document.querySelectorAll(
+        "#color-palette-dropdown>option"
+    );
+
+    if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
+    eLogFramerateCheckbox.addEventListener("change", function () {
+        config.logFramerate = !config.logFramerate;
         setParamConfig(config);
+        if (!config.logFramerate) eFramerate.textContent = "";
+    });
 
-        const eLogFramerateCheckbox = document.getElementById(
-            "log-framerate-checkbox"
-        );
-        const eFramerate = document.getElementById("framerate");
-        const eShowBlobCheckbox = document.getElementById("show-blob-checkbox");
-        const eShowParticlesCheckbox = document.getElementById(
-            "show-particles-checkbox"
-        );
-        const eShowParticleBorderCheckbox = document.getElementById(
-            "show-particle-border-checkbox"
-        );
-        const eShowParticleAlfaCheckbox = document.getElementById(
-            "show-particle-alfa-checkbox"
-        );
-        const eParticleAmountRange = document.getElementById(
-            "particle-amount-range"
-        );
-        const eParticleAmountLabel = document.querySelector(
-            'label[for="particle-amount-range"]>span'
-        );
-        const eColorPaletteDropdown = document.getElementById(
-            "color-palette-dropdown"
-        );
-        const eColorPaletteOptions = document.querySelectorAll(
-            "#color-palette-dropdown>option"
-        );
+    if (config.showBlob) toggleCheckbox(eShowBlobCheckbox);
+    eShowBlobCheckbox.addEventListener("change", function () {
+        config.showBlob = !config.showBlob;
+        setParamConfig(config);
+    });
 
-        if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
-        eLogFramerateCheckbox.addEventListener("change", function () {
-            config.logFramerate = !config.logFramerate;
-            setParamConfig(config);
-            if (!config.logFramerate) eFramerate.textContent = "";
-        });
+    if (config.showParticles) toggleCheckbox(eShowParticlesCheckbox);
+    eShowParticlesCheckbox.addEventListener("change", function () {
+        config.showParticles = !config.showParticles;
+        setParamConfig(config);
+    });
 
-        if (config.showBlob) toggleCheckbox(eShowBlobCheckbox);
-        eShowBlobCheckbox.addEventListener("change", function () {
-            config.showBlob = !config.showBlob;
-            setParamConfig(config);
-        });
+    if (config.showParticleBorder)
+        toggleCheckbox(eShowParticleBorderCheckbox);
+    eShowParticleBorderCheckbox.addEventListener("change", function () {
+        config.showParticleBorder = !config.showParticleBorder;
+        setParamConfig(config);
+    });
 
-        if (config.showParticles) toggleCheckbox(eShowParticlesCheckbox);
-        eShowParticlesCheckbox.addEventListener("change", function () {
-            config.showParticles = !config.showParticles;
-            setParamConfig(config);
-        });
+    if (config.showParticleAlfa) toggleCheckbox(eShowParticleAlfaCheckbox);
+    eShowParticleAlfaCheckbox.addEventListener("change", function () {
+        config.showParticleAlfa = !config.showParticleAlfa;
+        setParamConfig(config);
+    });
 
-        if (config.showParticleBorder)
-            toggleCheckbox(eShowParticleBorderCheckbox);
-        eShowParticleBorderCheckbox.addEventListener("change", function () {
-            config.showParticleBorder = !config.showParticleBorder;
-            setParamConfig(config);
-        });
+    eParticleAmountRange.setAttribute("value", config.particleAmount);
+    eParticleAmountLabel.textContent = config.particleAmount;
+    eParticleAmountRange.addEventListener("change", function (event) {
+        eParticleAmountLabel.textContent = event.target.value;
+        config.particleAmount = parseFloat(event.target.value);
+        setParamConfig(config);
+    });
 
-        if (config.showParticleAlfa) toggleCheckbox(eShowParticleAlfaCheckbox);
-        eShowParticleAlfaCheckbox.addEventListener("change", function () {
-            config.showParticleAlfa = !config.showParticleAlfa;
-            setParamConfig(config);
-        });
-
-        eParticleAmountRange.setAttribute("value", config.particleAmount);
-        eParticleAmountLabel.textContent = config.particleAmount;
-        eParticleAmountRange.addEventListener("change", function (event) {
-            eParticleAmountLabel.textContent = event.target.value;
-            config.particleAmount = parseFloat(event.target.value);
-            setParamConfig(config);
-        });
-
-        for (const colorPaletteOption of eColorPaletteOptions) {
-            console.log(colorPaletteOption);
-            const value = colorPaletteOption.getAttribute("value");
-            if (value === config.colorPalette) {
-                colorPaletteOption.setAttribute("selected", "");
-                break;
-            }
+    for (const colorPaletteOption of eColorPaletteOptions) {
+        console.log(colorPaletteOption);
+        const value = colorPaletteOption.getAttribute("value");
+        if (value === config.colorPalette) {
+            colorPaletteOption.setAttribute("selected", "");
+            break;
         }
-        eColorPaletteDropdown.addEventListener("change", function (event) {
-            config.colorPalette = event.target.value;
-            setParamConfig(config);
-        });
+    }
+    eColorPaletteDropdown.addEventListener("change", function (event) {
+        config.colorPalette = event.target.value;
+        setParamConfig(config);
+    });
 
-        class Particle {
-            constructor(position, color) {
-                this.color = color;
-                this.lifespan = 1;
-                this.position = position.copy();
-                this.velocity = Vector.create(random(-1, 1), random(-1, 1));
-            }
-
-            reset(position, color) {
-                this.color = color;
-                this.lifespan = 1;
-                this.position.set(position);
-                this.velocity.set(random(-1, 1), random(-1, 1));
-                return this;
-            }
-
-            update() {
-                this.position.add(this.velocity);
-                this.lifespan -= random(0.035, 0.045);
-                return this;
-            }
-
-            show(ctx, border, alfa) {
-                ctx.fillStyle = colorToString(
-                    this.color,
-                    alfa ? this.lifespan : 1
-                );
-                fillCircle(ctx, this.position.x, this.position.y, 8);
-                if (border) {
-                    ctx.strokeStyle = "#ffffff";
-                    ctx.stroke();
-                }
-                return this;
-            }
-
-            isFinished() {
-                return this.lifespan < 0;
-            }
-
-            static create(...args) {
-                return new Particle(...args);
-            }
+    class Particle {
+        constructor(position, color) {
+            this.color = color;
+            this.lifespan = 1;
+            this.position = position.copy();
+            this.velocity = Vector.create(random(-1, 1), random(-1, 1));
         }
 
-        const eMain = document.getElementById("canvas-wrapper");
-        const eCanvas = document.getElementById("mouse-follow-canvas");
+        reset(position, color) {
+            this.color = color;
+            this.lifespan = 1;
+            this.position.set(position);
+            this.velocity.set(random(-1, 1), random(-1, 1));
+            return this;
+        }
+
+        update() {
+            this.position.add(this.velocity);
+            this.lifespan -= random(0.035, 0.045);
+            return this;
+        }
+
+        show(ctx, border, alfa) {
+            ctx.fillStyle = colorToString(
+                this.color,
+                alfa ? this.lifespan : 1
+            );
+            fillCircle(ctx, this.position.x, this.position.y, 8);
+            if (border) {
+                ctx.strokeStyle = "#ffffff";
+                ctx.stroke();
+            }
+            return this;
+        }
+
+        isFinished() {
+            return this.lifespan < 0;
+        }
+
+        static create(...args) {
+            return new Particle(...args);
+        }
+    }
+
+    const eMain = document.getElementById("canvas-wrapper");
+    const eCanvas = document.getElementById("mouse-follow-canvas");
+    eCanvas.width = eMain.offsetWidth;
+    eCanvas.height = eMain.offsetHeight;
+
+    window.addEventListener("resize", function () {
         eCanvas.width = eMain.offsetWidth;
         eCanvas.height = eMain.offsetHeight;
+    });
 
-        window.addEventListener("resize", function () {
-            eCanvas.width = eMain.offsetWidth;
-            eCanvas.height = eMain.offsetHeight;
-        });
+    const ctx = eCanvas.getContext("2d");
+    const mouse = mousePosition(eCanvas);
+    const particles = [];
 
-        const ctx = eCanvas.getContext("2d");
-        const mouse = mousePosition(eCanvas);
-        const particles = [];
+    ctx.lineWidth = 1;
 
-        ctx.lineWidth = 1;
+    let framerate = 0;
 
-        let framerate = 0;
+    function draw() {
+        framerate++;
 
-        function draw() {
-            framerate++;
+        background(ctx, "#333333");
 
-            background(ctx, "#333333");
-
-            if (particles.length < config.particleAmount) {
-                particles.push(
-                    Particle.create(
-                        Vector.fromObject(mouse),
-                        random(COLOR_PALETTES[config.colorPalette])
-                    )
-                );
-            } else if (particles.length > config.particleAmount) {
-                particles.pop();
-            }
-
-            const averagePosition = Vector.create();
-
-            for (let i = 0; i < particles.length; i++) {
-                const particle = particles[i];
-                particle.update();
-                if (config.showParticles) {
-                    particle.show(
-                        ctx,
-                        config.showParticleBorder,
-                        config.showParticleAlfa
-                    );
-                }
-                averagePosition.add(particle.position);
-                if (particle.isFinished()) {
-                    particle.reset(
-                        Vector.fromObject(mouse),
-                        random(COLOR_PALETTES[config.colorPalette])
-                    );
-                }
-            }
-            averagePosition.div(particles.length);
-
-            if (config.showBlob) {
-                ctx.stroke;
-                ctx.fillStyle = "#ffffff";
-                fillCircle(ctx, averagePosition.x, averagePosition.y, 25);
-            }
-            requestAnimationFrame(draw);
+        if (particles.length < config.particleAmount) {
+            particles.push(
+                Particle.create(
+                    Vector.fromObject(mouse),
+                    random(COLOR_PALETTES[config.colorPalette])
+                )
+            );
+        } else if (particles.length > config.particleAmount) {
+            particles.pop();
         }
 
-        setInterval(function () {
-            if (config.logFramerate) eFramerate.textContent = `${framerate}fps`;
-            framerate = 0;
-        }, 1000);
+        const averagePosition = Vector.create();
 
-        draw();
+        for (let i = 0; i < particles.length; i++) {
+            const particle = particles[i];
+            particle.update();
+            if (config.showParticles) {
+                particle.show(
+                    ctx,
+                    config.showParticleBorder,
+                    config.showParticleAlfa
+                );
+            }
+            averagePosition.add(particle.position);
+            if (particle.isFinished()) {
+                particle.reset(
+                    Vector.fromObject(mouse),
+                    random(COLOR_PALETTES[config.colorPalette])
+                );
+            }
+        }
+        averagePosition.div(particles.length);
+
+        if (config.showBlob) {
+            ctx.stroke;
+            ctx.fillStyle = "#ffffff";
+            fillCircle(ctx, averagePosition.x, averagePosition.y, 25);
+        }
+        requestAnimationFrame(draw);
+    }
+
+    setInterval(function () {
+        if (config.logFramerate) eFramerate.textContent = `${framerate}fps`;
+        framerate = 0;
+    }, 1000);
+
+    draw();
     </script>
 </Layout>

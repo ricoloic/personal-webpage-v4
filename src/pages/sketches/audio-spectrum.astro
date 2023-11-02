@@ -134,7 +134,9 @@ const COLORS = {
 };
 ---
 
-<Layout title="Audio Spectrum">
+<Layout
+    title="Audio Spectrum"
+    previewImage="https://rico.studio/assets/website-previews/audio-spectrum.png">
     <script
         slot="head-layout"
         src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"
@@ -585,7 +587,6 @@ const COLORS = {
                 baseRadius: this.baseRadius,
             }
         ) {
-            ctx.beginPath();
             for (let a = 0; a < PI; a += 0.01) {
                 const i = Math.floor(map(a, 0, PI, 0, freq.length));
                 const r = freq[i];
