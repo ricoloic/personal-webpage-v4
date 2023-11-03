@@ -1,10 +1,8 @@
 function mousePosition(canvas, position = { x: 0, y: 0 }) {
     canvas.addEventListener("mousemove", (event) => {
         const rect = canvas.getBoundingClientRect();
-        console.log(position);
         position.x = event.clientX - rect.left;
         position.y = event.clientY - rect.top;
-        console.log(position);
     });
     canvas.addEventListener("touchmove", (event) => {
         event.preventDefault();
