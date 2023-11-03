@@ -7,6 +7,7 @@ import Range from "../../components/inputs/Range.astro";
 import Canvas from "../../components/Canvas.astro";
 import FabDropdown from "../../components/FabDropdown.astro";
 import MenuIcon from "../../components/icons/MenuIcon.astro";
+import COLOR_PALETTES from "../../constants/colors";
 ---
 
 <Layout title="Flowfield">
@@ -42,20 +43,22 @@ import MenuIcon from "../../components/icons/MenuIcon.astro";
     <!-- SECTION: STATIC_IMPORTS -->
     <script is:inline src="/js/externals/noise.js"></script>
     <script is:inline src="/js/classes/vector.js"></script>
+    <script is:inline src="/js/classes/quadtree.js"></script>
     <script is:inline src="/js/utils/core.js"></script>
     <script is:inline src="/js/utils/color.js"></script>
     <script is:inline src="/js/utils/draw.js"></script>
     <script is:inline src="/js/utils/url.js"></script>
     <!-- ENDSECTION: STATIC_IMPORTS -->
 
-    <script is:inline>
+    <script is:inline define:vars={{ COLOR_PALETTES }}>
         const config = {
             logFramerate: true,
             particleAmount: 2_000,
             scale: 10,
+            maxTrailLength: 50,
             increment: 0.1,
             lod: 3,
-            fallOff: 0.6,
+            fallOff: 0.3,
             showFlow: true,
         };
         prefillConfig(config);
@@ -108,12 +111,22 @@ import MenuIcon from "../../components/icons/MenuIcon.astro";
             setParamConfig(config);
         });
 
+        const useTrail = false;
+
         class Particle {
             constructor(x, y) {
+                this.trail = [];
                 this.position = Vector.create(x, y);
+                this.trail[0] = this.position.copy();
                 this.velocity = Vector.create(random(-1, 1), random(-1, 1));
                 this.acceleration = Vector.create();
-                this.limitVelocity = 0.08;
+                this.limitVelocity = 0.1;
+                const color = random(COLOR_PALETTES.happy);
+                this.color = color;
+                this.rgbaString = `rgba(${color.rgba.r}, ${color.rgba.g}, ${
+                    color.rgba.b
+                }, ${random(0, 0.8)})`;
+                this.width = random(1, 3);
             }
 
             reset(x, y) {
@@ -121,9 +134,13 @@ import MenuIcon from "../../components/icons/MenuIcon.astro";
                 return this;
             }
 
-            update(ok = false) {
+            update() {
                 this.velocity.add(this.acceleration).limit(this.limitVelocity);
                 this.position.add(this.velocity);
+                this.trail.push(this.position.copy());
+                if (this.trail.length > config.maxTrailLength) {
+                    this.trail.splice(0, 1);
+                }
                 this.acceleration.mult(0);
                 return this;
             }
@@ -134,19 +151,52 @@ import MenuIcon from "../../components/icons/MenuIcon.astro";
             }
 
             wrap(minimum, maximum) {
+                let wrapped = false;
+
                 if (this.position.x > maximum.x) {
                     this.position.x = minimum.x;
+                    wrapped = true;
                 } else if (this.position.x < minimum.x) {
                     this.position.x = maximum.x;
+                    wrapped = true;
                 }
 
                 if (this.position.y > maximum.y) {
                     this.position.y = minimum.y;
+                    wrapped = true;
                 } else if (this.position.y < minimum.y) {
                     this.position.y = maximum.y;
+                    wrapped = true;
+                }
+
+                if (wrapped) {
+                    this.trail.splice(
+                        0,
+                        this.trail.length,
+                        this.position.copy()
+                    );
                 }
 
                 return this;
+            }
+
+            avoid(particles, radius) {
+                const steering = Vector.create();
+                let count = 0;
+
+                for (let other of particles) {
+                    if (other == this) continue;
+                    const d = Vector.dist(this.position, other.position);
+                    if (d > 0 && d < radius) {
+                        const diff = Vector.sub(this.position, other.position)
+                            .normalize()
+                            .div(d);
+                        steering.add(diff);
+                        count++;
+                    }
+                }
+
+                return steering.mag(0.5);
             }
 
             follow(columns, flowfield) {
@@ -159,12 +209,29 @@ import MenuIcon from "../../components/icons/MenuIcon.astro";
             }
 
             show(ctx, scale) {
-                ctx.fillRect(
-                    this.position.x * scale,
-                    this.position.y * scale,
-                    1,
-                    1
-                );
+                if (useTrail) {
+                    ctx.strokeStyle = this.color.color;
+                    ctx.lineWidth = this.width;
+                    ctx.beginPath();
+                    ctx.moveTo(
+                        this.trail[0].x * scale,
+                        this.trail[0].y * scale
+                    );
+                    for (let i = 1; i < this.trail.length; i++) {
+                        const currentX = this.trail[i].x * scale;
+                        const currentY = this.trail[i].y * scale;
+                        ctx.lineTo(currentX, currentY);
+                    }
+                    ctx.stroke();
+                } else {
+                    ctx.fillStyle = this.rgbaString;
+                    ctx.fillRect(
+                        this.position.x * scale,
+                        this.position.y * scale,
+                        this.width,
+                        this.width
+                    );
+                }
             }
 
             static create(...args) {
@@ -207,7 +274,8 @@ import MenuIcon from "../../components/icons/MenuIcon.astro";
         let columns,
             rows,
             displayScale,
-            zOffset = 0;
+            zOffset = 0,
+            boundary = new Rectangle(0, 0, 0, 0);
 
         function initialize() {
             displayScale = config.scale * 1.5;
@@ -215,9 +283,15 @@ import MenuIcon from "../../components/icons/MenuIcon.astro";
             eCanvas.height = eMain.offsetHeight;
             columns = Math.ceil(eCanvas.width / config.scale);
             rows = Math.ceil(eCanvas.height / config.scale);
+            boundary = new Rectangle(
+                (rows + 1) / 2,
+                (columns + 1) / 2,
+                rows + 1,
+                columns + 1
+            );
             maximumSize.set(columns, rows);
             background(ctx, "#333333");
-            ctx.fillStyle = "hsla(26, 20%, 100%, 0.05)";
+            ctx.fillStyle = "hsla(26, 20%, 100%, 0.1)";
             ctx.lineWidth = 1;
             ctx.strokeStyle = "white";
 
@@ -254,9 +328,8 @@ import MenuIcon from "../../components/icons/MenuIcon.astro";
         let framerate = 0;
         function draw() {
             framerate++;
-            requestAnimationFrame(draw);
 
-            if (config.showFlow) {
+            if (config.showFlow || useTrail) {
                 background(ctx, "#333333");
             }
 
@@ -282,7 +355,15 @@ import MenuIcon from "../../components/icons/MenuIcon.astro";
             }
             zOffset += 0.001;
 
-            if (config.showFlow) return;
+            if (config.showFlow) {
+                requestAnimationFrame(draw);
+                return;
+            }
+
+            const quadTree = new QuadTree(boundary, 4);
+            for (let i = 0; i < particles.length; i++) {
+                quadTree.insert(particles[i]);
+            }
 
             for (let i = 0; i < config.particleAmount; i++) {
                 if (!particles[i]) {
@@ -292,12 +373,21 @@ import MenuIcon from "../../components/icons/MenuIcon.astro";
                     );
                 }
 
+                const range = new Rectangle(
+                    particles[i].position.x,
+                    particles[i].position.y,
+                    1,
+                    1
+                );
+
                 particles[i]
-                    .update(i == 0)
+                    .applyForce(particles[i].avoid(quadTree.query(range), 0.8))
+                    .update()
                     .wrap(minimumSize, maximumSize)
                     .follow(columns, flowfield)
                     .show(ctx, config.scale);
             }
+            requestAnimationFrame(draw);
         }
 
         setInterval(function () {

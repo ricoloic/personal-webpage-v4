@@ -1,5 +1,4 @@
 ---
-import Canvas from "../../components/Canvas.astro";
 import Layout from "../../layouts/Layout.astro";
 ---
 
@@ -7,6 +6,8 @@ import Layout from "../../layouts/Layout.astro";
     <!-- SECTION: STATIC_IMPORTS -->
     <script is:inline src="/js/utils/core.js"></script>
     <!-- ENDSECTION: STATIC_IMPORTS -->
+
+    <main class="relative w-full h-full overflow-auto"></main>
 
     <script is:inline>
     class MinesweeperCellElement extends HTMLDivElement {
@@ -34,7 +35,7 @@ import Layout from "../../layouts/Layout.astro";
             if (this.flagged) {
                 this.className = `${this.baseClassName} bg-orange-500`;
             } else {
-                this.className = `${this.baseClassName} hover:bg-gray-300 hover:cursor-pointer`;
+                this.className = `${this.baseClassName} bg-gray-300 hover:bg-gray-300 hover:cursor-pointer`;
             }
         }
 
@@ -89,13 +90,81 @@ import Layout from "../../layouts/Layout.astro";
         }
     }
 
-    class MinesweeperResetButtonElement extends HTMLButtonElement {
+    class PositiveNumberInputElement extends HTMLInputElement {
+        constructor(initialValue = 0) {
+            super();
+            this.setAttribute("type", "number");
+            this.setAttribute("value", initialValue);
+            this.value = initialValue;
+            this.className = "w-[4ch]";
+            this.onchange = ({ target: { value } }) => {
+                if (value == "") {
+                    this.setAttribute("value", 0);
+                    this.value = 0;
+                    return;
+                }
+                const v = parseInt(value, 10);
+                if (v < 0 || isNaN(v)) {
+                    this.setAttribute("value", 0);
+                    this.value = 0;
+                    return;
+                }
+
+                this.setAttribute("value", v);
+                this.value = v;
+            };
+        }
+    }
+
+    class MinesweeperResetButtonElement extends HTMLDivElement {
         constructor(onreset) {
             super();
-            this.onclick = onreset;
-            this.className =
-                "bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold px-2 inline-flex items-center";
-            this.textContent = "RESET GAME";
+            this.className = "flex border-2 divide-x";
+            const button = document.createElement("button");
+            button.className =
+                "hover:bg-gray-200 text-gray-800 font-bold px-2 inline-flex items-center";
+            button.textContent = "RESET GAME";
+            this.appendChild(button);
+
+            const initialRowsValue = 10;
+            const initialColsValue = 30;
+            const initialMinesValue = 20;
+
+            const rowsDiv = document.createElement("div");
+            rowsDiv.className = "pl-2";
+            const rowsLabel = document.createElement("label");
+            rowsLabel.textContent = "ROWS: ";
+            const rowsInput = new PositiveNumberInputElement(
+                initialRowsValue
+            );
+            rowsDiv.appendChild(rowsLabel);
+            rowsDiv.appendChild(rowsInput);
+            this.appendChild(rowsDiv);
+
+            const colsDiv = document.createElement("div");
+            colsDiv.className = "pl-2";
+            const colsLabel = document.createElement("label");
+            colsLabel.textContent = "COLS: ";
+            const colsInput = new PositiveNumberInputElement(
+                initialColsValue
+            );
+            colsDiv.appendChild(colsLabel);
+            colsDiv.appendChild(colsInput);
+            this.appendChild(colsDiv);
+
+            const minesDiv = document.createElement("div");
+            minesDiv.className = "pl-2";
+            const minesLabel = document.createElement("label");
+            minesLabel.textContent = "MINES: ";
+            const minesInput = new PositiveNumberInputElement(
+                initialMinesValue
+            );
+            minesDiv.appendChild(minesLabel);
+            minesDiv.appendChild(minesInput);
+            this.appendChild(minesDiv);
+
+            button.onclick = () =>
+                onreset(rowsInput.value, colsInput.value, minesInput.value);
         }
     }
 
@@ -109,7 +178,7 @@ import Layout from "../../layouts/Layout.astro";
         }
 
         connectedCallback() {
-            this.className = "w-full flex justify-between";
+            this.className = "w-full flex justify-around gap-20";
 
             const leftDiv = document.createElement("div");
             leftDiv.className = "flex gap-2";
@@ -161,57 +230,23 @@ import Layout from "../../layouts/Layout.astro";
         }
     }
 
-    class MinesweeperElement extends HTMLElement {
+    class MinesweeperElement extends HTMLDivElement {
         static observedAttributes = ["cols", "rows", "mines"];
 
-        constructor() {
+        constructor(rowAmount, columnAmount, mineAmount) {
             super();
-            this.columnAmount = 0;
-            this.rowAmount = 0;
-            this.mineAmount = 0;
+            this.columnAmount = columnAmount;
+            this.rowAmount = rowAmount;
+            this.mineAmount = mineAmount;
             this.rows = [];
 
             this.flaggedMineCount = 0;
             this.flaggedCount = 0;
             this.touched = false;
             this.controls = null;
-        }
 
-        connectedCallback() {
-            if (this.hasAttribute("cols"))
-                this.columnAmount = parseInt(this.getAttribute("cols"), 10);
-            else this.columnAmount = 10;
-
-            if (this.hasAttribute("rows"))
-                this.rowAmount = parseInt(this.getAttribute("rows"), 10);
-            else this.rowAmount = 10;
-
-            if (this.hasAttribute("mines"))
-                this.mineAmount = parseInt(this.getAttribute("mines"), 10);
-            else this.mineAmount = 2;
-
-            this.className = "flex flex-col gap-2 items-center";
-            this.initialGameState();
-        }
-
-        attributeChangedCallback(name, oldValue, newValue) {
-            let actualName = null;
-
-            switch (name) {
-                case "mines":
-                    actualName = "mineAmount";
-                    break;
-                case "cols":
-                    actualName = "columnAmount";
-                    break;
-                case "rows":
-                    actualName = "rowAmount";
-                    break;
-            }
-
-            if (actualName) {
-                this[actualName] = parseInt(newValue, 10);
-            }
+            this.className =
+                "flex flex-col gap-2 items-center p-10 mx-auto h-fit w-fit";
             this.initialGameState();
         }
 
@@ -272,8 +307,8 @@ import Layout from "../../layouts/Layout.astro";
             text.textContent = "You Lost";
             this.appendChild(text);
             this.appendChild(
-                new MinesweeperResetButtonElement(() =>
-                    this.initialGameState()
+                new MinesweeperResetButtonElement((r, c, m) =>
+                    this.initialGameState(r, c, m)
                 )
             );
         }
@@ -285,18 +320,25 @@ import Layout from "../../layouts/Layout.astro";
             text.textContent = "You Won";
             this.appendChild(text);
             this.appendChild(
-                new MinesweeperResetButtonElement(() =>
-                    this.initialGameState()
+                new MinesweeperResetButtonElement((r, c, m) =>
+                    this.initialGameState(r, c, m)
                 )
             );
         }
 
-        initialGameState() {
+        initialGameState(
+            rowAmount = this.rowAmount,
+            columnAmount = this.columnAmount,
+            mineAmount = this.mineAmount
+        ) {
+            this.rowAmount = rowAmount;
+            this.columnAmount = columnAmount;
+            this.mineAmount = mineAmount;
             this.innerHTML = "";
             this.textContent = "";
             this.controls = new MinesweeperControlsElement(
                 this.mineAmount,
-                () => this.initialGameState()
+                (r, c, m) => this.initialGameState(r, c, m)
             );
             this.appendChild(this.controls);
             this.flaggedMineCount = 0;
@@ -407,20 +449,22 @@ import Layout from "../../layouts/Layout.astro";
         { extends: "div" }
     );
     window.customElements.define(
+        "positive-number-input-element",
+        PositiveNumberInputElement,
+        { extends: "input" }
+    );
+    window.customElements.define(
         "minesweeper-reset-button-element",
         MinesweeperResetButtonElement,
-        { extends: "button" }
+        { extends: "div" }
     );
-    window.customElements.define("minesweeper-element", MinesweeperElement);
-    </script>
+    window.customElements.define(
+        "minesweeper-element",
+        MinesweeperElement,
+        { extends: "div" }
+    );
 
-    <main
-        class="overflow-y-auto relative flex-1 overflow-hidden h-full flex justify-center items-center">
-        <minesweeper-element cols="30" rows="10" mines="20"
-        ></minesweeper-element>
-    </main>
-
-    <script is:inline>
-    const config = {};
+    const game = new MinesweeperElement(10, 30, 20);
+    document.querySelector("main").appendChild(game);
     </script>
 </Layout>
