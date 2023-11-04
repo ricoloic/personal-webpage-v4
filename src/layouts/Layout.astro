@@ -185,6 +185,10 @@ const { title, previewImage = "https://rico.studio/assets/website-card.jpg" } =
                                         title="Audio Circles"
                                         href="/sketches/audio-circles"
                                     />
+                                    <Link
+                                        title="Audio Hexagon"
+                                        href="/sketches/audio-hexagon"
+                                    />
                                 </ul>
                             </li>
                         </ul>
@@ -198,42 +202,42 @@ const { title, previewImage = "https://rico.studio/assets/website-card.jpg" } =
         <slot />
 
         <script lang="js">
-        const eHomeLink = document.getElementById("home-link");
+            const eHomeLink = document.getElementById("home-link");
 
-        if (window.location.pathname === "/") {
-            eHomeLink.setAttribute("aria-current", "page");
-        } else {
-            eHomeLink.setAttribute("aria-current", "");
-        }
-
-        const eSketchDropdown =
-            document.getElementById("sketches-dropdown");
-
-        function handleCloseSketchDropdown(event) {
-            const eSketchesLinks =
-                document.getElementById("sketches-links");
-            let target = event.target;
-            while (target) {
-                if (target == eSketchesLinks) return;
-                target = target.parentNode;
-            }
-
-            addClass(eSketchDropdown, "hidden");
-        }
-
-        function handleToggleSketchDropdown() {
-            if (findClassIndex(eSketchDropdown, "hidden") === -1) {
-                addClass(eSketchDropdown, "hidden");
+            if (window.location.pathname === "/") {
+                eHomeLink.setAttribute("aria-current", "page");
             } else {
-                removeClass(eSketchDropdown, "hidden");
+                eHomeLink.setAttribute("aria-current", "");
             }
-        }
 
-        document
-            .querySelector('button[name="sketches-button"]')
-            .addEventListener("click", handleToggleSketchDropdown);
+            const eSketchDropdown =
+                document.getElementById("sketches-dropdown");
 
-        document.addEventListener("click", handleCloseSketchDropdown);
+            function handleCloseSketchDropdown(event) {
+                const eSketchesLinks =
+                    document.getElementById("sketches-links");
+                let target = event.target;
+                while (target) {
+                    if (target == eSketchesLinks) return;
+                    target = target.parentNode;
+                }
+
+                addClass(eSketchDropdown, "hidden");
+            }
+
+            function handleToggleSketchDropdown() {
+                if (findClassIndex(eSketchDropdown, "hidden") === -1) {
+                    addClass(eSketchDropdown, "hidden");
+                } else {
+                    removeClass(eSketchDropdown, "hidden");
+                }
+            }
+
+            document
+                .querySelector('button[name="sketches-button"]')
+                .addEventListener("click", handleToggleSketchDropdown);
+
+            document.addEventListener("click", handleCloseSketchDropdown);
         </script>
     </body>
 </html>

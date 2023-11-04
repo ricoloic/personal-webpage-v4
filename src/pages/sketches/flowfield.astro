@@ -7,6 +7,14 @@ import Range from "../../components/inputs/Range.astro";
 import Canvas from "../../components/Canvas.astro";
 import FabDropdown from "../../components/FabDropdown.astro";
 import MenuIcon from "../../components/icons/MenuIcon.astro";
+import COLOR_PALETTES from "../../constants/colors";
+import Dropdown from "../../components/inputs/Dropdown.astro";
+
+const paletteNames = Object.keys(COLOR_PALETTES);
+const colorPaletteOptions = paletteNames.map((paletteName) => ({
+    value: paletteName,
+    label: paletteName,
+}));
 ---
 
 <Layout title="Flowfield">
@@ -20,6 +28,10 @@ import MenuIcon from "../../components/icons/MenuIcon.astro";
                         title="Log Framerate"
                     />
                     <Checkbox id="show-flow-checkbox" title="Show Flow" />
+                    <Checkbox
+                        id="use-trails-checkbox"
+                        title="Use Particles Trail"
+                    />
                     <Range
                         id="particle-amount-range"
                         title="Particle Amount"
@@ -34,6 +46,11 @@ import MenuIcon from "../../components/icons/MenuIcon.astro";
                         max={50}
                         step={2}
                     />
+                    <Dropdown
+                        id="color-palette-dropdown"
+                        title="Color Palette"
+                        options={colorPaletteOptions}
+                    />
                 </Controls>
             </FabDropdown>
         </Fab>
@@ -42,88 +59,94 @@ import MenuIcon from "../../components/icons/MenuIcon.astro";
     <!-- SECTION: STATIC_IMPORTS -->
     <script is:inline src="/js/externals/noise.js"></script>
     <script is:inline src="/js/classes/vector.js"></script>
+    <script is:inline src="/js/classes/quadtree.js"></script>
     <script is:inline src="/js/utils/core.js"></script>
     <script is:inline src="/js/utils/color.js"></script>
     <script is:inline src="/js/utils/draw.js"></script>
     <script is:inline src="/js/utils/url.js"></script>
     <!-- ENDSECTION: STATIC_IMPORTS -->
 
-    <script is:inline>
+    <script is:inline define:vars={{ COLOR_PALETTES }}>
         const config = {
             logFramerate: true,
-            particleAmount: 2_000,
+            useTrails: true,
+            particleAmount: 1500,
             scale: 10,
-            increment: 0.1,
+            maxTrailLength: 40,
+            increment: 0.04,
             lod: 3,
-            fallOff: 0.6,
-            showFlow: true,
+            fallOff: 0.25,
+            colorPalette: "happy",
+            showFlow: false,
         };
         prefillConfig(config);
         setParamConfig(config);
 
-        const eLogFramerateCheckbox = document.getElementById(
-            "log-framerate-checkbox"
-        );
-        const eFramerate = document.getElementById("framerate");
-        const eShowFlowCheckbox = document.getElementById("show-flow-checkbox");
-        const eParticleAmountRange = document.getElementById(
-            "particle-amount-range"
-        );
-        const eParticleAmountLabel = document.querySelector(
+        const main = $("#canvas-wrapper");
+        const canvas = $("#flowfield-canvas");
+        const particles = [];
+        const ctx = canvas.getContext("2d");
+        const maximumSize = Vector.create();
+        const minimumSize = Vector.create();
+        const flowfield = [];
+        let columns,
+            rows,
+            displayScale,
+            zOffset = 0,
+            boundary = new Rectangle(0, 0, 0, 0);
+        let framerate = 0;
+        let amountOfFlows = 0;
+
+        const inputLogFramerate = $("#log-framerate-checkbox");
+        const spanFramerate = $("#framerate");
+        const inputShowFlow = $("#show-flow-checkbox");
+        const inputUseTrails = $("#use-trails-checkbox");
+        const inputParticleAmount = $("#particle-amount-range");
+        const labelParticleAmount = $(
             'label[for="particle-amount-range"]>span'
         );
-        const eScaleRange = document.getElementById("scale-range");
-        const eScaleLabel = document.querySelector(
-            'label[for="scale-range"]>span'
-        );
-
-        if (config.logFramerate) toggleCheckbox(eLogFramerateCheckbox);
-        eLogFramerateCheckbox.addEventListener("change", function () {
-            config.logFramerate = !config.logFramerate;
-            setParamConfig(config);
-            if (!config.logFramerate) eFramerate.textContent = "";
-        });
-
-        if (config.showFlow) toggleCheckbox(eShowFlowCheckbox);
-        eShowFlowCheckbox.addEventListener("change", function () {
-            config.showFlow = !config.showFlow;
-            initialize();
-            setParamConfig(config);
-        });
-
-        eParticleAmountRange.setAttribute("value", config.particleAmount);
-        eParticleAmountLabel.textContent = config.particleAmount;
-        eParticleAmountRange.addEventListener("change", function (event) {
-            eParticleAmountLabel.textContent = event.target.value;
-            config.particleAmount = parseFloat(event.target.value);
-            setParamConfig(config);
-        });
-
-        eScaleRange.setAttribute("value", config.scale);
-        eScaleLabel.textContent = config.scale;
-        eScaleRange.addEventListener("change", function (event) {
-            eScaleLabel.textContent = event.target.value;
-            config.scale = parseFloat(event.target.value);
-            initialize();
-            setParamConfig(config);
-        });
+        const inputScale = $("#scale-range");
+        const labelScale = $('label[for="scale-range"]>span');
+        const inputColorPalette = $("#color-palette-dropdown");
+        const optionsColorPalette = $("#color-palette-dropdown>option");
 
         class Particle {
-            constructor(x, y) {
+            constructor(x, y, minAlfa = 0.1) {
+                this.minAlfa = minAlfa;
                 this.position = Vector.create(x, y);
-                this.velocity = Vector.create(random(-1, 1), random(-1, 1));
+                this.trail = [];
+                this.trail[0] = this.position.copy();
+                this.sideTrail = [];
+                this.velocity = Vector.create();
                 this.acceleration = Vector.create();
-                this.limitVelocity = 0.08;
+                this.limitVelocity = 0.1;
+                this.updateColor(COLOR_PALETTES[config.colorPalette]);
+                this.width = random(1, 5);
+                this.maxTrailLength = random(1, config.maxTrailLength);
             }
 
-            reset(x, y) {
-                this.position.set(x, y);
+            updateColor(colors) {
+                const color = random(colors);
+                this.color = color;
+                this.rgbaString = `rgba(${color.rgba.r}, ${color.rgba.g}, ${
+                    color.rgba.b
+                }, ${random(0, this.minAlfa)})`;
+            }
+
+            reset() {
+                this.position.set(random(columns), random(rows));
                 return this;
             }
 
-            update(ok = false) {
+            update() {
                 this.velocity.add(this.acceleration).limit(this.limitVelocity);
                 this.position.add(this.velocity);
+                if (config.useTrails) {
+                    this.trail.push(this.position.copy());
+                    if (this.trail.length > this.maxTrailLength) {
+                        this.trail.splice(0, 1);
+                    }
+                }
                 this.acceleration.mult(0);
                 return this;
             }
@@ -133,20 +156,58 @@ import MenuIcon from "../../components/icons/MenuIcon.astro";
                 return this;
             }
 
-            wrap(minimum, maximum) {
-                if (this.position.x > maximum.x) {
-                    this.position.x = minimum.x;
-                } else if (this.position.x < minimum.x) {
-                    this.position.x = maximum.x;
-                }
+            wrap() {
+                if (config.useTrails) {
+                    const wrapped =
+                        this.position.x > maximumSize.x ||
+                        this.position.x < minimumSize.x ||
+                        this.position.y > maximumSize.y ||
+                        this.position.y < minimumSize.y;
 
-                if (this.position.y > maximum.y) {
-                    this.position.y = minimum.y;
-                } else if (this.position.y < minimum.y) {
-                    this.position.y = maximum.y;
+                    if (wrapped) {
+                        this.position.set(
+                            random(minimumSize.x, maximumSize.x),
+                            random(minimumSize.y, maximumSize.y)
+                        );
+
+                        this.sideTrail = this.trail.splice(
+                            0,
+                            this.trail.length,
+                            this.position.copy()
+                        );
+                    }
+                } else {
+                    if (this.position.x > maximumSize.x)
+                        this.position.x = minimumSize.x;
+                    else if (this.position.x < minimumSize.x)
+                        this.position.x = maximumSize.x;
+
+                    if (this.position.y > maximumSize.y)
+                        this.position.y = minimumSize.y;
+                    else if (this.position.y < minimumSize.y)
+                        this.position.y = maximumSize.y;
                 }
 
                 return this;
+            }
+
+            avoid(particles, radius) {
+                const steering = Vector.create();
+                let count = 0;
+
+                for (let other of particles) {
+                    if (other == this) continue;
+                    const d = Vector.dist(this.position, other.position);
+                    if (d > 0 && d < radius) {
+                        const diff = Vector.sub(this.position, other.position)
+                            .normalize()
+                            .div(d);
+                        steering.add(diff);
+                        count++;
+                    }
+                }
+
+                return steering.mag(0.5);
             }
 
             follow(columns, flowfield) {
@@ -158,17 +219,51 @@ import MenuIcon from "../../components/icons/MenuIcon.astro";
                 return this.applyForce(force);
             }
 
-            show(ctx, scale) {
-                ctx.fillRect(
-                    this.position.x * scale,
-                    this.position.y * scale,
-                    1,
-                    1
-                );
+            show() {
+                if (config.useTrails) {
+                    ctx.strokeStyle = this.color.color;
+                    ctx.lineWidth = this.width;
+                    ctx.beginPath();
+                    ctx.moveTo(
+                        this.trail[0].x * config.scale,
+                        this.trail[0].y * config.scale
+                    );
+                    for (let i = 1; i < this.trail.length; i++) {
+                        ctx.lineTo(
+                            this.trail[i].x * config.scale,
+                            this.trail[i].y * config.scale
+                        );
+                    }
+                    ctx.stroke();
+
+                    if (this.sideTrail.length > 0) {
+                        ctx.beginPath();
+                        ctx.moveTo(
+                            this.sideTrail[0].x * config.scale,
+                            this.sideTrail[0].y * config.scale
+                        );
+                        for (let i = 1; i < this.sideTrail.length; i++) {
+                            ctx.lineTo(
+                                this.sideTrail[i].x * config.scale,
+                                this.sideTrail[i].y * config.scale
+                            );
+                        }
+                        ctx.stroke();
+                        this.sideTrail.splice(0, 1);
+                    }
+                } else {
+                    ctx.fillStyle = this.rgbaString;
+                    ctx.fillRect(
+                        this.position.x * config.scale,
+                        this.position.y * config.scale,
+                        this.width,
+                        this.width
+                    );
+                }
             }
 
-            static create(...args) {
-                return new Particle(...args);
+            static create(minAlfa) {
+                return new Particle(random(columns), random(rows), minAlfa);
             }
         }
 
@@ -183,10 +278,10 @@ import MenuIcon from "../../components/icons/MenuIcon.astro";
                 return this;
             }
 
-            show(ctx, scale, x, y) {
+            show(x, y) {
                 ctx.beginPath();
                 ctx.moveTo(x, y);
-                const v = this.vector.copy().mag(scale);
+                const v = this.vector.copy().mag(displayScale);
                 ctx.lineTo(x + v.x, y + v.y);
                 ctx.stroke();
             }
@@ -196,85 +291,55 @@ import MenuIcon from "../../components/icons/MenuIcon.astro";
             }
         }
 
-        const eMain = document.getElementById("canvas-wrapper");
-        const eCanvas = document.getElementById("flowfield-canvas");
-
-        const maximumSize = Vector.create();
-        const minimumSize = Vector.create();
-        const ctx = eCanvas.getContext("2d");
-        const flowfield = [];
-        const particles = [];
-        let columns,
-            rows,
-            displayScale,
-            zOffset = 0;
-
         function initialize() {
             displayScale = config.scale * 1.5;
-            eCanvas.width = eMain.offsetWidth;
-            eCanvas.height = eMain.offsetHeight;
-            columns = Math.ceil(eCanvas.width / config.scale);
-            rows = Math.ceil(eCanvas.height / config.scale);
+            canvas.width = main.offsetWidth;
+            canvas.height = main.offsetHeight;
+            columns = Math.ceil(canvas.width / config.scale);
+            rows = Math.ceil(canvas.height / config.scale);
+            boundary = new Rectangle(
+                (rows + 1) / 2,
+                (columns + 1) / 2,
+                rows + 1,
+                columns + 1
+            );
             maximumSize.set(columns, rows);
             background(ctx, "#333333");
-            ctx.fillStyle = "hsla(26, 20%, 100%, 0.05)";
             ctx.lineWidth = 1;
             ctx.strokeStyle = "white";
+            ctx.lineCap = "round";
 
-            for (let i = 0; i < particles.length; i++) {
-                particles[i].reset(random(columns), random(rows));
-            }
-
-            let iterations = 0;
-            for (let y = 0; y <= rows + 1; y++) {
-                for (let x = 0; x <= columns + 1; x++) {
-                    if (!flowfield[iterations]) flowfield.push(Flow.create());
-                    iterations++;
-                }
-            }
+            for (let i = 0; i < particles.length; i++) particles[i].reset();
+            amountOfFlows = (rows + 1) * (columns + 1);
+            for (let i = 0; i < amountOfFlows; i++)
+                if (!flowfield[i]) flowfield.push(Flow.create());
         }
 
-        window.addEventListener("resize", initialize);
+        window.onresize = initialize;
 
         initialize();
 
         noiseDetail(config.lod, config.fallOff);
 
-        for (let y = 0; y <= rows + 1; y++) {
-            for (let x = 0; x <= columns + 1; x++) {
-                flowfield.push(Flow.create());
-            }
-        }
+        for (let i = 0; i < amountOfFlows; i++) flowfield.push(Flow.create());
+        for (let i = 0; i < config.particleAmount; i++)
+            particles.push(
+                Particle.create(map(i, 0, particles.length, 0.05, 0.8))
+            );
 
-        for (let i = 0; i < config.particleAmount; i++) {
-            const particle = Particle.create(random(columns), random(rows));
-            particles.push(particle);
-        }
-
-        let framerate = 0;
         function draw() {
             framerate++;
-            requestAnimationFrame(draw);
 
-            if (config.showFlow) {
-                background(ctx, "#333333");
-            }
+            if (config.showFlow || config.useTrails) background(ctx, "#333333");
 
-            let yOffset = 234423;
+            let yOffset = 3;
             for (let y = 0; y <= rows; y++) {
-                let xOffset = 1000;
+                let xOffset = 3301;
                 for (let x = 0; x <= columns; x++) {
-                    const realX = x * config.scale,
-                        realY = y * config.scale;
                     const flow = flowfield[x + y * columns];
-
-                    if (!flow) return;
-
                     flow.update(xOffset, yOffset, zOffset);
-
-                    if (config.showFlow) {
-                        flow.show(ctx, displayScale, realX, realY);
-                    }
+                    if (config.showFlow)
+                        flow.show(x * config.scale, y * config.scale);
 
                     xOffset += config.increment;
                 }
@@ -282,28 +347,104 @@ import MenuIcon from "../../components/icons/MenuIcon.astro";
             }
             zOffset += 0.001;
 
-            if (config.showFlow) return;
+            if (config.showFlow) {
+                requestAnimationFrame(draw);
+                return;
+            }
+
+            const quadTree = new QuadTree(boundary, 4);
+            for (let i = 0; i < particles.length; i++)
+                quadTree.insert(particles[i]);
 
             for (let i = 0; i < config.particleAmount; i++) {
-                if (!particles[i]) {
+                if (!particles[i])
                     particles[i] = Particle.create(
-                        random(columns),
-                        random(rows)
+                        map(i, 0, particles.length, 0.05, 0.8)
                     );
-                }
+
+                const range = new Rectangle(
+                    particles[i].position.x,
+                    particles[i].position.y,
+                    1,
+                    1
+                );
 
                 particles[i]
-                    .update(i == 0)
-                    .wrap(minimumSize, maximumSize)
+                    .applyForce(particles[i].avoid(quadTree.query(range), 0.8))
+                    .update()
+                    .wrap()
                     .follow(columns, flowfield)
                     .show(ctx, config.scale);
             }
+
+            requestAnimationFrame(draw);
         }
 
-        setInterval(function () {
-            if (config.logFramerate) eFramerate.textContent = `${framerate}fps`;
+        setInterval(() => {
+            if (config.logFramerate)
+                spanFramerate.textContent = `${framerate}fps`;
             framerate = 0;
         }, 1000);
+
+        if (config.logFramerate) toggleCheckbox(inputLogFramerate);
+        inputLogFramerate.onchange = () => {
+            config.logFramerate = !config.logFramerate;
+            setParamConfig(config);
+            if (!config.logFramerate) spanFramerate.textContent = "";
+        };
+
+        if (config.showFlow) toggleCheckbox(inputShowFlow);
+        inputShowFlow.onchange = () => {
+            config.showFlow = !config.showFlow;
+            background(ctx, "#333333");
+            ctx.fillStyle = "hsla(26, 20%, 100%, 0.1)";
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = "white";
+            ctx.lineCap = "round";
+            setParamConfig(config);
+        };
+
+        if (config.useTrails) toggleCheckbox(inputUseTrails);
+        inputUseTrails.onchange = () => {
+            config.useTrails = !config.useTrails;
+            if (!config.useTrails) {
+                background(ctx, "#333333");
+                ctx.lineWidth = 1;
+                ctx.strokeStyle = "white";
+            }
+            setParamConfig(config);
+        };
+
+        inputParticleAmount.setAttribute("value", config.particleAmount);
+        labelParticleAmount.textContent = config.particleAmount;
+        inputParticleAmount.onchange = (event) => {
+            labelParticleAmount.textContent = event.target.value;
+            config.particleAmount = parseFloat(event.target.value);
+            setParamConfig(config);
+        };
+
+        inputScale.setAttribute("value", config.scale);
+        labelScale.textContent = config.scale;
+        inputScale.onchange = (event) => {
+            labelScale.textContent = event.target.value;
+            config.scale = parseFloat(event.target.value);
+            initialize();
+            setParamConfig(config);
+        };
+
+        for (const colorPaletteOption of optionsColorPalette) {
+            const value = colorPaletteOption.getAttribute("value");
+            if (value === config.colorPalette) {
+                colorPaletteOption.setAttribute("selected", "");
+                break;
+            }
+        }
+        inputColorPalette.onchange = (event) => {
+            config.colorPalette = event.target.value;
+            for (const p of particles)
+                p.updateColor(COLOR_PALETTES[config.colorPalette]);
+            setParamConfig(config);
+        };
 
         draw();
     </script>
