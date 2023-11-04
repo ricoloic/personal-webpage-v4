@@ -57,9 +57,7 @@ const colorPaletteOptions = paletteNames.map((paletteName) => ({
     </Canvas>
 
     <!-- SECTION: STATIC_IMPORTS -->
-    <script is:inline src="/js/externals/noise.js">
-        import COLOR_PALETTES from "../../constants/colors";
-    </script>
+    <script is:inline src="/js/externals/noise.js"></script>
     <script is:inline src="/js/classes/vector.js"></script>
     <script is:inline src="/js/classes/quadtree.js"></script>
     <script is:inline src="/js/utils/core.js"></script>
@@ -72,13 +70,13 @@ const colorPaletteOptions = paletteNames.map((paletteName) => ({
         const config = {
             logFramerate: true,
             useTrails: true,
-            particleAmount: 3_000,
+            particleAmount: 1500,
             scale: 10,
             maxTrailLength: 40,
             increment: 0.04,
             lod: 3,
             fallOff: 0.25,
-            colorPalette: "pastel",
+            colorPalette: "happy",
             showFlow: false,
         };
         prefillConfig(config);
