@@ -18,16 +18,20 @@ import Layout from "../../layouts/Layout.astro";
         };
 
         class CellElement extends HTMLDivElement {
-            constructor(i, j) {
+            constructor(empty = false, i, j) {
                 super();
                 this.i = i;
                 this.j = j;
-                this.className =
-                    "flex justify-center items-center w-20 h-20 border-2 text-2xl";
+                this.className = `${
+                    empty
+                        ? "w-[100px] h-[100px] border-[4px]"
+                        : "w-[92px] h-[92px] absolute bg-white"
+                } transition-all ease-out duration-200 flex justify-center items-center text-2xl`;
                 this.value = 0;
                 this.id = `${i}-${j}-cell`;
                 this.setAttribute("id", this.id);
-                this._onValueChange();
+
+                if (!empty) this._onValueChange();
             }
 
             isZero() {
@@ -44,8 +48,22 @@ import Layout from "../../layouts/Layout.astro";
                 this._onValueChange();
             }
 
+            setPosition(i, j) {
+                this.i = i;
+                this.j = j;
+                this._onValueChange();
+            }
+
             _onValueChange() {
                 this.textContent = this.value ? this.value : "";
+                if (this.value == 0) {
+                    this.setAttribute("style", "display: none;");
+                } else {
+                    this.setAttribute(
+                        "style",
+                        `top: calc(${this.i} * 92px + ${this.i} * 8px + 4px); left: calc(${this.j} * 92px + ${this.j} * 8px + 4px);`
+                    );
+                }
             }
         }
         window.customElements.define("cell-element", CellElement, {
@@ -69,7 +87,7 @@ import Layout from "../../layouts/Layout.astro";
         });
 
         class GridElement extends HTMLDivElement {
-            constructor() {
+            constructor(empty = false) {
                 super();
                 this.className = "flex flex-col";
                 this.rows = [];
@@ -80,12 +98,14 @@ import Layout from "../../layouts/Layout.astro";
                     this.rows[i] = new RowElement();
                     this.appendChild(this.rows[i]);
                     for (let j = 0; j < 4; j++) {
-                        this.rows[i].addCell(new CellElement(i, j));
+                        this.rows[i].addCell(new CellElement(empty, i, j));
                     }
                 }
 
-                this._addPossibleValueToRandomZeroCell();
-                this._addPossibleValueToRandomZeroCell();
+                if (!empty) {
+                    this._addPossibleValueToRandomZeroCell();
+                    this._addPossibleValueToRandomZeroCell();
+                }
             }
 
             _addPossibleValueToRandomZeroCell() {
@@ -140,8 +160,7 @@ import Layout from "../../layouts/Layout.astro";
                             isStartSmaller ? i + 1 : i - 1,
                             colIndex
                         );
-                        cell.add(nextCell.value);
-                        nextCell.setZero();
+                        this._switchCells(cell, nextCell);
                     }
 
                     if (isStartSmaller) i++;
@@ -165,8 +184,7 @@ import Layout from "../../layouts/Layout.astro";
                             rowIndex,
                             isStartSmaller ? j + 1 : j - 1
                         );
-                        cell.add(nextCell.value);
-                        nextCell.setZero();
+                        this._switchCells(cell, nextCell);
                     }
 
                     if (isStartSmaller) j++;
@@ -199,6 +217,14 @@ import Layout from "../../layouts/Layout.astro";
                 }
 
                 return true;
+            }
+
+            _switchCells(cell1, cell2) {
+                const tempPosition = { i: cell1.i, j: cell1.j };
+                this.rows[cell1.i].cols[cell1.j] = cell2;
+                this.rows[cell2.i].cols[cell2.j] = cell1;
+                cell1.setPosition(cell2.i, cell2.j);
+                cell2.setPosition(tempPosition.i, tempPosition.j);
             }
 
             move(direction) {
@@ -303,6 +329,7 @@ import Layout from "../../layouts/Layout.astro";
                 this.className =
                     "flex flex-col items-center gap-4 w-fit m-auto";
                 this.score = 0;
+                const emptyGrid = new GridElement(true);
                 this.grid = new GridElement();
                 const title = document.createElement("p");
                 const topContainer = document.createElement("div");
@@ -334,8 +361,13 @@ import Layout from "../../layouts/Layout.astro";
                     console.log(this.score);
                 };
 
+                const gridContainer = document.createElement("div");
+                gridContainer.className = "relative";
+                gridContainer.appendChild(emptyGrid);
+                gridContainer.appendChild(this.grid);
+
                 this.appendChild(topContainer);
-                this.appendChild(this.grid);
+                this.appendChild(gridContainer);
             }
         }
         window.customElements.define("game-element", GameElement, {
