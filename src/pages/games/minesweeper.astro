@@ -10,461 +10,460 @@ import Layout from "../../layouts/Layout.astro";
     <main class="relative w-full h-full overflow-auto"></main>
 
     <script is:inline>
-    class MinesweeperCellElement extends HTMLDivElement {
-        constructor() {
-            super();
-            this.revealed = false;
-            this.adjacentMineCount = 0;
-            this.mine = false;
-            this.flagged = false;
+        class MinesweeperCellElement extends HTMLDivElement {
+            constructor() {
+                super();
+                this.revealed = false;
+                this.adjacentMineCount = 0;
+                this.mine = false;
+                this.flagged = null;
 
-            this.baseClassName =
-                "w-10 h-10 flex items-center justify-center border-2 border-gray-600 select-none";
-            this.className = `${this.baseClassName} bg-gray-300 hover:bg-gray-400 hover:cursor-pointer`;
-        }
+                this.baseClassName =
+                    "w-10 h-10 flex items-center justify-center border-2 border-gray-600 select-none";
+                this.className = `${this.baseClassName} bg-gray-300 hover:bg-gray-400 hover:cursor-pointer`;
+            }
 
-        getFlagged() {
-            return this.flagged;
-        }
+            getFlagged() {
+                return this.flagged;
+            }
 
-        setFlagged() {
-            if (this.revealed) return;
+            setFlagged() {
+                if (this.revealed) return;
 
-            this.flagged = !this.flagged;
+                if (this.flagged == null) {
+                    this.flagged = "mine";
+                } else if (this.flagged == "mine") {
+                    this.flagged = "?";
+                } else if (this.flagged == "?") {
+                    this.flagged = null;
+                }
 
-            if (this.flagged) {
-                this.className = `${this.baseClassName} bg-orange-500`;
-            } else {
-                this.className = `${this.baseClassName} bg-gray-300 hover:bg-gray-300 hover:cursor-pointer`;
+                if (this.flagged) {
+                    this.className = `${this.baseClassName} bg-orange-500 text-white hover:bg-orange-700 hover:cursor-pointer`;
+                    this.textContent = this.flagged == "?" ? "?" : "";
+                } else {
+                    this.className = `${this.baseClassName} bg-gray-300 hover:bg-gray-300 hover:cursor-pointer`;
+                    this.textContent = "";
+                }
+            }
+
+            getRevealed() {
+                return this.revealed;
+            }
+
+            setRevealed() {
+                this.revealed = true;
+                this.flagged = null;
+                this._setContent();
+                if (this.mine)
+                    this.className = `${this.baseClassName} bg-red-500`;
+                else this.className = this.baseClassName;
+            }
+
+            getMine() {
+                return this.mine;
+            }
+
+            setMine() {
+                this.mine = true;
+                this._setContent();
+            }
+
+            getAdjacentMineCount() {
+                return this.adjacentMineCount;
+            }
+
+            setAdjacentMineCount(adjacentMineCount) {
+                this.adjacentMineCount = adjacentMineCount;
+                this._setContent();
+            }
+
+            _setContent() {
+                if (this.revealed) {
+                    if (!this.mine) {
+                        if (this.adjacentMineCount == 0) this.textContent = "";
+                        else this.textContent = this.adjacentMineCount;
+                    } else {
+                        this.textContent = "X";
+                    }
+                }
             }
         }
 
-        getRevealed() {
-            return this.revealed;
+        class MinesweeperRowElement extends HTMLDivElement {
+            constructor() {
+                super();
+                this.cells = [];
+                this.className = "flex flex-row gap-1";
+            }
+
+            push(cell) {
+                this.appendChild(cell);
+                this.cells.push(cell);
+            }
         }
 
-        setRevealed() {
-            this.revealed = true;
-            this.flagged = false;
-            this._setContent();
-            if (this.mine)
-                this.className = `${this.baseClassName} bg-red-500`;
-            else this.className = this.baseClassName;
+        class MinesweeperResetButtonElement extends HTMLDivElement {
+            constructor(onreset, difficulty) {
+                super();
+                this.difficulty = difficulty;
+                this.className = "flex border-2 divide-x bg-white";
+                const button = document.createElement("button");
+                button.className =
+                    "hover:bg-gray-200 text-gray-800 font-bold px-2 inline-flex items-center";
+                button.textContent = "RESET GAME";
+                this.appendChild(button);
+
+                const difficultySelect = document.createElement("select");
+                difficultySelect.className = "pl-2";
+                difficultySelect.innerHTML = [
+                    "beginner",
+                    "intermediate",
+                    "expert",
+                ].map(
+                    (d) =>
+                        `<option ${
+                            d == this.difficulty ? "selected" : ""
+                        } value="${d}">${d}</option>`
+                );
+                difficultySelect.onchange = (e) => {
+                    this.difficulty = e.target.value;
+                };
+
+                this.appendChild(difficultySelect);
+
+                button.onclick = () => onreset(this.difficulty);
+            }
         }
 
-        getMine() {
-            return this.mine;
-        }
+        class MinesweeperControlsElement extends HTMLDivElement {
+            constructor(minesAmount, difficulty, onreset) {
+                super();
+                this.difficulty = difficulty;
+                this.flags = null;
+                this.minesAmount = minesAmount;
+                this.mines = null;
+                this.onreset = onreset;
+            }
 
-        setMine() {
-            this.mine = true;
-            this._setContent();
-        }
+            connectedCallback() {
+                this.className = "relative w-full flex justify-around gap-20";
 
-        getAdjacentMineCount() {
-            return this.adjacentMineCount;
-        }
+                const leftDiv = document.createElement("div");
+                leftDiv.className = "flex gap-2";
 
-        setAdjacentMineCount(adjacentMineCount) {
-            this.adjacentMineCount = adjacentMineCount;
-            this._setContent();
-        }
+                const flagsDiv = document.createElement("div");
+                flagsDiv.className = "flex gap-2";
+                const flagsLabel = document.createElement("span");
+                flagsLabel.className = "font-bold";
+                flagsDiv.appendChild(flagsLabel);
+                flagsLabel.textContent = "Amount Of Flags";
+                this.flags = document.createElement("span");
+                flagsDiv.appendChild(this.flags);
+                leftDiv.appendChild(flagsDiv);
+                this.setFlags(0);
 
-        _setContent() {
-            if (this.revealed && !this.mine)
-                if (this.adjacentMineCount == 0) this.textContent = "";
-                else this.textContent = this.adjacentMineCount;
-        }
-    }
+                const seperator = document.createElement("div");
+                leftDiv.appendChild(seperator);
+                seperator.className = "border-l-2 border-black";
 
-    class MinesweeperRowElement extends HTMLDivElement {
-        constructor() {
-            super();
-            this.cells = [];
-            this.className = "flex flex-row gap-2";
-        }
+                const minesDiv = document.createElement("div");
+                minesDiv.className = "flex gap-2";
+                const minesLabel = document.createElement("span");
+                minesLabel.className = "font-bold";
+                minesDiv.appendChild(minesLabel);
+                minesLabel.textContent = "Amount Of Mines";
+                this.mines = document.createElement("span");
+                minesDiv.appendChild(this.mines);
+                leftDiv.appendChild(minesDiv);
+                this.setMines(this.minesAmount);
 
-        push(cell) {
-            this.appendChild(cell);
-            this.cells.push(cell);
-        }
-    }
+                this.appendChild(leftDiv);
 
-    class PositiveNumberInputElement extends HTMLInputElement {
-        constructor(initialValue = 0) {
-            super();
-            this.setAttribute("type", "number");
-            this.setAttribute("value", initialValue);
-            this.value = initialValue;
-            this.className = "w-[4ch]";
-            this.onchange = ({ target: { value } }) => {
-                if (value == "") {
-                    this.setAttribute("value", 0);
-                    this.value = 0;
-                    return;
+                const rightButton = new MinesweeperResetButtonElement(
+                    this.onreset,
+                    this.difficulty
+                );
+                this.appendChild(rightButton);
+            }
+
+            setFlags(flagsAmount) {
+                if (this.flags) {
+                    this.flags.textContent = flagsAmount;
                 }
-                const v = parseInt(value, 10);
-                if (v < 0 || isNaN(v)) {
-                    this.setAttribute("value", 0);
-                    this.value = 0;
-                    return;
-                }
+            }
 
-                this.setAttribute("value", v);
-                this.value = v;
+            setMines(minesAmount) {
+                if (this.mines) {
+                    this.mines.textContent = minesAmount;
+                }
+            }
+        }
+
+        class MinesweeperElement extends HTMLDivElement {
+            static difficulties = {
+                beginner: { cols: 9, rows: 9, mines: 10 },
+                intermediate: { cols: 16, rows: 16, mines: 40 },
+                expert: { cols: 30, rows: 16, mines: 99 },
             };
-        }
-    }
+            static observedAttributes = ["cols", "rows", "mines"];
 
-    class MinesweeperResetButtonElement extends HTMLDivElement {
-        constructor(onreset) {
-            super();
-            this.className = "flex border-2 divide-x";
-            const button = document.createElement("button");
-            button.className =
-                "hover:bg-gray-200 text-gray-800 font-bold px-2 inline-flex items-center";
-            button.textContent = "RESET GAME";
-            this.appendChild(button);
+            constructor(difficulty = "beginner") {
+                super();
+                this.difficulty = difficulty;
+                this.rowAmount =
+                    MinesweeperElement.difficulties[difficulty].rows;
+                this.columnAmount =
+                    MinesweeperElement.difficulties[difficulty].cols;
+                this.mineAmount =
+                    MinesweeperElement.difficulties[difficulty].mines;
+                this.rows = [];
 
-            const initialRowsValue = 10;
-            const initialColsValue = 30;
-            const initialMinesValue = 20;
+                this.flaggedMineCount = 0;
+                this.flaggedCount = 0;
+                this.touched = false;
+                this.controls = null;
 
-            const rowsDiv = document.createElement("div");
-            rowsDiv.className = "pl-2";
-            const rowsLabel = document.createElement("label");
-            rowsLabel.textContent = "ROWS: ";
-            const rowsInput = new PositiveNumberInputElement(
-                initialRowsValue
-            );
-            rowsDiv.appendChild(rowsLabel);
-            rowsDiv.appendChild(rowsInput);
-            this.appendChild(rowsDiv);
-
-            const colsDiv = document.createElement("div");
-            colsDiv.className = "pl-2";
-            const colsLabel = document.createElement("label");
-            colsLabel.textContent = "COLS: ";
-            const colsInput = new PositiveNumberInputElement(
-                initialColsValue
-            );
-            colsDiv.appendChild(colsLabel);
-            colsDiv.appendChild(colsInput);
-            this.appendChild(colsDiv);
-
-            const minesDiv = document.createElement("div");
-            minesDiv.className = "pl-2";
-            const minesLabel = document.createElement("label");
-            minesLabel.textContent = "MINES: ";
-            const minesInput = new PositiveNumberInputElement(
-                initialMinesValue
-            );
-            minesDiv.appendChild(minesLabel);
-            minesDiv.appendChild(minesInput);
-            this.appendChild(minesDiv);
-
-            button.onclick = () =>
-                onreset(rowsInput.value, colsInput.value, minesInput.value);
-        }
-    }
-
-    class MinesweeperControlsElement extends HTMLDivElement {
-        constructor(minesAmount, onreset) {
-            super();
-            this.flags = null;
-            this.minesAmount = minesAmount;
-            this.mines = null;
-            this.onreset = onreset;
-        }
-
-        connectedCallback() {
-            this.className = "w-full flex justify-around gap-20";
-
-            const leftDiv = document.createElement("div");
-            leftDiv.className = "flex gap-2";
-
-            const flagsDiv = document.createElement("div");
-            flagsDiv.className = "flex gap-2";
-            const flagsLabel = document.createElement("span");
-            flagsLabel.className = "font-bold";
-            flagsDiv.appendChild(flagsLabel);
-            flagsLabel.textContent = "Amount Of Flags";
-            this.flags = document.createElement("span");
-            flagsDiv.appendChild(this.flags);
-            leftDiv.appendChild(flagsDiv);
-            this.setFlags(0);
-
-            const seperator = document.createElement("div");
-            leftDiv.appendChild(seperator);
-            seperator.className = "border-l-2 border-black";
-
-            const minesDiv = document.createElement("div");
-            minesDiv.className = "flex gap-2";
-            const minesLabel = document.createElement("span");
-            minesLabel.className = "font-bold";
-            minesDiv.appendChild(minesLabel);
-            minesLabel.textContent = "Amount Of Mines";
-            this.mines = document.createElement("span");
-            minesDiv.appendChild(this.mines);
-            leftDiv.appendChild(minesDiv);
-            this.setMines(this.minesAmount);
-
-            this.appendChild(leftDiv);
-
-            const rightButton = new MinesweeperResetButtonElement(
-                this.onreset
-            );
-            this.appendChild(rightButton);
-        }
-
-        setFlags(flagsAmount) {
-            if (this.flags) {
-                this.flags.textContent = flagsAmount;
+                this.className =
+                    "flex flex-col gap-1 items-center p-10 mx-auto h-fit w-fit";
+                this.initialGameState();
             }
-        }
 
-        setMines(minesAmount) {
-            if (this.mines) {
-                this.mines.textContent = minesAmount;
-            }
-        }
-    }
+            revealCell(i, j) {
+                const cell = this.rows[i].cells[j];
 
-    class MinesweeperElement extends HTMLDivElement {
-        static observedAttributes = ["cols", "rows", "mines"];
-
-        constructor(rowAmount, columnAmount, mineAmount) {
-            super();
-            this.columnAmount = columnAmount;
-            this.rowAmount = rowAmount;
-            this.mineAmount = mineAmount;
-            this.rows = [];
-
-            this.flaggedMineCount = 0;
-            this.flaggedCount = 0;
-            this.touched = false;
-            this.controls = null;
-
-            this.className =
-                "flex flex-col gap-2 items-center p-10 mx-auto h-fit w-fit";
-            this.initialGameState();
-        }
-
-        revealCell(i, j) {
-            const cell = this.rows[i].cells[j];
-
-            if (!cell.getRevealed()) {
-                if (cell.getFlagged()) {
-                    this.flaggedCount--;
-                    this.controls.setFlags(this.flaggedCount);
+                if (!cell.getRevealed()) {
+                    if (cell.getFlagged() == "mine") {
+                        this.flaggedCount--;
+                        this.controls.setFlags(this.flaggedCount);
+                    }
+                    cell.setRevealed();
                 }
-                cell.setRevealed();
-            }
 
-            if (!this.touched) {
-                if (cell.getMine() || cell.getAdjacentMineCount() > 0) {
-                    this.initialGameState();
-                    this.revealCell(i, j);
+                if (!this.touched) {
+                    if (cell.getMine() || cell.getAdjacentMineCount() > 0) {
+                        this.initialGameState(this.difficulty);
+                        this.revealCell(i, j);
+                        return;
+                    }
+                }
+
+                this.touched = true;
+
+                if (cell.getMine()) {
+                    this.lostGameState();
+                    for (let x = 0; x < this.rows.length; x++) {
+                        for (let y = 0; y < this.rows[x].cells.length; y++) {
+                            this.rows[x].cells[y].setRevealed();
+                        }
+                    }
                     return;
                 }
+
+                if (cell.getAdjacentMineCount() != 0) return;
+
+                for (let g = -1; g <= 1; g++) {
+                    for (let k = -1; k <= 1; k++) {
+                        const rowIndex = i + g;
+                        const colIndex = j + k;
+
+                        const validRowIndex =
+                            rowIndex >= 0 && rowIndex < this.rowAmount;
+                        if (!validRowIndex) continue;
+
+                        const validColIndex =
+                            colIndex >= 0 && colIndex < this.columnAmount;
+                        if (!validColIndex) continue;
+
+                        if (
+                            !this.rows[rowIndex].cells[colIndex].getRevealed()
+                        ) {
+                            this.revealCell(rowIndex, colIndex);
+                        }
+                    }
+                }
             }
 
-            this.touched = true;
+            lostGameState() {
+                this.failDiv = document.createElement("div");
+                const innerDiv = document.createElement("div");
+                const text = document.createElement("span");
 
-            if (cell.getMine()) {
-                this.lostGameState();
-                return;
+                text.className = "text-3xl text-white";
+                text.textContent = "You Lost";
+
+                this.failDiv.className =
+                    "absolute top-0 w-full h-full bg-gray-500 bg-opacity-80 p-2";
+
+                innerDiv.className = "flex flex-col items-center";
+
+                innerDiv.appendChild(text);
+                innerDiv.appendChild(
+                    new MinesweeperResetButtonElement(
+                        (d) => this.initialGameState(d),
+                        this.difficulty
+                    )
+                );
+
+                this.failDiv.appendChild(innerDiv);
+
+                this.parentElement.appendChild(this.failDiv);
             }
 
-            if (cell.getAdjacentMineCount() != 0) return;
+            winGameState() {
+                this.innerHTML = "";
+                const text = document.createElement("span");
+                text.className = "text-3xl";
+                text.textContent = "You Won";
+                this.appendChild(text);
+                this.appendChild(
+                    new MinesweeperResetButtonElement(
+                        (d) => this.initialGameState(d),
+                        this.difficulty
+                    )
+                );
+            }
 
-            for (let g = -1; g <= 1; g++) {
-                for (let k = -1; k <= 1; k++) {
-                    const rowIndex = i + g;
-                    const colIndex = j + k;
+            initialGameState(difficulty = "beginner") {
+                if (this.failDiv) this.failDiv.remove();
+                this.difficulty = difficulty;
+                this.rowAmount =
+                    MinesweeperElement.difficulties[difficulty].rows;
+                this.columnAmount =
+                    MinesweeperElement.difficulties[difficulty].cols;
+                this.mineAmount =
+                    MinesweeperElement.difficulties[difficulty].mines;
+                this.innerHTML = "";
+                this.textContent = "";
+                this.controls = new MinesweeperControlsElement(
+                    this.mineAmount,
+                    difficulty,
+                    (d) => this.initialGameState(d)
+                );
+                this.appendChild(this.controls);
+                this.flaggedMineCount = 0;
+                this.flaggedCount = 0;
+                this.controls.setFlags(this.flaggedCount);
+                this.touched = false;
+                this.rows = [];
+                const availableSpots = [];
+                for (let i = 0; i < this.rowAmount; i++) {
+                    const row = new MinesweeperRowElement();
+                    this.appendChild(row);
+                    this.rows[i] = row;
+                    for (let j = 0; j < this.columnAmount; j++) {
+                        const cell = new MinesweeperCellElement();
+                        cell.oncontextmenu = () => {
+                            if (!cell.getRevealed()) {
+                                const priorFlag = cell.getFlagged();
+                                cell.setFlagged();
+                                if (cell.getFlagged() == "mine")
+                                    this.flaggedCount++;
+                                else if (priorFlag != "?") this.flaggedCount--;
+                                this.controls.setFlags(this.flaggedCount);
 
-                    const validRowIndex =
-                        rowIndex >= 0 && rowIndex < this.rowAmount;
-                    if (!validRowIndex) continue;
+                                if (cell.getMine()) {
+                                    if (cell.getFlagged() != "?")
+                                        if (cell.getFlagged() == "mine")
+                                            this.flaggedMineCount++;
+                                        else this.flaggedMineCount--;
 
-                    const validColIndex =
-                        colIndex >= 0 && colIndex < this.columnAmount;
-                    if (!validColIndex) continue;
+                                    if (
+                                        this.flaggedMineCount ==
+                                            this.mineAmount &&
+                                        this.flaggedMineCount ==
+                                            this.flaggedCount
+                                    )
+                                        this.winGameState();
+                                }
+                            }
+                            return false;
+                        };
+                        cell.onclick = () => this.revealCell(i, j);
 
-                    if (
-                        !this.rows[rowIndex].cells[colIndex].getRevealed()
-                    ) {
-                        this.revealCell(rowIndex, colIndex);
+                        availableSpots.push(cell);
+                        this.rows[i].push(cell);
+                    }
+                }
+
+                for (let i = this.mineAmount; i > 0; i--) {
+                    const index = Math.floor(random(availableSpots.length));
+                    availableSpots[index].setMine();
+                    availableSpots.splice(index, 1);
+                }
+
+                for (let i = 0; i < this.rowAmount; i++) {
+                    for (let j = 0; j < this.columnAmount; j++) {
+                        let adjacentMineCount = 0;
+                        for (let g = -1; g <= 1; g++) {
+                            for (let k = -1; k <= 1; k++) {
+                                const rowIndex = i + g;
+                                const colIndex = j + k;
+
+                                const validRowIndex =
+                                    rowIndex >= 0 && rowIndex < this.rowAmount;
+                                const validColIndex =
+                                    colIndex >= 0 &&
+                                    colIndex < this.columnAmount;
+
+                                if (validRowIndex && validColIndex) {
+                                    const isMine =
+                                        this.rows[rowIndex].cells[
+                                            colIndex
+                                        ].getMine();
+                                    if (isMine) adjacentMineCount++;
+                                }
+                            }
+                        }
+                        this.rows[i].cells[j].setAdjacentMineCount(
+                            adjacentMineCount
+                        );
                     }
                 }
             }
-        }
 
-        lostGameState() {
-            this.innerHTML = "";
-            const text = document.createElement("span");
-            text.className = "text-3xl";
-            text.textContent = "You Lost";
-            this.appendChild(text);
-            this.appendChild(
-                new MinesweeperResetButtonElement((r, c, m) =>
-                    this.initialGameState(r, c, m)
-                )
-            );
-        }
-
-        winGameState() {
-            this.innerHTML = "";
-            const text = document.createElement("span");
-            text.className = "text-3xl";
-            text.textContent = "You Won";
-            this.appendChild(text);
-            this.appendChild(
-                new MinesweeperResetButtonElement((r, c, m) =>
-                    this.initialGameState(r, c, m)
-                )
-            );
-        }
-
-        initialGameState(
-            rowAmount = this.rowAmount,
-            columnAmount = this.columnAmount,
-            mineAmount = this.mineAmount
-        ) {
-            this.rowAmount = rowAmount;
-            this.columnAmount = columnAmount;
-            this.mineAmount = mineAmount;
-            this.innerHTML = "";
-            this.textContent = "";
-            this.controls = new MinesweeperControlsElement(
-                this.mineAmount,
-                (r, c, m) => this.initialGameState(r, c, m)
-            );
-            this.appendChild(this.controls);
-            this.flaggedMineCount = 0;
-            this.flaggedCount = 0;
-            this.controls.setFlags(this.flaggedCount);
-            this.touched = false;
-            this.rows = [];
-            const availableSpots = [];
-            for (let i = 0; i < this.rowAmount; i++) {
-                const row = new MinesweeperRowElement();
-                this.appendChild(row);
-                this.rows[i] = row;
-                for (let j = 0; j < this.columnAmount; j++) {
-                    const cell = new MinesweeperCellElement();
-                    cell.oncontextmenu = () => {
-                        if (!cell.getRevealed()) {
-                            cell.setFlagged();
-                            if (cell.getFlagged()) this.flaggedCount++;
-                            else this.flaggedCount--;
-                            this.controls.setFlags(this.flaggedCount);
-
-                            if (cell.getMine()) {
-                                if (cell.getFlagged())
-                                    this.flaggedMineCount++;
-                                else this.flaggedMineCount--;
-
-                                if (
-                                    this.flaggedMineCount ==
-                                    this.mineAmount &&
-                                    this.flaggedMineCount ==
-                                    this.flaggedCount
-                                )
-                                    this.winGameState();
-                            }
-                        }
-                        return false;
-                    };
-                    cell.onclick = () => this.revealCell(i, j);
-
-                    availableSpots.push(cell);
-                    this.rows[i].push(cell);
-                }
-            }
-
-            for (let i = this.mineAmount; i > 0; i--) {
-                const index = Math.floor(random(availableSpots.length));
-                availableSpots[index].setMine();
-                availableSpots.splice(index, 1);
-            }
-
-            for (let i = 0; i < this.rowAmount; i++) {
-                for (let j = 0; j < this.columnAmount; j++) {
-                    let adjacentMineCount = 0;
-                    for (let g = -1; g <= 1; g++) {
-                        for (let k = -1; k <= 1; k++) {
-                            const rowIndex = i + g;
-                            const colIndex = j + k;
-
-                            const validRowIndex =
-                                rowIndex >= 0 && rowIndex < this.rowAmount;
-                            const validColIndex =
-                                colIndex >= 0 &&
-                                colIndex < this.columnAmount;
-
-                            if (validRowIndex && validColIndex) {
-                                const isMine =
-                                    this.rows[rowIndex].cells[
-                                        colIndex
-                                    ].getMine();
-                                if (isMine) adjacentMineCount++;
-                            }
-                        }
-                    }
-                    this.rows[i].cells[j].setAdjacentMineCount(
-                        adjacentMineCount
-                    );
-                }
-            }
-        }
-
-        print() {
-            let pretty = ``;
-            for (let i = 0; i < this.rowAmount; i++) {
-                for (let j = 0; j < this.columnAmount; j++) {
-                    const cell = this.rows[i].cells[j];
-                    pretty += `${cell.getMine() ? "M" : cell.getAdjacentMineCount()
+            print() {
+                let pretty = ``;
+                for (let i = 0; i < this.rowAmount; i++) {
+                    for (let j = 0; j < this.columnAmount; j++) {
+                        const cell = this.rows[i].cells[j];
+                        pretty += `${
+                            cell.getMine() ? "M" : cell.getAdjacentMineCount()
                         } `;
+                    }
+                    pretty += `\n`;
                 }
-                pretty += `\n`;
+                console.log(pretty);
             }
-            console.log(pretty);
         }
-    }
 
-    window.customElements.define(
-        "minesweeper-cell-element",
-        MinesweeperCellElement,
-        { extends: "div" }
-    );
-    window.customElements.define(
-        "minesweeper-row-element",
-        MinesweeperRowElement,
-        { extends: "div" }
-    );
-    window.customElements.define(
-        "minesweeper-controls-element",
-        MinesweeperControlsElement,
-        { extends: "div" }
-    );
-    window.customElements.define(
-        "positive-number-input-element",
-        PositiveNumberInputElement,
-        { extends: "input" }
-    );
-    window.customElements.define(
-        "minesweeper-reset-button-element",
-        MinesweeperResetButtonElement,
-        { extends: "div" }
-    );
-    window.customElements.define(
-        "minesweeper-element",
-        MinesweeperElement,
-        { extends: "div" }
-    );
+        window.customElements.define(
+            "minesweeper-cell-element",
+            MinesweeperCellElement,
+            { extends: "div" }
+        );
+        window.customElements.define(
+            "minesweeper-row-element",
+            MinesweeperRowElement,
+            { extends: "div" }
+        );
+        window.customElements.define(
+            "minesweeper-controls-element",
+            MinesweeperControlsElement,
+            { extends: "div" }
+        );
+        window.customElements.define(
+            "minesweeper-reset-button-element",
+            MinesweeperResetButtonElement,
+            { extends: "div" }
+        );
+        window.customElements.define(
+            "minesweeper-element",
+            MinesweeperElement,
+            { extends: "div" }
+        );
 
-    const game = new MinesweeperElement(10, 30, 20);
-    document.querySelector("main").appendChild(game);
+        const game = new MinesweeperElement("beginner");
+        document.querySelector("main").appendChild(game);
     </script>
 </Layout>
