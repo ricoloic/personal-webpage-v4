@@ -7,7 +7,7 @@ import Layout from "../../layouts/Layout.astro";
     <script is:inline src="/js/utils/core.js"></script>
     <!-- ENDSECTION: STATIC_IMPORTS -->
 
-    <main class="relative w-full h-full overflow-auto"></main>
+    <main class="relative w-full h-full overflow-auto bg-stone-300"></main>
 
     <script is:inline>
         class MinesweeperCellElement extends HTMLDivElement {
@@ -19,8 +19,8 @@ import Layout from "../../layouts/Layout.astro";
                 this.flagged = null;
 
                 this.baseClassName =
-                    "w-10 h-10 flex items-center justify-center border-2 border-gray-600 select-none";
-                this.className = `${this.baseClassName} bg-gray-300 hover:bg-gray-400 hover:cursor-pointer`;
+                    "w-10 h-10 flex items-center justify-center border-2 border-stone-300 select-none";
+                this.className = `${this.baseClassName} bg-stone-400 hover:bg-stone-500 hover:cursor-pointer`;
             }
 
             getFlagged() {
@@ -39,10 +39,10 @@ import Layout from "../../layouts/Layout.astro";
                 }
 
                 if (this.flagged) {
-                    this.className = `${this.baseClassName} bg-orange-500 text-white hover:bg-orange-700 hover:cursor-pointer`;
+                    this.className = `${this.baseClassName} bg-amber-600 text-white hover:bg-amber-700 hover:cursor-pointer`;
                     this.textContent = this.flagged == "?" ? "?" : "";
                 } else {
-                    this.className = `${this.baseClassName} bg-gray-300 hover:bg-gray-300 hover:cursor-pointer`;
+                    this.className = `${this.baseClassName} bg-stone-400 hover:bg-stone-500 hover:cursor-pointer`;
                     this.textContent = "";
                 }
             }
@@ -57,7 +57,7 @@ import Layout from "../../layouts/Layout.astro";
                 this._setContent();
                 if (this.mine)
                     this.className = `${this.baseClassName} bg-red-500`;
-                else this.className = this.baseClassName;
+                else this.className = `${this.baseClassName} bg-white`;
             }
 
             getMine() {
@@ -94,7 +94,7 @@ import Layout from "../../layouts/Layout.astro";
             constructor() {
                 super();
                 this.cells = [];
-                this.className = "flex flex-row gap-1";
+                this.className = "flex flex-row";
             }
 
             push(cell) {
@@ -107,7 +107,7 @@ import Layout from "../../layouts/Layout.astro";
             constructor(onreset, difficulty) {
                 super();
                 this.difficulty = difficulty;
-                this.className = "flex border-2 divide-x bg-white";
+                this.className = "flex rounded divide-x bg-white";
                 const button = document.createElement("button");
                 button.className =
                     "hover:bg-gray-200 text-gray-800 font-bold px-2 inline-flex items-center";
@@ -147,38 +147,33 @@ import Layout from "../../layouts/Layout.astro";
             }
 
             connectedCallback() {
-                this.className = "relative w-full flex justify-around gap-20";
-
-                const leftDiv = document.createElement("div");
-                leftDiv.className = "flex gap-2";
+                this.className = "relative w-full flex gap-2";
 
                 const flagsDiv = document.createElement("div");
-                flagsDiv.className = "flex gap-2";
+                flagsDiv.className =
+                    "flex flex-col items-center bg-white p-1 rounded";
                 const flagsLabel = document.createElement("span");
-                flagsLabel.className = "font-bold";
+                flagsLabel.className = "";
                 flagsDiv.appendChild(flagsLabel);
-                flagsLabel.textContent = "Amount Of Flags";
+                flagsLabel.textContent = "FLAGS";
                 this.flags = document.createElement("span");
+                this.flags.className = "font-bold";
                 flagsDiv.appendChild(this.flags);
-                leftDiv.appendChild(flagsDiv);
+                this.appendChild(flagsDiv);
                 this.setFlags(0);
 
-                const seperator = document.createElement("div");
-                leftDiv.appendChild(seperator);
-                seperator.className = "border-l-2 border-black";
-
                 const minesDiv = document.createElement("div");
-                minesDiv.className = "flex gap-2";
+                minesDiv.className =
+                    "flex flex-col items-center bg-white p-1 rounded";
                 const minesLabel = document.createElement("span");
-                minesLabel.className = "font-bold";
+                minesLabel.className = "";
                 minesDiv.appendChild(minesLabel);
-                minesLabel.textContent = "Amount Of Mines";
+                minesLabel.textContent = "MINES";
                 this.mines = document.createElement("span");
+                this.mines.className = "font-bold";
                 minesDiv.appendChild(this.mines);
-                leftDiv.appendChild(minesDiv);
+                this.appendChild(minesDiv);
                 this.setMines(this.minesAmount);
-
-                this.appendChild(leftDiv);
 
                 const rightButton = new MinesweeperResetButtonElement(
                     this.onreset,
@@ -225,7 +220,7 @@ import Layout from "../../layouts/Layout.astro";
                 this.controls = null;
 
                 this.className =
-                    "flex flex-col gap-1 items-center p-10 mx-auto h-fit w-fit";
+                    "flex flex-col gap-10 items-center p-10 mx-auto h-fit w-fit";
                 this.initialGameState();
             }
 
@@ -295,7 +290,7 @@ import Layout from "../../layouts/Layout.astro";
                 this.failDiv.className =
                     "absolute top-0 w-full h-full bg-gray-500 bg-opacity-80 p-2";
 
-                innerDiv.className = "flex flex-col items-center";
+                innerDiv.className = "flex flex-col items-center gap-10";
 
                 innerDiv.appendChild(text);
                 innerDiv.appendChild(
@@ -347,9 +342,11 @@ import Layout from "../../layouts/Layout.astro";
                 this.touched = false;
                 this.rows = [];
                 const availableSpots = [];
+                const container = document.createElement("div");
+                this.appendChild(container);
                 for (let i = 0; i < this.rowAmount; i++) {
                     const row = new MinesweeperRowElement();
-                    this.appendChild(row);
+                    container.appendChild(row);
                     this.rows[i] = row;
                     for (let j = 0; j < this.columnAmount; j++) {
                         const cell = new MinesweeperCellElement();

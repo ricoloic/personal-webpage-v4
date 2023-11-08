@@ -7,9 +7,23 @@ import Layout from "../../layouts/Layout.astro";
     <script is:inline src="/js/utils/core.js"></script>
     <!-- ENDSECTION: STATIC_IMPORTS -->
 
-    <main class="relative w-full h-full overflow-auto p-6"></main>
+    <main class="relative w-full h-full overflow-auto p-6 bg-stone-300"></main>
 
     <script is:inline>
+        const TILE_COLORS = {
+            2: "#eee4da",
+            4: "#eee1c9",
+            8: "#f3b27a",
+            16: "#f69664",
+            32: "#f77c5f",
+            64: "#f75f3b",
+            128: "#edd073",
+            256: "#edcc62",
+            512: "#edc950",
+            1024: "#edc53f",
+            2048: "#edc22e",
+        };
+
         const DIRECTIONS = {
             up: 38,
             right: 39,
@@ -24,8 +38,8 @@ import Layout from "../../layouts/Layout.astro";
                 this.j = j;
                 this.className = `${
                     empty
-                        ? "w-[100px] h-[100px] border-[4px]"
-                        : "w-[92px] h-[92px] absolute bg-white"
+                        ? "w-[100px] h-[100px] border-[4px] border-stone-300 bg-white"
+                        : "absolute shadow-2xl shadow-inner"
                 } transition-all ease-out duration-200 flex justify-center items-center text-2xl`;
                 this.value = 0;
                 this.id = `${i}-${j}-cell`;
@@ -61,7 +75,16 @@ import Layout from "../../layouts/Layout.astro";
                 } else {
                     this.setAttribute(
                         "style",
-                        `top: calc(${this.i} * 92px + ${this.i} * 8px + 4px); left: calc(${this.j} * 92px + ${this.j} * 8px + 4px);`
+                        `   display: flex;
+                            top: calc(${this.i} * 92px + ${this.i} * 8px + 4px);
+                            left: calc(${this.j} * 92px + ${
+                                this.j
+                            } * 8px + 4px);
+                            width: 92px;
+                            height: 92px;
+                            background-color: ${
+                                TILE_COLORS[this.value] || TILE_COLORS[2048]
+                            };`
                     );
                 }
             }
@@ -227,6 +250,12 @@ import Layout from "../../layouts/Layout.astro";
                 cell2.setPosition(tempPosition.i, tempPosition.j);
             }
 
+            _mergeCells(cell1, cell2) {
+                this._switchCells(cell1, cell2);
+                cell1.add(cell2.value);
+                cell2.setZero();
+            }
+
             move(direction) {
                 const prevRows = this.rows.map((r) =>
                     r.cols.map((c) => c.value)
@@ -242,8 +271,7 @@ import Layout from "../../layouts/Layout.astro";
 
                             const nextCell = this._getCell(i + 1, j);
                             if (cell.value == nextCell.value) {
-                                cell.add(nextCell.value);
-                                nextCell.setZero();
+                                this._mergeCells(cell, nextCell);
                                 this.onmerge(cell);
                                 continue loop_rows;
                             }
@@ -261,8 +289,7 @@ import Layout from "../../layouts/Layout.astro";
 
                             const nextCell = this._getCell(i - 1, j);
                             if (cell.value == nextCell.value) {
-                                cell.add(nextCell.value);
-                                nextCell.setZero();
+                                this._mergeCells(cell, nextCell);
                                 this.onmerge(cell);
                                 continue loop_rows;
                             }
@@ -280,8 +307,7 @@ import Layout from "../../layouts/Layout.astro";
 
                             const nextCell = this._getCell(i, j - 1);
                             if (cell.value == nextCell.value) {
-                                cell.add(nextCell.value);
-                                nextCell.setZero();
+                                this._mergeCells(cell, nextCell);
                                 this.onmerge(cell);
                                 continue loop_cols;
                             }
@@ -299,8 +325,7 @@ import Layout from "../../layouts/Layout.astro";
 
                             const nextCell = this._getCell(i, j + 1);
                             if (cell.value == nextCell.value) {
-                                cell.add(nextCell.value);
-                                nextCell.setZero();
+                                this._mergeCells(cell, nextCell);
                                 this.onmerge(cell);
                                 continue loop_cols;
                             }
@@ -326,21 +351,19 @@ import Layout from "../../layouts/Layout.astro";
         class GameElement extends HTMLDivElement {
             constructor() {
                 super();
-                this.className =
-                    "flex flex-col items-center gap-4 w-fit m-auto";
+                this.className = "flex flex-col items-end gap-4 w-fit m-auto";
                 this.score = 0;
-                const emptyGrid = new GridElement(true);
-                this.grid = new GridElement();
+
                 const title = document.createElement("p");
                 const topContainer = document.createElement("div");
                 topContainer.className = "flex justify-between w-full";
                 title.className = "block text-5xl";
                 title.textContent = "2048";
                 this.scoreElement = document.createElement("p");
-                this.scoreElement.className = "text-md";
+                this.scoreElement.className = "text-sm font-bold";
                 this.scoreElement.textContent = this.score;
                 const scoreTitle = document.createElement("p");
-                scoreTitle.className = "text-lg";
+                scoreTitle.className = "text-md";
                 scoreTitle.textContent = "SCORE";
                 const scoreContainer = document.createElement("p");
                 scoreContainer.className =
@@ -349,6 +372,27 @@ import Layout from "../../layouts/Layout.astro";
                 scoreContainer.appendChild(this.scoreElement);
                 topContainer.appendChild(title);
                 topContainer.appendChild(scoreContainer);
+
+                this.appendChild(topContainer);
+                const restart = document.createElement("button");
+                restart.className =
+                    "bg-stone-700 text-white font-bold p-2 rounded";
+                restart.textContent = "RESTART";
+                restart.onclick = () => this._startGame();
+                this.appendChild(restart);
+
+                this._startGame();
+            }
+
+            _startGame() {
+                this.emptyGrid?.remove();
+                this.grid?.remove();
+                this.gridContainer?.remove();
+                this.emptyGrid = new GridElement(true);
+                this.grid = new GridElement();
+
+                this.score = 0;
+                this.scoreElement.textContent = this.score;
 
                 window.onkeydown = (event) => {
                     if (Object.values(DIRECTIONS).includes(event.keyCode))
@@ -361,13 +405,11 @@ import Layout from "../../layouts/Layout.astro";
                     console.log(this.score);
                 };
 
-                const gridContainer = document.createElement("div");
-                gridContainer.className = "relative";
-                gridContainer.appendChild(emptyGrid);
-                gridContainer.appendChild(this.grid);
-
-                this.appendChild(topContainer);
-                this.appendChild(gridContainer);
+                this.gridContainer = document.createElement("div");
+                this.gridContainer.className = "relative";
+                this.gridContainer.appendChild(this.emptyGrid);
+                this.gridContainer.appendChild(this.grid);
+                this.appendChild(this.gridContainer);
             }
         }
         window.customElements.define("game-element", GameElement, {
