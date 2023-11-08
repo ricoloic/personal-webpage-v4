@@ -1,0 +1,421 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="2048">
+    <!-- SECTION: STATIC_IMPORTS -->
+    <script is:inline src="/js/utils/core.js"></script>
+    <!-- ENDSECTION: STATIC_IMPORTS -->
+
+    <main class="relative w-full h-full overflow-auto p-6 bg-stone-300"></main>
+
+    <script is:inline>
+        const TILE_COLORS = {
+            2: "#eee4da",
+            4: "#eee1c9",
+            8: "#f3b27a",
+            16: "#f69664",
+            32: "#f77c5f",
+            64: "#f75f3b",
+            128: "#edd073",
+            256: "#edcc62",
+            512: "#edc950",
+            1024: "#edc53f",
+            2048: "#edc22e",
+        };
+
+        const DIRECTIONS = {
+            up: 38,
+            right: 39,
+            down: 40,
+            left: 37,
+        };
+
+        class CellElement extends HTMLDivElement {
+            constructor(empty = false, i, j) {
+                super();
+                this.i = i;
+                this.j = j;
+                this.className = `${
+                    empty
+                        ? "w-[100px] h-[100px] border-[4px] border-stone-300 bg-white"
+                        : "absolute shadow-2xl shadow-inner"
+                } transition-all ease-out duration-200 flex justify-center items-center text-2xl`;
+                this.value = 0;
+                this.id = `${i}-${j}-cell`;
+                this.setAttribute("id", this.id);
+
+                if (!empty) this._onValueChange();
+            }
+
+            isZero() {
+                return this.value == 0;
+            }
+
+            add(value) {
+                this.value += value;
+                this._onValueChange();
+            }
+
+            setZero() {
+                this.value = 0;
+                this._onValueChange();
+            }
+
+            setPosition(i, j) {
+                this.i = i;
+                this.j = j;
+                this._onValueChange();
+            }
+
+            _onValueChange() {
+                this.textContent = this.value ? this.value : "";
+                if (this.value == 0) {
+                    this.setAttribute("style", "display: none;");
+                } else {
+                    this.setAttribute(
+                        "style",
+                        `   display: flex;
+                            top: calc(${this.i} * 92px + ${this.i} * 8px + 4px);
+                            left: calc(${this.j} * 92px + ${
+                                this.j
+                            } * 8px + 4px);
+                            width: 92px;
+                            height: 92px;
+                            background-color: ${
+                                TILE_COLORS[this.value] || TILE_COLORS[2048]
+                            };`
+                    );
+                }
+            }
+        }
+        window.customElements.define("cell-element", CellElement, {
+            extends: "div",
+        });
+
+        class RowElement extends HTMLDivElement {
+            constructor() {
+                super();
+                this.className = "flex flex-row";
+                this.cols = [];
+            }
+
+            addCell(cell) {
+                this.cols.push(cell);
+                this.appendChild(cell);
+            }
+        }
+        window.customElements.define("row-element", RowElement, {
+            extends: "div",
+        });
+
+        class GridElement extends HTMLDivElement {
+            constructor(empty = false) {
+                super();
+                this.className = "flex flex-col";
+                this.rows = [];
+                this.onmerge = () => null;
+                this.onlost = () => null;
+
+                for (let i = 0; i < 4; i++) {
+                    this.rows[i] = new RowElement();
+                    this.appendChild(this.rows[i]);
+                    for (let j = 0; j < 4; j++) {
+                        this.rows[i].addCell(new CellElement(empty, i, j));
+                    }
+                }
+
+                if (!empty) {
+                    this._addPossibleValueToRandomZeroCell();
+                    this._addPossibleValueToRandomZeroCell();
+                }
+            }
+
+            _addPossibleValueToRandomZeroCell() {
+                const zeroCells = this._getZeroCells();
+                if (zeroCells.length > 0) random(zeroCells).add(random([2, 4]));
+            }
+
+            _getZeroCells() {
+                const zeroCells = [];
+                for (let i = 0; i < this.rows.length; i++)
+                    for (let j = 0; j < this.rows[i].cols.length; j++) {
+                        const cell = this._getCell(i, j);
+                        if (cell.isZero()) zeroCells.push(cell);
+                    }
+                return zeroCells;
+            }
+
+            _areCellsSameValuesOrOneOfCellZero(cell1, cell2) {
+                return (
+                    (cell1.value == cell2.value ||
+                        cell1.isZero() ||
+                        cell2.isZero()) &&
+                    !(cell1.isZero() && cell2.isZero())
+                );
+            }
+
+            _isDifferentCurrentRows(otherRows) {
+                for (let i = 0; i < this.rows.length; i++)
+                    for (let j = 0; j < this.rows[i].cols.length; j++)
+                        if (otherRows[i][j] != this.rows[i].cols[j].value)
+                            return true;
+                return false;
+            }
+
+            _getCell(i, j) {
+                return this.rows[i].cols[j];
+            }
+
+            _removeZerosForRows(colIndex, start, end) {
+                const isStartSmaller = start < end;
+                let i = start;
+                loop_rows: while (isStartSmaller ? i < end : i > end) {
+                    const cell = this._getCell(i, colIndex);
+
+                    if (cell.isZero()) {
+                        this._removeZerosForRows(
+                            colIndex,
+                            isStartSmaller ? i + 1 : i - 1,
+                            end
+                        );
+                        const nextCell = this._getCell(
+                            isStartSmaller ? i + 1 : i - 1,
+                            colIndex
+                        );
+                        this._switchCells(cell, nextCell);
+                    }
+
+                    if (isStartSmaller) i++;
+                    else i--;
+                }
+            }
+
+            _removeZerosForCols(rowIndex, start, end) {
+                const isStartSmaller = start < end;
+                let j = start;
+                loop_cols: while (isStartSmaller ? j < end : j > end) {
+                    const cell = this._getCell(rowIndex, j);
+
+                    if (cell.isZero()) {
+                        this._removeZerosForCols(
+                            rowIndex,
+                            isStartSmaller ? j + 1 : j - 1,
+                            end
+                        );
+                        const nextCell = this._getCell(
+                            rowIndex,
+                            isStartSmaller ? j + 1 : j - 1
+                        );
+                        this._switchCells(cell, nextCell);
+                    }
+
+                    if (isStartSmaller) j++;
+                    else j--;
+                }
+            }
+
+            _isBlocked() {
+                if (this._getZeroCells().length > 0) return false;
+
+                for (let i = 0; i < this.rows.length; i++) {
+                    for (let j = 0; j < this.rows[i].cols.length; j++) {
+                        const current = this._getCell(i, j);
+
+                        const left =
+                            i - 1 >= 0 ? this._getCell(i - 1, j) : null;
+                        if (left?.value === current.value) return false;
+
+                        const right =
+                            i + 1 <= 3 ? this._getCell(i + 1, j) : null;
+                        if (right?.value === current.value) return false;
+
+                        const top = j - 1 >= 0 ? this._getCell(i, j - 1) : null;
+                        if (top?.value === current.value) return false;
+
+                        const bottom =
+                            j + 1 <= 3 ? this._getCell(i, j + 1) : null;
+                        if (bottom?.value === current.value) return false;
+                    }
+                }
+
+                return true;
+            }
+
+            _switchCells(cell1, cell2) {
+                const tempPosition = { i: cell1.i, j: cell1.j };
+                this.rows[cell1.i].cols[cell1.j] = cell2;
+                this.rows[cell2.i].cols[cell2.j] = cell1;
+                cell1.setPosition(cell2.i, cell2.j);
+                cell2.setPosition(tempPosition.i, tempPosition.j);
+            }
+
+            _mergeCells(cell1, cell2) {
+                this._switchCells(cell1, cell2);
+                cell1.add(cell2.value);
+                cell2.setZero();
+            }
+
+            move(direction) {
+                const prevRows = this.rows.map((r) =>
+                    r.cols.map((c) => c.value)
+                );
+
+                if (direction == DIRECTIONS.up) {
+                    loop_cols: for (let j = 0; j < 4; j++) {
+                        this._removeZerosForRows(j, 0, 3);
+
+                        loop_rows: for (let i = 0; i < 3; i++) {
+                            const cell = this._getCell(i, j);
+                            if (cell.isZero()) continue loop_rows;
+
+                            const nextCell = this._getCell(i + 1, j);
+                            if (cell.value == nextCell.value) {
+                                this._mergeCells(cell, nextCell);
+                                this.onmerge(cell);
+                                continue loop_rows;
+                            }
+                        }
+
+                        this._removeZerosForRows(j, 0, 3);
+                    }
+                } else if (direction == DIRECTIONS.down) {
+                    loop_cols: for (let j = 0; j < 4; j++) {
+                        this._removeZerosForRows(j, 3, 0);
+
+                        loop_rows: for (let i = 3; i > 0; i--) {
+                            const cell = this._getCell(i, j);
+                            if (cell.isZero()) continue loop_rows;
+
+                            const nextCell = this._getCell(i - 1, j);
+                            if (cell.value == nextCell.value) {
+                                this._mergeCells(cell, nextCell);
+                                this.onmerge(cell);
+                                continue loop_rows;
+                            }
+                        }
+
+                        this._removeZerosForRows(j, 3, 0);
+                    }
+                } else if (direction == DIRECTIONS.right) {
+                    loop_rows: for (let i = 0; i < 4; i++) {
+                        this._removeZerosForCols(i, 3, 0);
+
+                        loop_cols: for (let j = 3; j > 0; j--) {
+                            const cell = this._getCell(i, j);
+                            if (cell.isZero()) continue loop_cols;
+
+                            const nextCell = this._getCell(i, j - 1);
+                            if (cell.value == nextCell.value) {
+                                this._mergeCells(cell, nextCell);
+                                this.onmerge(cell);
+                                continue loop_cols;
+                            }
+                        }
+
+                        this._removeZerosForCols(i, 3, 0);
+                    }
+                } else if (direction == DIRECTIONS.left) {
+                    loop_rows: for (let i = 0; i < 4; i++) {
+                        this._removeZerosForCols(i, 0, 3);
+
+                        loop_cols: for (let j = 0; j < 3; j++) {
+                            const cell = this._getCell(i, j);
+                            if (cell.isZero()) continue loop_cols;
+
+                            const nextCell = this._getCell(i, j + 1);
+                            if (cell.value == nextCell.value) {
+                                this._mergeCells(cell, nextCell);
+                                this.onmerge(cell);
+                                continue loop_cols;
+                            }
+                        }
+
+                        this._removeZerosForCols(i, 0, 3);
+                    }
+                }
+
+                if (this._isDifferentCurrentRows(prevRows)) {
+                    this._addPossibleValueToRandomZeroCell();
+                }
+
+                if (this._isBlocked()) {
+                    console.log("You Lost");
+                }
+            }
+        }
+        window.customElements.define("grid-element", GridElement, {
+            extends: "div",
+        });
+
+        class GameElement extends HTMLDivElement {
+            constructor() {
+                super();
+                this.className = "flex flex-col items-end gap-4 w-fit m-auto";
+                this.score = 0;
+
+                const title = document.createElement("p");
+                const topContainer = document.createElement("div");
+                topContainer.className = "flex justify-between w-full";
+                title.className = "block text-5xl";
+                title.textContent = "2048";
+                this.scoreElement = document.createElement("p");
+                this.scoreElement.className = "text-sm font-bold";
+                this.scoreElement.textContent = this.score;
+                const scoreTitle = document.createElement("p");
+                scoreTitle.className = "text-md";
+                scoreTitle.textContent = "SCORE";
+                const scoreContainer = document.createElement("p");
+                scoreContainer.className =
+                    "rounded px-2 py-1 bg-amber-500 shadow-xl text-white flex flex-col items-center justify-evenly";
+                scoreContainer.appendChild(scoreTitle);
+                scoreContainer.appendChild(this.scoreElement);
+                topContainer.appendChild(title);
+                topContainer.appendChild(scoreContainer);
+
+                this.appendChild(topContainer);
+                const restart = document.createElement("button");
+                restart.className =
+                    "bg-stone-700 text-white font-bold p-2 rounded";
+                restart.textContent = "RESTART";
+                restart.onclick = () => this._startGame();
+                this.appendChild(restart);
+
+                this._startGame();
+            }
+
+            _startGame() {
+                this.emptyGrid?.remove();
+                this.grid?.remove();
+                this.gridContainer?.remove();
+                this.emptyGrid = new GridElement(true);
+                this.grid = new GridElement();
+
+                this.score = 0;
+                this.scoreElement.textContent = this.score;
+
+                window.onkeydown = (event) => {
+                    if (Object.values(DIRECTIONS).includes(event.keyCode))
+                        this.grid.move(event.keyCode);
+                };
+
+                this.grid.onmerge = (cell) => {
+                    this.score += cell.value;
+                    this.scoreElement.textContent = this.score;
+                    console.log(this.score);
+                };
+
+                this.gridContainer = document.createElement("div");
+                this.gridContainer.className = "relative";
+                this.gridContainer.appendChild(this.emptyGrid);
+                this.gridContainer.appendChild(this.grid);
+                this.appendChild(this.gridContainer);
+            }
+        }
+        window.customElements.define("game-element", GameElement, {
+            extends: "div",
+        });
+
+        $("main").appendChild(new GameElement());
+    </script>
+</Layout>
