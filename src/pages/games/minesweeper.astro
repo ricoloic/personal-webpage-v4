@@ -434,31 +434,29 @@ import Layout from "../../layouts/Layout.astro";
             }
         }
 
-        window.customElements.define(
+        customElements.define(
             "minesweeper-cell-element",
             MinesweeperCellElement,
             { extends: "div" }
         );
-        window.customElements.define(
+        customElements.define(
             "minesweeper-row-element",
             MinesweeperRowElement,
             { extends: "div" }
         );
-        window.customElements.define(
+        customElements.define(
             "minesweeper-controls-element",
             MinesweeperControlsElement,
             { extends: "div" }
         );
-        window.customElements.define(
+        customElements.define(
             "minesweeper-reset-button-element",
             MinesweeperResetButtonElement,
             { extends: "div" }
         );
-        window.customElements.define(
-            "minesweeper-element",
-            MinesweeperElement,
-            { extends: "div" }
-        );
+        customElements.define("minesweeper-element", MinesweeperElement, {
+            extends: "div",
+        });
 
         const game = new MinesweeperElement("beginner");
         document.querySelector("main").appendChild(game);

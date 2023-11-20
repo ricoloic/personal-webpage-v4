@@ -89,7 +89,7 @@ import Layout from "../../layouts/Layout.astro";
                 }
             }
         }
-        window.customElements.define("cell-element", CellElement, {
+        customElements.define("cell-element", CellElement, {
             extends: "div",
         });
 
@@ -105,7 +105,7 @@ import Layout from "../../layouts/Layout.astro";
                 this.appendChild(cell);
             }
         }
-        window.customElements.define("row-element", RowElement, {
+        customElements.define("row-element", RowElement, {
             extends: "div",
         });
 
@@ -344,7 +344,7 @@ import Layout from "../../layouts/Layout.astro";
                 }
             }
         }
-        window.customElements.define("grid-element", GridElement, {
+        customElements.define("grid-element", GridElement, {
             extends: "div",
         });
 
@@ -412,7 +412,7 @@ import Layout from "../../layouts/Layout.astro";
                 this.appendChild(this.gridContainer);
             }
         }
-        window.customElements.define("game-element", GameElement, {
+        customElements.define("game-element", GameElement, {
             extends: "div",
         });
 
