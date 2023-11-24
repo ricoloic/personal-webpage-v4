@@ -1,0 +1,414 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout
+    title="Times Table"
+    previewImage="https://rico.studio/assets/website-previews/times-table.png"
+>
+    <div slot="head-layout">
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"
+        />
+
+        <script
+            is:inline
+            src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"
+        ></script>
+        <style>
+            pre {
+                position: relative;
+
+                flex-grow: 1;
+                overflow-y: auto;
+
+                line-height: 1.3;
+                font-size: 20px;
+            }
+
+            pre::after {
+                content: "";
+                display: inline-block;
+                width: 2px;
+                height: calc(20px + 10px);
+                vertical-align: middle;
+                background-color: white;
+                animation: blink 2s infinite;
+            }
+
+            button,
+            select {
+                background-color: white;
+                color: black;
+
+                display: inline-flex;
+
+                padding: 0.5rem;
+
+                font-size: 1em;
+                font-weight: 800;
+
+                border: 2px solid black;
+            }
+
+            button:hover,
+            select:hover {
+                outline: 1px solid white;
+            }
+
+            @keyframes blink {
+                0%,
+                50%,
+                100% {
+                    opacity: 0;
+                }
+                25%,
+                75% {
+                    opacity: 1;
+                }
+            }
+        </style>
+    </div>
+
+    <main
+        class="hljs relative flex-1 overflow-hidden h-full flex flex-col gap-2 p-2"
+    >
+        <div class="flex justify-between gap-2">
+            <div class="flex flex-wrap gap-2">
+                <button type="button" name="start-animation">
+                    Start Animation
+                </button>
+                <button type="button" name="stop-animation">
+                    Stop Animation
+                </button>
+                <button type="button" name="restart-animation">
+                    Restart Animation
+                </button>
+                <select name="lang-selector" id="lang-selector">
+                    <option selected value="(auto)">(auto)</option>
+                    <option value="xml">xml</option>
+                    <option value="bash">bash</option>
+                    <option value="c">c</option>
+                    <option value="cpp">cpp</option>
+                    <option value="csharp">csharp</option>
+                    <option value="css">css</option>
+                    <option value="markdown">markdown</option>
+                    <option value="ruby">ruby</option>
+                    <option value="go">go</option>
+                    <option value="ini">ini</option>
+                    <option value="java">java</option>
+                    <option value="javascript">javascript</option>
+                    <option value="json">json</option>
+                    <option value="kotlin">kotlin</option>
+                    <option value="less">less</option>
+                    <option value="lua">lua</option>
+                    <option value="makefile">makefile</option>
+                    <option value="perl">perl</option>
+                    <option value="objectivec">objectivec</option>
+                    <option value="php">php</option>
+                    <option value="php-template">php-template</option>
+                    <option value="plaintext">plaintext</option>
+                    <option value="python">python</option>
+                    <option value="python-repl">python-repl</option>
+                    <option value="rust">rust</option>
+                    <option value="scss">scss</option>
+                    <option value="shell">shell</option>
+                    <option value="sql">sql</option>
+                    <option value="swift">swift</option>
+                    <option value="yaml">yaml</option>
+                    <option value="typescript">typescript</option>
+                    <option value="vbnet">vbnet</option>
+                    <option value="wasm">wasm</option>
+                </select>
+                <select name="font-size" id="font-size">
+                    <option value="10px">10px</option>
+                    <option value="15px" selected>15px</option>
+                    <option value="20px">20px</option>
+                    <option value="25px">25px</option>
+                    <option value="30px">30px</option>
+                </select>
+                <input type="file" id="file-input" style="display: none" />
+                <button name="file" id="file">Select File</button>
+                <select name="speed" id="speed">
+                    <option value="10">fastest</option>
+                    <option selected value="50">fast</option>
+                    <option value="100">normal</option>
+                    <option value="150">slow</option>
+                    <option value="200">slowest</option>
+                </select>
+            </div>
+            <p id="lang"></p>
+        </div>
+
+        <pre></pre>
+    </main>
+
+    <script is:inline>
+        /**
+         * AnimateCode class for animating the display of code in an HTML element.
+         */
+        class AnimateCode {
+            /**
+             * Default options for AnimateCode.
+             * @type {Object}
+             * @property {number} intervalDurationMs - The duration of each animation interval in milliseconds.
+             * @property {Function} highlightFn - A function for highlighting the displayed code.
+             */
+            static options = {
+                intervalDurationMs: 100,
+                highlightFn: (str) => str,
+            };
+
+            /**
+             * Constructor for AnimateCode class.
+             * @param {HTMLElement} element - The HTML element where the code will be displayed.
+             * @param {string} code - The code to be animated.
+             * @param {Object} options - Options for customizing the animation (optional).
+             */
+            constructor(element, code, options) {
+                this.code = code;
+                this.element = element;
+
+                this.options = { ...AnimateCode.options, ...(options || {}) };
+
+                this.displayedCode = "";
+                this.index = 0;
+                this.offsetAddedString = "";
+                this.started = false;
+
+                this.interval = undefined;
+            }
+
+            /**
+             * Set the duration of each animation interval.
+             * @param {number} duration - The duration of each animation interval in milliseconds.
+             */
+            setIntervalDurationMs(duration) {
+                this.options.intervalDurationMs = duration;
+
+                const previouslyStarted = this.started;
+                this.stopAnimation();
+                if (previouslyStarted) this.startAnimation();
+            }
+
+            /**
+             * Reset the animation to its initial state.
+             */
+            resetAnimation() {
+                this.stopAnimation();
+
+                this.element.innerHTML = "";
+                this.displayedCode = "";
+                this.index = 0;
+                this.offsetAddedString = "";
+            }
+
+            /**
+             * Restart the animation from the beginning.
+             */
+            restartAnimation() {
+                const previouslyStarted = this.started;
+                this.resetAnimation();
+                if (previouslyStarted) this.startAnimation();
+            }
+
+            /**
+             * Start the code animation if it hasn't already started.
+             */
+            startAnimation() {
+                if (
+                    !this.started &&
+                    this.displayedCode.length < this.code.length
+                ) {
+                    this.started = true;
+                    this._animate();
+                }
+            }
+
+            /**
+             * Stop the code animation.
+             */
+            stopAnimation() {
+                if (this.interval) {
+                    clearInterval(this.interval);
+                    this.interval = undefined;
+                    this.started = false;
+                }
+            }
+
+            /**
+             * Internal method for handling the animation logic.
+             * @private
+             */
+            _animate() {
+                this.interval = setInterval(() => {
+                    this.displayedCode +=
+                        this.offsetAddedString + this.code[this.index++];
+                    this.element.innerHTML = this.options.highlightFn(
+                        this.displayedCode
+                    );
+
+                    if (this.displayedCode.length >= this.code.length) {
+                        this.stopAnimation();
+                        return;
+                    }
+
+                    if (
+                        this.code[this.index] + this.code[this.index + 1] ===
+                        "  "
+                    ) {
+                        let whiteSpacesCount = 0;
+                        while (this.code[this.index + whiteSpacesCount] === " ")
+                            whiteSpacesCount++;
+
+                        this.index += whiteSpacesCount;
+                        this.offsetAddedString = " ".repeat(whiteSpacesCount);
+                    } else {
+                        this.offsetAddedString = "";
+                    }
+                }, this.options.intervalDurationMs);
+            }
+        }
+
+        // Function to fetch text from a file
+        const loadTextFromFilePath = async (filePath) => {
+            try {
+                const response = await fetch(filePath);
+                const text = await response.text();
+                return text;
+            } catch (error) {
+                console.error("Error loading file:", error);
+                return undefined;
+            }
+        };
+
+        // Function to load text from a file
+        const loadTextFromFile = async (file) => {
+            try {
+                const text = await file.text();
+                return text;
+            } catch (error) {
+                console.error("Error loading file:", error);
+                return undefined;
+            }
+        };
+
+        window.onload = () => {
+            hljs.highlightAll();
+
+            document.documentElement.style.setProperty("--font-size", "15px");
+            const pre = document.querySelector("pre");
+            const lang = document.querySelector("#lang");
+
+            const start = document.querySelector(
+                'button[name="start-animation"]'
+            );
+            const stop = document.querySelector(
+                'button[name="stop-animation"]'
+            );
+            const restart = document.querySelector(
+                'button[name="restart-animation"]'
+            );
+            const font = document.querySelector('select[name="font-size"]');
+            const language = document.querySelector(
+                'select[name="lang-selector"]'
+            );
+            const file = document.querySelector('button[name="file"]');
+            const fileInput = document.querySelector("#file-input");
+            const speed = document.querySelector('select[name="speed"]');
+
+            start.className = "hidden";
+            stop.className = "hidden";
+            restart.className = "hidden";
+            font.className = "hidden";
+            language.className = "hidden";
+            file.className = "hidden";
+            speed.className = "hidden";
+
+            var animated,
+                selectedLang = "(auto)";
+
+            const options = {
+                intervalDurationMs: 50,
+                highlightFn: (str) => {
+                    const highlight =
+                        selectedLang === "(auto)"
+                            ? hljs.highlightAuto(str)
+                            : hljs.highlight(str, { language: selectedLang });
+                    lang.textContent = highlight.language;
+                    return highlight.value;
+                },
+            };
+
+            font.onchange = (event) => {
+                document.documentElement.style.setProperty(
+                    "--font-size",
+                    event.target.value
+                );
+            };
+
+            language.onchange = (event) => {
+                selectedLang = event.target.value;
+                const highlight =
+                    selectedLang === "(auto)"
+                        ? hljs.highlightAuto(animated.displayedCode)
+                        : hljs.highlight(animated.displayedCode, {
+                              language: selectedLang,
+                          });
+                lang.textContent = highlight.language;
+                pre.innerHTML = highlight.value;
+            };
+
+            fileInput.onchange = async (event) => {
+                if (fileInput.files.length === 0) return;
+
+                const selectedFile = fileInput.files[0];
+
+                const text = await loadTextFromFile(selectedFile);
+
+                if (text === undefined) return;
+
+                if (animated) animated.resetAnimation();
+                animated = new AnimateCode(pre, text, options);
+
+                start.onclick = () => animated.startAnimation();
+                stop.onclick = () => animated.stopAnimation();
+                restart.onclick = () => {
+                    lang.textContent = "";
+                    animated.restartAnimation();
+                };
+            };
+
+            file.onclick = () => fileInput.click();
+
+            speed.onchange = (event) => {
+                const duration = parseInt(event.target.value, 10);
+                options.intervalDurationMs = duration;
+                animated.setIntervalDurationMs(duration);
+            };
+
+            loadTextFromFilePath("/js/classes/vector.js").then((text) => {
+                if (text === undefined) return;
+
+                if (animated) animated.resetAnimation();
+                animated = new AnimateCode(pre, text, options);
+
+                start.onclick = () => animated.startAnimation();
+                stop.onclick = () => animated.stopAnimation();
+                restart.onclick = () => {
+                    lang.textContent = "";
+                    animated.restartAnimation();
+                };
+
+                start.className = "";
+                stop.className = "";
+                restart.className = "";
+                font.className = "";
+                language.className = "";
+                file.className = "";
+                speed.className = "";
+            });
+        };
+    </script>
+</Layout>
