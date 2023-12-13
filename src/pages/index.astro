@@ -20,6 +20,7 @@ import audioCirclesImage from "../assets/previews/audio-circles-preview.png";
 import audioHexagonImage from "../assets/previews/audio-hexagon-preview.png";
 import minesweeperImage from "../assets/previews/minesweeper.png";
 import g2048Image from "../assets/previews/2048.png";
+import codeAnimationToolImage from "../assets/previews/code-animation-tool.png";
 
 const ageDifMs = Date.now() - new Date("2002-09-23").getTime();
 const ageDate = new Date(ageDifMs); // milliseconds from epoch
@@ -27,7 +28,7 @@ const age = Math.abs(ageDate.getUTCFullYear() - 1970);
 ---
 
 <Layout title="Rico Generative Arts">
-    <main class="px-12 py-20 flex flex-col gap-12 overflow-y-auto">
+        <main class="px-12 py-20 flex flex-col gap-12 overflow-y-auto">
         <section
             id="intro"
             aria-label="Site Introduction"
@@ -234,6 +235,25 @@ const age = Math.abs(ageDate.getUTCFullYear() - 1970);
                     route="/games/2048"
                     title="2048"
                     alt="The 2048 game"
+                />
+            </div>
+        </section>
+
+        <section
+            id="tools"
+            aria-labelledby="tools-title"
+            class="w-full max-w-7xl mx-auto">
+            <h2 id="tools-title" class="text-2xl mb-3 tracking-wider">Tools</h2>
+
+            <hr />
+
+            <div
+                class="mt-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 mx-auto">
+                <SketchCard
+                    image={codeAnimationToolImage}
+                    route="/tools/code-animation"
+                    title="Code Animation"
+                    alt="The code animation tool"
                 />
             </div>
         </section>
