@@ -64,6 +64,10 @@ const { title, previewImage = "https://rico.studio/assets/website-card.jpg" } =
         <slot name="head-layout" />
 
         <style is:global>
+            :root {
+                --blur-size: 100px;
+            }
+
             html,
             body {
                 overscroll-behavior-y: none;
@@ -89,7 +93,7 @@ const { title, previewImage = "https://rico.studio/assets/website-card.jpg" } =
     </head>
 
     <body class="relative flex flex-col">
-        <header class="w-full sticky top-0 z-10">
+        <header class="w-full sticky top-0 z-10 bg-white">
             <nav>
                 <ul class="flex shadow">
                     <li class="mr-auto">
