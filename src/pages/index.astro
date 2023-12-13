@@ -28,264 +28,332 @@ const age = Math.abs(ageDate.getUTCFullYear() - 1970);
 ---
 
 <Layout title="Rico Generative Arts">
-        <main class="px-12 py-20 flex flex-col gap-12 overflow-y-auto">
-        <section
-            id="intro"
-            aria-label="Site Introduction"
-            class="max-w-7xl mx-auto grid grid-cols-1 gap-12 items-center md:grid-cols-12">
-            <Image
-                id="self-image"
-                class="object-cover select-none rounded-full aspect-square m-auto md:col-span-6 lg:col-span-4"
-                width="350"
-                height="350"
-                src={selfImage}
-                alt="The page creator 'Loïc Rico' in portrait"
-            />
+    <style slot="head-layout">
+        #blur-overlay {
+            width: var(--blur-size);
+            height: var(--blur-size);
 
-            <div id="hero" class="md:col-span-6 lg:col-span-8">
-                <h2
-                    class="text-3xl xs:text-5xl break-words mb-5 tracking-wider">
-                    Rico Generative Art
+            position: absolute;
+
+            border-radius: 50%;
+            background: hsl(200, 80%, 80%);
+            background: radial-gradient(
+                circle,
+                hsla(200, 100%, 80%, 0) 0%,
+                hsla(0, 100%, 80%, 0.8) 30%,
+                hsla(0, 100%, 80%, 0.8) 70%,
+                hsla(200, 100%, 80%, 0) 100%
+            );
+
+            transform: scale(2.3);
+            filter: blur(50px);
+            opacity: 0.8;
+            transition: opacity 0.5s ease;
+        }
+    </style>
+
+    <div class="relative max-w-full max-h-full">
+        <div id="blur-overlay" class="hidden"></div>
+
+        <main
+            class="px-12 py-20 relative flex flex-col gap-12 w-full max-h-full overflow-y-auto">
+            <section
+                id="intro"
+                aria-label="Site Introduction"
+                class="max-w-7xl mx-auto grid grid-cols-1 gap-12 items-center md:grid-cols-12">
+                <Image
+                    id="self-image"
+                    class="object-cover select-none rounded-full aspect-square m-auto md:col-span-6 lg:col-span-4"
+                    width="350"
+                    height="350"
+                    src={selfImage}
+                    alt="The page creator 'Loïc Rico' in portrait"
+                />
+
+                <div id="hero" class="md:col-span-6 lg:col-span-8">
+                    <h2
+                        class="text-3xl xs:text-5xl break-words mb-5 tracking-wider">
+                        Rico Generative Art
+                    </h2>
+
+                    <hr />
+
+                    <p id="hero-description" class="ml-5 mt-5 leading-5">
+                        Hi, I'm Loïc Rico, a {age} years old canadian web
+                        developer. I'm passionate about generative art and I
+                        love to learn new things. Great things are to come in
+                        the near and far future! Be prepared!
+                    </p>
+                </div>
+
+                <div id="about" class="md:col-span-12">
+                    <h2 class="text-2xl mb-3 tracking-wider">
+                        About this site
+                    </h2>
+
+                    <hr />
+
+                    <p id="about-description" class="ml-5 mt-5 leading-5">
+                        This is a personal website of mine where I can display
+                        my creations. It was build with
+                        <a
+                            href="https://astro.build/"
+                            class="underline hover:decoration-double">
+                            Astro
+                        </a>
+                         ,
+                        <a
+                            href="https://tailwindcss.com/"
+                            class="underline hover:decoration-double">
+                            Tailwind
+                        </a>
+                         and the <a
+                            href="https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/"
+                            class="underline hover:decoration-double">
+                            Canvas Element with Javascipt
+                        </a>
+                         to render the different sketches. The source code is
+                        available on the
+                        <a
+                            href="https://github.com/ricoloic/personal-webpage-v4/"
+                            class="underline hover:decoration-double">
+                            Github Repo
+                        </a>
+                         . I'm currently working on this site on my free time.
+                        If you would like to report a feature or a bug, feel
+                        free to leave an
+                        <a
+                            href="https://github.com/ricoloic/personal-webpage-v4/issues/new/"
+                            class="underline hover:decoration-double">
+                            Issue
+                        </a>
+                         on the project repository. Before I decided to create
+                        this site, I was always finding my self searching for a
+                        particular project to show to someone. And more often
+                        than not I wasn't even able to start the project since
+                        the person I would be showing it to, would not be setup
+                        to run it locally. So I decided to build this page to
+                        show my creations to people who are interested in my
+                        work. I hope you enjoy it.
+                    </p>
+                </div>
+            </section>
+
+            <section
+                id="sketches"
+                aria-labelledby="sketches-title"
+                class="w-full max-w-7xl mx-auto">
+                <h2 id="sketches-title" class="text-2xl mb-3 tracking-wider">
+                    Sketches
                 </h2>
 
                 <hr />
 
-                <p id="hero-description" class="ml-5 mt-5 leading-5">
-                    Hi, I'm Loïc Rico, a {age} years old canadian web developer.
-                    I'm passionate about generative art and I love to learn new
-                    things. Great things are to come in the near and far future!
-                    Be prepared!
-                </p>
-            </div>
+                <div
+                    class="mt-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 mx-auto">
+                    <SketchCard
+                        image={flowfieldImage}
+                        route="/sketches/flowfield"
+                        title="Flowfield"
+                        alt="The flowfield sketch"
+                    />
+                    <SketchCard
+                        image={mouseFollowImage}
+                        route="/sketches/mouse-follow"
+                        title="Mouse Follow"
+                        alt="The mouse follow sketch"
+                    />
+                    <SketchCard
+                        image={flockingImage}
+                        route="/sketches/flocking"
+                        title="Flocking"
+                        alt="The flocking sketch"
+                    />
+                    <SketchCard
+                        image={blackHoleImage}
+                        route="/sketches/black-hole"
+                        title="Black Hole"
+                        alt="The black hole sketch"
+                    />
+                    <SketchCard
+                        image={rayCastingImage}
+                        route="/sketches/ray-casting"
+                        title="Ray Casting"
+                        alt="The ray casting sketch"
+                    />
+                    <SketchCard
+                        image={timesTableImage}
+                        route="/sketches/times-table"
+                        title="Times Table"
+                        alt="The times table sketch"
+                    />
+                    <SketchCard
+                        image={metaBallsImage}
+                        route="/sketches/meta-balls"
+                        title="Meta Balls"
+                        alt="The meta balls sketch"
+                    />
+                    <SketchCard
+                        image={quadraticBesierCurveImage}
+                        route="/sketches/quadratic-besier-curve"
+                        title="Quadratic Besier Curve"
+                        alt="The quadratic besier curve sketch"
+                    />
+                    <SketchCard
+                        image={cubicBesierCurveImage}
+                        route="/sketches/cubic-besier-curve"
+                        title="Cubic Besier Curve"
+                        alt="The cubic besier curve sketch"
+                    />
+                    <SketchCard
+                        image={audioSpectrumImage}
+                        route="/sketches/audio-spectrum"
+                        title="Audio Spectrum"
+                        alt="The audio spectrum sketch"
+                    />
+                    <SketchCard
+                        image={lineFollowImage}
+                        route="/sketches/line-follow"
+                        title="Line Follow"
+                        alt="The line follow curve sketch"
+                    />
+                    <SketchCard
+                        image={pointMeshImage}
+                        route="/sketches/point-mesh"
+                        title="Point Mesh"
+                        alt="The point mesh sketch"
+                    />
+                    <SketchCard
+                        image={maurerRoseImage}
+                        route="/sketches/maurer-rose"
+                        title="Maurer Rose"
+                        alt="The maurer rose sketch"
+                    />
+                    <SketchCard
+                        image={audioCirclesImage}
+                        route="/sketches/audio-circles"
+                        title="Audio Circles"
+                        alt="The audio circles sketch"
+                    />
+                    <SketchCard
+                        image={audioHexagonImage}
+                        route="/sketches/audio-hexagon"
+                        title="Audio Hexagon"
+                        alt="The audio hexagon sketch"
+                    />
+                </div>
+            </section>
 
-            <div id="about" class="md:col-span-12">
-                <h2 class="text-2xl mb-3 tracking-wider">About this site</h2>
+            <section
+                id="games"
+                aria-labelledby="games-title"
+                class="w-full max-w-7xl mx-auto">
+                <h2 id="games-title" class="text-2xl mb-3 tracking-wider">
+                    Games
+                </h2>
 
                 <hr />
 
-                <p id="about-description" class="ml-5 mt-5 leading-5">
-                    This is a personal website of mine where I can display my
-                    creations. It was build with
-                    <a
-                        href="https://astro.build/"
-                        class="underline hover:decoration-double">
-                        Astro
-                    </a>
-                     ,
-                    <a
-                        href="https://tailwindcss.com/"
-                        class="underline hover:decoration-double">
-                        Tailwind
-                    </a>
-                     and the <a
-                        href="https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/"
-                        class="underline hover:decoration-double">
-                        Canvas Element with Javascipt
-                    </a>
-                     to render the different sketches. The source code is
-                    available on the
-                    <a
-                        href="https://github.com/ricoloic/personal-webpage-v4/"
-                        class="underline hover:decoration-double">
-                        Github Repo
-                    </a>
-                     . I'm currently working on this site on my free time. If
-                    you would like to report a feature or a bug, feel free to
-                    leave an
-                    <a
-                        href="https://github.com/ricoloic/personal-webpage-v4/issues/new/"
-                        class="underline hover:decoration-double">
-                        Issue
-                    </a>
-                     on the project repository. Before I decided to create this
-                    site, I was always finding my self searching for a
-                    particular project to show to someone. And more often than
-                    not I wasn't even able to start the project since the person
-                    I would be showing it to, would not be setup to run it
-                    locally. So I decided to build this page to show my
-                    creations to people who are interested in my work. I hope
-                    you enjoy it.
-                </p>
-            </div>
-        </section>
+                <div
+                    class="mt-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 mx-auto">
+                    <SketchCard
+                        image={minesweeperImage}
+                        route="/games/minesweeper"
+                        title="Minesweeper"
+                        alt="The minesweeper game"
+                    />
+                    <SketchCard
+                        image={g2048Image}
+                        route="/games/2048"
+                        title="2048"
+                        alt="The 2048 game"
+                    />
+                </div>
+            </section>
 
-        <section
-            id="sketches"
-            aria-labelledby="sketches-title"
-            class="w-full max-w-7xl mx-auto">
-            <h2 id="sketches-title" class="text-2xl mb-3 tracking-wider">
-                Sketches
-            </h2>
+            <section
+                id="tools"
+                aria-labelledby="tools-title"
+                class="w-full max-w-7xl mx-auto">
+                <h2 id="tools-title" class="text-2xl mb-3 tracking-wider">
+                    Tools
+                </h2>
 
-            <hr />
+                <hr />
 
-            <div
-                class="mt-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 mx-auto">
-                <SketchCard
-                    image={flowfieldImage}
-                    route="/sketches/flowfield"
-                    title="Flowfield"
-                    alt="The flowfield sketch"
-                />
-                <SketchCard
-                    image={mouseFollowImage}
-                    route="/sketches/mouse-follow"
-                    title="Mouse Follow"
-                    alt="The mouse follow sketch"
-                />
-                <SketchCard
-                    image={flockingImage}
-                    route="/sketches/flocking"
-                    title="Flocking"
-                    alt="The flocking sketch"
-                />
-                <SketchCard
-                    image={blackHoleImage}
-                    route="/sketches/black-hole"
-                    title="Black Hole"
-                    alt="The black hole sketch"
-                />
-                <SketchCard
-                    image={rayCastingImage}
-                    route="/sketches/ray-casting"
-                    title="Ray Casting"
-                    alt="The ray casting sketch"
-                />
-                <SketchCard
-                    image={timesTableImage}
-                    route="/sketches/times-table"
-                    title="Times Table"
-                    alt="The times table sketch"
-                />
-                <SketchCard
-                    image={metaBallsImage}
-                    route="/sketches/meta-balls"
-                    title="Meta Balls"
-                    alt="The meta balls sketch"
-                />
-                <SketchCard
-                    image={quadraticBesierCurveImage}
-                    route="/sketches/quadratic-besier-curve"
-                    title="Quadratic Besier Curve"
-                    alt="The quadratic besier curve sketch"
-                />
-                <SketchCard
-                    image={cubicBesierCurveImage}
-                    route="/sketches/cubic-besier-curve"
-                    title="Cubic Besier Curve"
-                    alt="The cubic besier curve sketch"
-                />
-                <SketchCard
-                    image={audioSpectrumImage}
-                    route="/sketches/audio-spectrum"
-                    title="Audio Spectrum"
-                    alt="The audio spectrum sketch"
-                />
-                <SketchCard
-                    image={lineFollowImage}
-                    route="/sketches/line-follow"
-                    title="Line Follow"
-                    alt="The line follow curve sketch"
-                />
-                <SketchCard
-                    image={pointMeshImage}
-                    route="/sketches/point-mesh"
-                    title="Point Mesh"
-                    alt="The point mesh sketch"
-                />
-                <SketchCard
-                    image={maurerRoseImage}
-                    route="/sketches/maurer-rose"
-                    title="Maurer Rose"
-                    alt="The maurer rose sketch"
-                />
-                <SketchCard
-                    image={audioCirclesImage}
-                    route="/sketches/audio-circles"
-                    title="Audio Circles"
-                    alt="The audio circles sketch"
-                />
-                <SketchCard
-                    image={audioHexagonImage}
-                    route="/sketches/audio-hexagon"
-                    title="Audio Hexagon"
-                    alt="The audio hexagon sketch"
-                />
-            </div>
-        </section>
+                <div
+                    class="mt-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 mx-auto">
+                    <SketchCard
+                        image={codeAnimationToolImage}
+                        route="/tools/code-animation"
+                        title="Code Animation"
+                        alt="The code animation tool"
+                    />
+                </div>
+            </section>
 
-        <section
-            id="games"
-            aria-labelledby="games-title"
-            class="w-full max-w-7xl mx-auto">
-            <h2 id="games-title" class="text-2xl mb-3 tracking-wider">Games</h2>
-
-            <hr />
-
-            <div
-                class="mt-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 mx-auto">
-                <SketchCard
-                    image={minesweeperImage}
-                    route="/games/minesweeper"
-                    title="Minesweeper"
-                    alt="The minesweeper game"
-                />
-                <SketchCard
-                    image={g2048Image}
-                    route="/games/2048"
-                    title="2048"
-                    alt="The 2048 game"
-                />
-            </div>
-        </section>
-
-        <section
-            id="tools"
-            aria-labelledby="tools-title"
-            class="w-full max-w-7xl mx-auto">
-            <h2 id="tools-title" class="text-2xl mb-3 tracking-wider">Tools</h2>
-
-            <hr />
-
-            <div
-                class="mt-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 mx-auto">
-                <SketchCard
-                    image={codeAnimationToolImage}
-                    route="/tools/code-animation"
-                    title="Code Animation"
-                    alt="The code animation tool"
-                />
-            </div>
-        </section>
-
-        <section
-            id="links"
-            aria-label="Social Links"
-            class="w-full justify-center flex gap-3 my-10">
-            <a
-                rel="noopener"
-                target="_blank"
-                href="https://github.com/ricoloic/">
-                <span class="sr-only">Github Button</span>
-                <i class="fa-brands fa-github fa-2xl"></i>
-            </a>
-            <a
-                rel="noopener"
-                target="_blank"
-                href="https://www.linkedin.com/in/rico-suave/">
-                <span class="sr-only">Linkedin Button</span>
-                <i class="fa-brands fa-linkedin fa-2xl"></i>
-            </a>
-            <button type="button" name="share-button">
-                <span class="sr-only">Share Button</span>
-                <i class="fa-solid fa-share-from-square fa-2xl"></i>
-            </button>
-        </section>
-    </main>
+            <section
+                id="links"
+                aria-label="Social Links"
+                class="w-full justify-center flex gap-3 my-10">
+                <a
+                    rel="noopener"
+                    target="_blank"
+                    href="https://github.com/ricoloic/">
+                    <span class="sr-only">Github Button</span>
+                    <i class="fa-brands fa-github fa-2xl"></i>
+                </a>
+                <a
+                    rel="noopener"
+                    target="_blank"
+                    href="https://www.linkedin.com/in/rico-suave/">
+                    <span class="sr-only">Linkedin Button</span>
+                    <i class="fa-brands fa-linkedin fa-2xl"></i>
+                </a>
+                <button type="button" name="share-button">
+                    <span class="sr-only">Share Button</span>
+                    <i class="fa-solid fa-share-from-square fa-2xl"></i>
+                </button>
+            </section>
+        </main>
+    </div>
 
     <script is:inline>
         document
             .querySelector('button[name="share-button"]')
             .addEventListener("click", handleClickShare);
+
+        const lastMPos = [];
+
+        const blurSize = getComputedStyle(
+            document.documentElement
+        ).getPropertyValue("--blur-size");
+
+        const blur = document.getElementById("blur-overlay");
+        const main = document.querySelector("main");
+        window.onmousemove = (event) => {
+            if (blur.className === "hidden") {
+                blur.className = "";
+            }
+
+            const bounds = main.getBoundingClientRect();
+            const x = Math.max(event.clientX - bounds.left);
+            const y = Math.max(0, event.clientY - bounds.top);
+            lastMPos.push([x, y]);
+            if (lastMPos.length > 50) {
+                lastMPos.splice(0, 1);
+            }
+            console.log(x, y);
+            const avg = lastMPos.reduce(
+                ([ax, ay], [nx, ny]) => [ax + nx, ay + ny],
+                [0, 0]
+            );
+            avg[0] /= lastMPos.length;
+            avg[1] /= lastMPos.length;
+            blur.setAttribute(
+                "style",
+                `top: calc(${avg[1]}px - ${blurSize} / 2); left: calc(${avg[0]}px - ${blurSize} / 2);`
+            );
+        };
     </script>
 </Layout>
