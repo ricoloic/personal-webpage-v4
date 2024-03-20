@@ -133,45 +133,45 @@ const COLORS = {
 ---
 
 <Layout
-    title="Audio Circles"
-    previewImage="https://rico.studio/assets/website-previews/audio-circles.png">
+        title="Audio Circles"
+        previewImage="https://rico.studio/assets/website-previews/audio-circles.png">
     <Canvas id="audio-circles-canvas">
         <Fab slot="edit">
             <FabButton name="toggle">
                 <span id="play-icon">
-                    <PlayIcon />
+                    <PlayIcon/>
                 </span>
                 <span id="pause-icon" class="hidden">
-                    <PauseIcon />
+                    <PauseIcon/>
                 </span>
             </FabButton>
             <FabButton name="upload-audio">
                 <input
-                    type="file"
-                    class="hidden"
-                    id="input-upload-audio"
-                    accept="audio/mpeg, audio/mp4"
+                        type="file"
+                        class="hidden"
+                        id="input-upload-audio"
+                        accept="audio/mpeg, audio/mp4"
                 />Select Audio
             </FabButton>
             <FabDropdown id="color">
                 <div slot="button" id="color-pill" class="rounded-full"></div>
 
                 <div
-                    slot="dropdown"
-                    class="flex gap-2 max-w-full flex-wrap justify-between">
+                        slot="dropdown"
+                        class="flex gap-2 max-w-full flex-wrap justify-between">
                     {
                         Object.entries(COLORS).map(([key, value]) => (
-                            <ColorButton name={key} color={value[5]} />
+                                <ColorButton name={key} color={value[5]}/>
                         ))
                     }
                 </div>
             </FabDropdown>
             <FabDropdown id="edit">
-                <MenuIcon slot="button" />
+                <MenuIcon slot="button"/>
                 <Controls slot="dropdown">
                     <Checkbox
-                        id="log-framerate-checkbox"
-                        title="Log Framerate"
+                            id="log-framerate-checkbox"
+                            title="Log Framerate"
                     />
                 </Controls>
             </FabDropdown>
@@ -188,193 +188,193 @@ const COLORS = {
     <script is:inline src="/js/classes/audio-controller.js"></script>
     <!-- ENDSECTION: STATIC_IMPORTS -->
 
-    <script is:inline define:vars={{ COLORS }}>
-    const config = {
-        palette: "tacha",
-        logFramerate: true,
-    };
-    prefillConfig(config);
-    setParamConfig(config);
-
-    let currentPalette = config.palette;
-
-    const inputLogFramerate = $("#log-framerate-checkbox");
-    const spanFramerate = $("#framerate");
-    const buttonTogglPlay = $('button[name="toggle"]');
-    const spanPauseIcon = $("#pause-icon");
-    const spanPlayIcon = $("#play-icon");
-    const inputUploadAudio = $("#input-upload-audio");
-    const divColorPill = $("#color-pill");
-    const buttonsColors = document.querySelectorAll(
-        'button[data-name="color-button"]'
-    );
-
-    $('button[name="upload-audio"]').onclick = () =>
-        inputUploadAudio.click();
-
-    if (config.logFramerate) toggleCheckbox(inputLogFramerate);
-    inputLogFramerate.onchange = () => {
-        config.logFramerate = !config.logFramerate;
-        if (!config.logFramerate) spanFramerate.textContent = "";
-        setParamConfig(config);
-    };
-
-    divColorPill.setAttribute(
-        "style",
-        `background-color: ${COLORS[currentPalette][5]};`
-    );
-    for (const elem of buttonsColors) {
-        elem.addEventListener("click", function () {
-            config.palette = elem.getAttribute("data-color-name");
-            currentPalette = config.palette;
-            divColorPill.setAttribute(
-                "style",
-                `background-color: ${COLORS[currentPalette][5]};`
-            );
-            setParamConfig(config);
-        });
-    }
-
-    const main = document.getElementById("canvas-wrapper");
-    const canvas = document.getElementById("audio-circles-canvas");
-    const ctx = canvas.getContext("2d");
-    let halfWidth,
-        halfHeight,
-        audioController,
-        framerate = 0;
-    const frequencyDomain = 2048;
-
-    function initialize() {
-        canvas.width = main.offsetWidth;
-        canvas.height = main.offsetHeight;
-
-        halfWidth = canvas.width / 2;
-        halfHeight = canvas.height / 2;
-    }
-
-    initialize();
-    window.onresize = initialize;
-
-    function getAverageVolume(array) {
-        const values = array.reduce((sum, value) => sum + value, 0);
-        return values / array.length;
-    }
-
-    const radius = 200;
-    noiseDetail(10, 0.25);
-    let timeOffset = 0;
-
-    const increment = 0.05;
-    let x, y;
-    function getPointInfo(angle, noiseScale, segmentOffset) {
-        x = Math.cos(angle);
-        y = Math.sin(angle);
-        const noiseDisplacementX =
-            map(noise(x, y, segmentOffset), 0, 0.75, -1, 1) * noiseScale;
-        const noiseDisplacementY =
-            map(noise(x, y, segmentOffset + 1030), 0, 0.75, -1, 1) *
-            noiseScale;
-
-        x *= radius;
-        // x += halfWidth;
-        x += noiseDisplacementX + halfWidth;
-
-        y *= radius;
-        // y += halfHeight;
-        y += noiseDisplacementY + halfHeight;
-    }
-
-    function draw() {
-        framerate++;
-        background(ctx, "#333333");
-
-        if (audioController?.initialized) {
-            const frequencies = audioController.analyzeFrequency({
-                fftSize: frequencyDomain,
-            });
-            const frequencyInterval = Math.floor(
-                frequencies.length / COLORS[currentPalette].length
-            );
-            let lower = frequencies.length - frequencyInterval,
-                upper = frequencies.length;
-
-            for (let i = 0; i < COLORS[currentPalette].length; i++) {
-                const volume = getAverageVolume(
-                    frequencies.subarray(lower, upper)
-                );
-                lower -= frequencyInterval;
-                upper -= frequencyInterval;
-
-                const noiseScale = map(volume, 0, 255, 0, 120);
-                const segmentOffset = timeOffset + 1033 * i;
-
-                ctx.strokeStyle = COLORS[currentPalette][i];
-                ctx.lineWidth = map(volume, 0, 255, 2, 6);
-                ctx.beginPath();
-                getPointInfo(0, noiseScale, segmentOffset);
-                ctx.moveTo(x, y);
-                for (
-                    let angle = increment;
-                    angle < TWO_PI;
-                    angle += increment
-                ) {
-                    getPointInfo(angle, noiseScale, segmentOffset);
-                    ctx.lineTo(x, y);
-                }
-                ctx.closePath();
-                ctx.stroke();
-            }
-        }
-
-        timeOffset += 0.0005;
-
-        requestAnimationFrame(draw);
-    }
-
-    setInterval(function () {
-        if (config.logFramerate)
-            spanFramerate.textContent = `${framerate}fps`;
-        framerate = 0;
-    }, 1000);
-
-    draw();
-
-    const toogleVisibility = () => {
-        if (findClassIndex(spanPlayIcon, "hidden") !== -1) {
-            addClass(spanPauseIcon, "hidden");
-            removeClass(spanPlayIcon, "hidden");
-        } else {
-            addClass(spanPlayIcon, "hidden");
-            removeClass(spanPauseIcon, "hidden");
-        }
-    };
-
-    function initializeAudio(url) {
-        addClass(spanPauseIcon, "hidden");
-        removeClass(spanPlayIcon, "hidden");
-        audioController?.disconnect();
-        audioController = AudioController.create();
-        audioController
-            .load(url)
-            .then((ac) => ac.initialize())
-            .then(() => {
-                buttonTogglPlay.onclick = () => {
-                    audioController.toggle();
-                    toogleVisibility();
-                };
-            });
-
-        audioController.onended = () => {
-            addClass(spanPauseIcon, "hidden");
-            removeClass(spanPlayIcon, "hidden");
+    <script is:inline define:vars={{COLORS}}>
+        const config = {
+            palette: "tacha",
+            logFramerate: true,
         };
-    }
+        prefillConfig(config);
 
-    initializeAudio("/audio/Hudson Lee & False Noise - Way Of Thought.mp3");
+        let currentPalette = config.palette;
 
-    inputUploadAudio.onchange = (event) => {
-        if (event.target.files[0])
-            initializeAudio(URL.createObjectURL(event.target.files[0]));
-    };
-        </script>
+        const inputLogFramerate = $("#log-framerate-checkbox");
+        const spanFramerate = $("#framerate");
+        const buttonTogglPlay = $('button[name="toggle"]');
+        const spanPauseIcon = $("#pause-icon");
+        const spanPlayIcon = $("#play-icon");
+        const inputUploadAudio = $("#input-upload-audio");
+        const divColorPill = $("#color-pill");
+        const buttonsColors = document.querySelectorAll(
+            'button[data-name="color-button"]'
+        );
+
+        $('button[name="upload-audio"]').onclick = () =>
+            inputUploadAudio.click();
+
+        if (config.logFramerate) toggleCheckbox(inputLogFramerate);
+        inputLogFramerate.onchange = () => {
+            config.logFramerate = !config.logFramerate;
+            if (!config.logFramerate) spanFramerate.textContent = "";
+            setParamConfig(config);
+        };
+
+        divColorPill.setAttribute(
+            "style",
+            `background-color: ${COLORS[currentPalette][5]};`
+        );
+        for (const elem of buttonsColors) {
+            elem.addEventListener("click", function () {
+                config.palette = elem.getAttribute("data-color-name");
+                currentPalette = config.palette;
+                divColorPill.setAttribute(
+                    "style",
+                    `background-color: ${COLORS[currentPalette][5]};`
+                );
+                setParamConfig(config);
+            });
+        }
+
+        const main = document.getElementById("canvas-wrapper");
+        const canvas = document.getElementById("audio-circles-canvas");
+        const ctx = canvas.getContext("2d");
+        let halfWidth,
+            halfHeight,
+            audioController,
+            framerate = 0;
+        const frequencyDomain = 2048;
+
+        function initialize() {
+            canvas.width = main.offsetWidth;
+            canvas.height = main.offsetHeight;
+
+            halfWidth = canvas.width / 2;
+            halfHeight = canvas.height / 2;
+        }
+
+        initialize();
+        window.onresize = initialize;
+
+        function getAverageVolume(array) {
+            const values = array.reduce((sum, value) => sum + value, 0);
+            return values / array.length;
+        }
+
+        const radius = 200;
+        noiseDetail(10, 0.25);
+        let timeOffset = 0;
+
+        const increment = 0.05;
+        let x, y;
+
+        function getPointInfo(angle, noiseScale, segmentOffset) {
+            x = Math.cos(angle);
+            y = Math.sin(angle);
+            const noiseDisplacementX =
+                map(noise(x, y, segmentOffset), 0, 0.75, -1, 1) * noiseScale;
+            const noiseDisplacementY =
+                map(noise(x, y, segmentOffset + 1030), 0, 0.75, -1, 1) *
+                noiseScale;
+
+            x *= radius;
+            // x += halfWidth;
+            x += noiseDisplacementX + halfWidth;
+
+            y *= radius;
+            // y += halfHeight;
+            y += noiseDisplacementY + halfHeight;
+        }
+
+        function draw() {
+            framerate++;
+            background(ctx, "#333333");
+
+            if (audioController?.initialized) {
+                const frequencies = audioController.analyzeFrequency({
+                    fftSize: frequencyDomain,
+                });
+                const frequencyInterval = Math.floor(
+                    frequencies.length / COLORS[currentPalette].length
+                );
+                let lower = frequencies.length - frequencyInterval,
+                    upper = frequencies.length;
+
+                for (let i = 0; i < COLORS[currentPalette].length; i++) {
+                    const volume = getAverageVolume(
+                        frequencies.subarray(lower, upper)
+                    );
+                    lower -= frequencyInterval;
+                    upper -= frequencyInterval;
+
+                    const noiseScale = map(volume, 0, 255, 0, 120);
+                    const segmentOffset = timeOffset + 1033 * i;
+
+                    ctx.strokeStyle = COLORS[currentPalette][i];
+                    ctx.lineWidth = map(volume, 0, 255, 2, 6);
+                    ctx.beginPath();
+                    getPointInfo(0, noiseScale, segmentOffset);
+                    ctx.moveTo(x, y);
+                    for (
+                        let angle = increment;
+                        angle < TWO_PI;
+                        angle += increment
+                    ) {
+                        getPointInfo(angle, noiseScale, segmentOffset);
+                        ctx.lineTo(x, y);
+                    }
+                    ctx.closePath();
+                    ctx.stroke();
+                }
+            }
+
+            timeOffset += 0.0005;
+
+            requestAnimationFrame(draw);
+        }
+
+        setInterval(function () {
+            if (config.logFramerate)
+                spanFramerate.textContent = `${framerate}fps`;
+            framerate = 0;
+        }, 1000);
+
+        draw();
+
+        const toogleVisibility = () => {
+            if (findClassIndex(spanPlayIcon, "hidden") !== -1) {
+                addClass(spanPauseIcon, "hidden");
+                removeClass(spanPlayIcon, "hidden");
+            } else {
+                addClass(spanPlayIcon, "hidden");
+                removeClass(spanPauseIcon, "hidden");
+            }
+        };
+
+        function initializeAudio(url) {
+            addClass(spanPauseIcon, "hidden");
+            removeClass(spanPlayIcon, "hidden");
+            audioController?.disconnect();
+            audioController = AudioController.create();
+            audioController
+                .load(url)
+                .then((ac) => ac.initialize())
+                .then(() => {
+                    buttonTogglPlay.onclick = () => {
+                        audioController.toggle();
+                        toogleVisibility();
+                    };
+                });
+
+            audioController.onended = () => {
+                addClass(spanPauseIcon, "hidden");
+                removeClass(spanPlayIcon, "hidden");
+            };
+        }
+
+        initializeAudio("/audio/Kirra.mp3");
+
+        inputUploadAudio.onchange = (event) => {
+            if (event.target.files[0])
+                initializeAudio(URL.createObjectURL(event.target.files[0]));
+        };
+    </script>
 </Layout>

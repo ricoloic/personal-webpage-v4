@@ -31,7 +31,7 @@ import Layout from "../../layouts/Layout.astro";
             left: 37,
         };
 
-        class CellElement extends HTMLDivElement {
+        class CellElement extends HTMLElement {
             constructor(empty = false, i, j) {
                 super();
                 this.i = i;
@@ -89,11 +89,9 @@ import Layout from "../../layouts/Layout.astro";
                 }
             }
         }
-        customElements.define("cell-element", CellElement, {
-            extends: "div",
-        });
+        customElements.define("cell-element", CellElement);
 
-        class RowElement extends HTMLDivElement {
+        class RowElement extends HTMLElement {
             constructor() {
                 super();
                 this.className = "flex flex-row";
@@ -105,11 +103,9 @@ import Layout from "../../layouts/Layout.astro";
                 this.appendChild(cell);
             }
         }
-        customElements.define("row-element", RowElement, {
-            extends: "div",
-        });
+        customElements.define("row-element", RowElement);
 
-        class GridElement extends HTMLDivElement {
+        class GridElement extends HTMLElement {
             constructor(empty = false) {
                 super();
                 this.className = "flex flex-col";
@@ -344,11 +340,9 @@ import Layout from "../../layouts/Layout.astro";
                 }
             }
         }
-        customElements.define("grid-element", GridElement, {
-            extends: "div",
-        });
+        customElements.define("grid-element", GridElement);
 
-        class GameElement extends HTMLDivElement {
+        class GameElement extends HTMLElement {
             constructor() {
                 super();
                 this.className = "flex flex-col items-end gap-4 w-fit m-auto";
@@ -412,9 +406,7 @@ import Layout from "../../layouts/Layout.astro";
                 this.appendChild(this.gridContainer);
             }
         }
-        customElements.define("game-element", GameElement, {
-            extends: "div",
-        });
+        customElements.define("game-element", GameElement);
 
         $("main").appendChild(new GameElement());
     </script>

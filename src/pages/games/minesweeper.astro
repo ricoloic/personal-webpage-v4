@@ -10,7 +10,7 @@ import Layout from "../../layouts/Layout.astro";
     <main class="relative w-full h-full overflow-auto bg-stone-300"></main>
 
     <script is:inline>
-        class MinesweeperCellElement extends HTMLDivElement {
+        class MinesweeperCellElement extends HTMLElement {
             constructor() {
                 super();
                 this.revealed = false;
@@ -90,7 +90,7 @@ import Layout from "../../layouts/Layout.astro";
             }
         }
 
-        class MinesweeperRowElement extends HTMLDivElement {
+        class MinesweeperRowElement extends HTMLElement {
             constructor() {
                 super();
                 this.cells = [];
@@ -103,7 +103,7 @@ import Layout from "../../layouts/Layout.astro";
             }
         }
 
-        class MinesweeperResetButtonElement extends HTMLDivElement {
+        class MinesweeperResetButtonElement extends HTMLElement {
             constructor(onreset, difficulty) {
                 super();
                 this.difficulty = difficulty;
@@ -136,7 +136,7 @@ import Layout from "../../layouts/Layout.astro";
             }
         }
 
-        class MinesweeperControlsElement extends HTMLDivElement {
+        class MinesweeperControlsElement extends HTMLElement {
             constructor(minesAmount, difficulty, onreset) {
                 super();
                 this.difficulty = difficulty;
@@ -195,7 +195,7 @@ import Layout from "../../layouts/Layout.astro";
             }
         }
 
-        class MinesweeperElement extends HTMLDivElement {
+        class MinesweeperElement extends HTMLElement {
             static difficulties = {
                 beginner: { cols: 9, rows: 9, mines: 10 },
                 intermediate: { cols: 16, rows: 16, mines: 40 },
@@ -436,27 +436,21 @@ import Layout from "../../layouts/Layout.astro";
 
         customElements.define(
             "minesweeper-cell-element",
-            MinesweeperCellElement,
-            { extends: "div" }
+            MinesweeperCellElement
         );
         customElements.define(
             "minesweeper-row-element",
-            MinesweeperRowElement,
-            { extends: "div" }
+            MinesweeperRowElement
         );
         customElements.define(
             "minesweeper-controls-element",
-            MinesweeperControlsElement,
-            { extends: "div" }
+            MinesweeperControlsElement
         );
         customElements.define(
             "minesweeper-reset-button-element",
-            MinesweeperResetButtonElement,
-            { extends: "div" }
+            MinesweeperResetButtonElement
         );
-        customElements.define("minesweeper-element", MinesweeperElement, {
-            extends: "div",
-        });
+        customElements.define("minesweeper-element", MinesweeperElement);
 
         const game = new MinesweeperElement("beginner");
         document.querySelector("main").appendChild(game);

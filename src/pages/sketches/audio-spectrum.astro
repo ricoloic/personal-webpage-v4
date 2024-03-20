@@ -137,14 +137,7 @@ const COLORS = {
 <Layout
     title="Audio Spectrum"
     previewImage="https://rico.studio/assets/website-previews/audio-spectrum.png">
-    <script
-        slot="head-layout"
-        src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"
-    ></script>
-
     <Canvas id="audio-spectrum-canvas">
-        <div id="replace-me"></div>
-
         <Fab slot="edit">
             <FabButton name="toggle">
                 <span id="play-icon">
@@ -193,13 +186,6 @@ const COLORS = {
                         min={0}
                         max={200}
                         step={1}
-                    />
-                    <Range
-                        id="blur-intensity-range"
-                        title="Bluring Intensity"
-                        min={0}
-                        max={2}
-                        step={0.1}
                     />
                     <Range
                         id="scale-intensity-range"
@@ -287,12 +273,10 @@ const COLORS = {
         shakeIntencity: 10,
         scaleIntensity: 1,
         waveDelay: 10,
-        blurIntensity: 1,
         baseRadius: 100,
         logFramerate: true,
     };
     prefillConfig(config);
-    setParamConfig(config);
 
     let freqDomain = Math.pow(2, config.freqPow);
     let currentPalette = config.palette;
@@ -319,8 +303,6 @@ const COLORS = {
     const inputFreqPow = $("#freq-domain-range");
     const labelFreqPow = $('label[for="freq-domain-range"]>span');
     const inputFilled = $("#filled-checkbox");
-    const inputBlurIntencity = $("#blur-intensity-range");
-    const labelBlurIntencity = $('label[for="blur-intensity-range"]>span');
     const inputShakeIntencity = $("#shake-intensity-range");
     const labelShakeIntencity = $(
         'label[for="shake-intensity-range"]>span'
@@ -370,14 +352,6 @@ const COLORS = {
     inputBaseRadius.onchange = (event) => {
         labelBaseRadius.textContent = event.target.value;
         config.baseRadius = parseFloat(event.target.value);
-        setParamConfig(config);
-    };
-
-    inputBlurIntencity.setAttribute("value", config.blurIntensity);
-    labelBlurIntencity.textContent = config.blurIntensity;
-    inputBlurIntencity.onchange = (event) => {
-        labelBlurIntencity.textContent = event.target.value;
-        config.blurIntensity = parseFloat(event.target.value);
         setParamConfig(config);
     };
 
@@ -471,7 +445,6 @@ const COLORS = {
             this.initialPosition = Vector.create(positionX, positionY);
             this.position = this.initialPosition.copy();
             this.velocity = Vector.create(random(-1, 1), random(-1, 1));
-            this.movingSpeed = random(1);
             this.life = 0;
             this.maxLife = random(100, 250);
             this.acceleration = Vector.create();
@@ -610,26 +583,11 @@ const COLORS = {
     const ctx = eCanvas.getContext("2d");
 
     let halfWidth,
-        halfHeight,
-        scene,
-        camera,
-        material,
-        texture,
-        blurShader,
-        renderer;
+        halfHeight;
     const min = Vector.create(0, 0);
     const max = Vector.create();
     const particleAmount = 80;
     const particles = Array.from({ length: particleAmount });
-
-    scene = new THREE.Scene();
-    camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-    renderer = new THREE.WebGLRenderer();
-    document.getElementById("replace-me").replaceWith(renderer.domElement);
-    renderer.domElement.setAttribute(
-        "class",
-        "block absolute top-0 right-0 bottom-0 left-0"
-    );
 
     function initialize() {
         eCanvas.width = eMain.offsetWidth;
@@ -639,58 +597,6 @@ const COLORS = {
         halfHeight = eCanvas.height / 2;
         max.set(eCanvas.width, eCanvas.height);
         background(ctx, "#333333");
-
-        renderer.setSize(eMain.offsetWidth, eMain.offsetHeight);
-        texture = new THREE.CanvasTexture(eCanvas);
-        blurShader = {
-            uniforms: {
-                tDiffuse: { type: "t", value: texture },
-                resolution: { type: "v2", value: new THREE.Vector2() },
-                gain: { type: "f", value: 0 },
-            },
-            vertexShader: `
-                varying vec2 vUv;
-                void main() {
-                    vUv = uv;
-                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-                }
-            `,
-            fragmentShader: `
-                uniform sampler2D tDiffuse;
-                uniform vec2 resolution;
-                uniform float gain;
-                varying vec2 vUv;
-
-                void main() {
-                    vec4 sum = vec4(0.0);
-                    vec2 blurSize = gain * 1.5 / resolution;  // Scale blur size with gain
-                    int radius = int(gain * 2.);  // Scale loop radius with gain, you may want to cap this value to a maximum
-
-                    for (int i = -radius; i <= radius; i++) {
-                        for (int j = -radius; j <= radius; j++) {
-                            vec2 uv = vUv + vec2(j, i) * blurSize;
-                            sum += texture2D(tDiffuse, uv);
-                        }
-                    }
-
-                    gl_FragColor = sum / float((radius * 2 + 1) * (radius * 2 + 1));  // Adjust divisor based on total number of samples
-                }
-            `,
-        };
-
-        material = new THREE.ShaderMaterial({
-            uniforms: blurShader.uniforms,
-            vertexShader: blurShader.vertexShader,
-            fragmentShader: blurShader.fragmentShader,
-        });
-
-        const geometry = new THREE.PlaneBufferGeometry(2, 2);
-        const mesh = new THREE.Mesh(geometry, material);
-        scene.add(mesh);
-        blurShader.uniforms.resolution.value.set(
-            eCanvas.width,
-            eCanvas.height
-        );
 
         for (let i = 0; i < particles.length; i++) {
             particles[i] = new Particle(
@@ -725,11 +631,6 @@ const COLORS = {
             .load(url)
             .then((ac) => ac.initialize())
             .then(() => {
-                // renderer.domElement.onclick = () => {
-                //     audioController.toggle();
-                //     toogleVisibility();
-                // };
-
                 buttonTogglPlay.onclick = () => {
                     audioController.toggle();
                     toogleVisibility();
@@ -742,7 +643,7 @@ const COLORS = {
         };
     }
 
-    initializeAudio("/audio/Hudson Lee & False Noise - Way Of Thought.mp3");
+    initializeAudio("/audio/Kirra.mp3");
 
     inputUploadAudio.onchange = (event) => {
         if (event.target.files[0])
@@ -750,14 +651,13 @@ const COLORS = {
     };
 
     const mouse = Vector.create();
-    mousePosition(renderer.domElement, mouse);
+    mousePosition(eCanvas, mouse);
 
     const visualizer = new Visualizer(10);
 
     let framerate = 0;
 
     const frequencyOffset = 10;
-    blurShader.uniforms.resolution.value.set(eCanvas.width, eCanvas.height);
     function getAverageVolume(array) {
         const values = array.reduce((sum, value) => sum + value, 0);
         return values / array.length;
@@ -861,15 +761,6 @@ const COLORS = {
                 }
 
                 ctx.setTransform(1, 0, 0, 1, offsetX, offsetY);
-
-                if (blurShader.uniforms.gain?.value != undefined) {
-                    blurShader.uniforms.gain.value = Math.min(
-                        0.9,
-                        averageVolume * config.blurIntensity
-                    );
-                }
-                texture.needsUpdate = true;
-                renderer.render(scene, camera);
             }
         }, baseDelay);
     }
