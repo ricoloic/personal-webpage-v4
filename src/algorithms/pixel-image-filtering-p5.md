@@ -1,8 +1,8 @@
 # Creating a filter for images using p5js
 
-## _showing the image_
+## showing the image
 
-### _1. pre-load your image_
+### 1. pre-load your image
 
 ```js
 let img;
@@ -12,7 +12,7 @@ function preload() {
 }
 ```
 
-### _2. set a the size of your image_
+### 2. set a the size of your image
 
 ```js
 function setup() {
@@ -20,9 +20,9 @@ function setup() {
 }
 ```
 
-### _3. draw your image by changing the canvas pixels color value_
+### 3. draw your image by changing the canvas pixels color value
 
-#### _load both of the pixels arrays_
+load both of the pixels arrays
 
 ```js
 function setup() {
@@ -33,7 +33,7 @@ function setup() {
 }
 ```
 
-#### _loop through the pixels array based on the width & height_
+loop through the pixels array based on the width & height
 
 ```js
 function setup() {
@@ -47,10 +47,9 @@ function setup() {
 }
 ```
 
-#### _get the index of the pixel using the density of pixels_
+get the index of the pixel using the density of pixels
 
 ```js
-
 function setup() {
     // ...
     let d = pixelDensity();
@@ -64,7 +63,7 @@ function setup() {
 }
 ```
 
-#### _get the r, g, b and a value of the pixel of the image_
+get the r, g, b and a value of the pixel of the image
 
 ```js
 function setup() {
@@ -84,7 +83,7 @@ function setup() {
 }
 ```
 
-#### _change the color of the pixel of the canvas_
+change the color of the pixel of the canvas
 
 ```js
 function setup() {
@@ -108,7 +107,7 @@ function setup() {
 }
 ```
 
-#### _update the canvas pixels_
+update the canvas pixels
 
 ```js
 function setup() {
@@ -134,19 +133,19 @@ function setup() {
 }
 ```
 
-## _adding a chromatic effect/filter to the render_
-
 ![loic](../assets/markdown-images/pixel-image-filtering-p5/loic1.jpg)
 
-### _1. create a variable to store the chromatic value_
+## adding a chromatic effect/filter to the render
 
-#### _value calculated by using the brightness of the pixels, so to result 1 value from 3 (r, g, b) we must calculate the average of the 3 values_
+### 1. create a variable to store the chromatic value
+
+value calculated by using the brightness of the pixels, so to result 1 value from 3 (r, g, b) we must calculate the average of the 3 values
 
 ```js
 const cumulative = (r + g + b) / 3;
 ```
 
-#### _update the existing code within the loops to use the new chromatic value for each of the rgb channel_
+update the existing code within the loops to use the new chromatic value for each of the rgb channel
 
 ```js
 function setup() {
@@ -167,10 +166,7 @@ function setup() {
 
 ![loic](../assets/markdown-images/pixel-image-filtering-p5/loic2.png)
 
-
-### _3. add a threshold at which the pixel will be either black or white_
-
-
+### 3. add a threshold at which the pixel will be either black or white
 
 ```js
 // 0 = black
@@ -182,20 +178,20 @@ cumulative = cumulative > threshold ? 255 : 0;
 
 ![loic](../assets/markdown-images/pixel-image-filtering-p5/loic3.png)
 
-### _4. smoothen the bright part of the threshold by mapping it's original values to a given range_
+### 4. smoothen the bright part of the threshold by mapping it's original values to a given range
 
 ```js
 const threshold = 150;
 cumulative = cumulative > threshold ? map(cumulative, 150, 255, 50, 255) : 0;
 ```
 
-#### _which will result in a clearer image_
+which will result in a clearer image
 
 ![loic](../assets/markdown-images/pixel-image-filtering-p5/loic4.png)
 
-## _now lets make the image be "glitched"_
+## now lets make the image be "glitched"
 
-#### _now instead of setting a value to each canvas pixels directly, lets create points and draw those with the proper color_
+now instead of setting a value to each canvas pixels directly, lets create points and draw those with the proper color
 
 ```js
 function setup() {
@@ -221,7 +217,7 @@ function setup() {
 }
 ```
 
-#### _add a bit of randomness to the size of the points_
+add a bit of randomness to the size of the points
 
 ```js
 function setup() {
@@ -239,7 +235,7 @@ function setup() {
 }
 ```
 
-#### _change the points to lines and set the second x to the current x + a random amount_
+change the points to lines and set the second x to the current x + a random amount
 
 ```js
 const lineHalfMaxLength = 100;
@@ -289,9 +285,9 @@ function setup() {
 
 ![loic](../assets/markdown-images/pixel-image-filtering-p5/loic5-5.png)
 
-## _other variant_
+## other variant
 
-#### _lets use the color of the image and only apply it to the pixels where the chromatic value is higher then the threshold_
+lets use the color of the image and only apply it to the pixels where the chromatic value is higher then the threshold
 
 ```js
 const threshold = 150;
@@ -338,8 +334,6 @@ function setup() {
 
 ![loic](../assets/markdown-images/pixel-image-filtering-p5/loic6.png)
 
----
-
 We could also map the colored pixels values.
 
 ```js
@@ -371,13 +365,16 @@ function setup() {
 
 ![loic](../assets/markdown-images/pixel-image-filtering-p5/loic7.png)
 
-## _now what? SHADER???_
+## now what?? SHADER!
 
-#### why, well currently our filter is running on the CPU, which is really powerfull but can't do a lot of process/calculation all at once. So instead we can convert our code/filter to be ran on the GPU which is not as powerful as the CPU but allow for a lot more processes to be ran at once
+Why? Well currently our filter is running on the CPU, which is really powerfull but can't do a lot of process/calculation all at once. So instead we can convert our code/filter to be ran on the GPU which is not as powerful as the CPU but allow for a lot more processes to be ran at once
+
+### shader files
 
 we first need to create a shader file, which will be used to run our filter on the GPU
 
 create a `shader.vert` file (vertex shader) that will contain a main function
+
 ```glsl
 // vertex shader
 void main() {
