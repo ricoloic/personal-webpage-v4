@@ -262,6 +262,33 @@ function setup() {
 
 ![loic](../assets/markdown-images/pixel-image-filtering-p5/loic5.png)
 
+And with color
+
+```js
+const lineHalfMaxLength = 100;
+
+function setup() {
+    // ...
+    
+    for (let x = 0; x < width; x++) {
+        for (let y = 0; y < height; y++) {
+            // ...
+
+            const cumulative = (r + g + b) / 3;
+            strokeWeight(random(3, 5));
+            if (threshold < cumulative) {
+                stroke(r, g, b, a);
+            } else {
+                stroke(0, a);
+            }
+            line(x, y, x + random(-lineHalfMaxLength, lineHalfMaxLength), y);
+        }
+    }
+}
+```
+
+![loic](../assets/markdown-images/pixel-image-filtering-p5/loic5-5.png)
+
 ## _other variant_
 
 #### _lets use the color of the image and only apply it to the pixels where the chromatic value is higher then the threshold_
@@ -310,6 +337,39 @@ function setup() {
 ```
 
 ![loic](../assets/markdown-images/pixel-image-filtering-p5/loic6.png)
+
+---
+
+We could also map the colored pixels values.
+
+```js
+const threshold = 165;
+
+// ...
+
+function setup() {
+    // ...
+
+    for (let x = 0; x < width; x++) {
+        for (let y = 0; y < height; y++) {
+            // ...
+
+            if (cumulative > threshold) {
+                pixels[index] = map(img.pixels[index], threshold, 255, 0, 255);
+                pixels[index + 1] = map(img.pixels[index + 1], threshold, 255, 0, 255);
+                pixels[index + 2] = map(img.pixels[index + 2], threshold, 255, 0, 255);
+            } else {
+                // ...
+            }
+            // ...
+        }
+    }
+
+    // ...
+}
+```
+
+![loic](../assets/markdown-images/pixel-image-filtering-p5/loic7.png)
 
 ## _now what? SHADER???_
 
