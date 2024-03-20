@@ -258,7 +258,7 @@ function setup() {
 
 ![loic](../assets/markdown-images/pixel-image-filtering-p5/loic5.png)
 
-And with color
+and with color
 
 ```js
 const lineHalfMaxLength = 100;
@@ -334,7 +334,7 @@ function setup() {
 
 ![loic](../assets/markdown-images/pixel-image-filtering-p5/loic6.png)
 
-We could also map the colored pixels values.
+we could also map the colored pixels values.
 
 ```js
 const threshold = 165;
@@ -467,11 +467,11 @@ this is because the vertex shader start at the center of the canvas, so we need 
 attribute vec3 aPosition;
 
 void main() {
-  vec4 positionVec4 = vec4(aPosition, 1.0);
-  // * 2 is to use the full canvas size
-  // - 1 is to place it back to a new origin (from the center to the bottom left)
-  positionVec4.xy = (positionVec4.xy * 2.0) - 1.0;
-  gl_Position = positionVec4;
+    vec4 positionVec4 = vec4(aPosition, 1.0);
+    // * 2 is to use the full canvas size
+    // - 1 is to place it back to a new origin (from the center to the bottom left)
+    positionVec4.xy = (positionVec4.xy * 2.0) - 1.0;
+    gl_Position = positionVec4;
 }
 ```
 
@@ -564,8 +564,8 @@ void main() {
 
     float cumulative = (color.r + color.g + color.b) / 3.0;
 
-    float treshold = 0.5;
-    cumulative = cumulative > treshold ? 1.0 : 0.0;
+    float threshold = 0.5;
+    cumulative = cumulative > threshold ? 1.0 : 0.0;
 
     gl_FragColor = vec4(cumulative, cumulative, cumulative, 1.0);
 }
@@ -587,8 +587,8 @@ void main() {
 
     float cumulative = (color.r + color.g + color.b) / 3.0;
 
-    float treshold = 0.5;
-    cumulative = cumulative > treshold ? smoothstep(treshold, 1.0, cumulative) : 0.0;
+    float threshold = 0.5;
+    cumulative = cumulative > threshold ? smoothstep(threshold, 1.0, cumulative) : 0.0;
 
     gl_FragColor = vec4(cumulative, cumulative, cumulative, 1.0);
 }
@@ -596,12 +596,12 @@ void main() {
 
 ![shader-7.png](../assets/markdown-images/pixel-image-filtering-p5/shader-7.png)
 
-now I also want the treshold to be dynamic, so let's add a uniform for it
+now I also want the threshold to be dynamic, so let's add a uniform for it
 
 ```js
 function draw() {
     // ...
-    shd.setUniform('u_treshold', 0.5);
+    shd.setUniform('u_threshold', 0.5);
     // ...
 }
 ```
@@ -610,7 +610,7 @@ function draw() {
 // fragment shader
 uniform vec2 u_resolution;
 uniform sampler2D u_texture;
-uniform float u_treshold;
+uniform float u_threshold;
 
 void main() {
     vec2 uv = gl_FragCoord.xy / u_resolution.xy;
@@ -619,10 +619,76 @@ void main() {
 
     float cumulative = (color.r + color.g + color.b) / 3.0;
 
-    cumulative = cumulative > u_treshold ? smoothstep(u_treshold, 1.0, cumulative) : 0.0;
+    cumulative = cumulative > u_threshold ? smoothstep(u_threshold, 1.0, cumulative) : 0.0;
 
     gl_FragColor = vec4(cumulative, cumulative, cumulative, 1.0);
 }
 ```
+
+you can also add the color back with some change
+
+```glsl
+precision mediump float;
+
+uniform vec2 u_resolution;
+uniform sampler2D u_texture; // Input texture
+uniform float u_threshold;
+
+float map(float value, float min1, float max1, float min2, float max2) {
+    return min2 + (value - min1) * (max2 - min2) / (max1 - min1);
+}
+
+void main() {
+    vec2 uv = gl_FragCoord.xy / u_resolution;
+    
+    // Flip the Y-axis
+    uv.y = 1.0 - uv.y;
+    
+    // Sample color from the texture
+    vec4 texColor = texture2D(u_texture, uv);
+    
+    float cum = (texColor.r + texColor.g + texColor.b) / 3.0;
+    
+    if (cum > u_threshold) {
+        texColor.r = map(texColor.r, u_threshold, 1.0, 0.0, 1.1);
+        texColor.g = map(texColor.g, u_threshold, 1.0, 0.0, 1.1);
+        texColor.b = map(texColor.b, u_threshold, 1.0, 0.0, 1.1);
+    } else {
+        texColor.rgb *= 0.0;
+    }
+    
+    gl_FragColor = texColor;
+}
+```
+
+but keep in mind that using `if` statement in shaders is not recomended as it is a lot more intensive then math
+
+in our case we could update the code to use the `step` function which receive 2 float, and return `0.0` if the first argument is smaller than the second and `1.0` otherwise.
+
+knowing this we can create a new float variable called `mult` which will either be `0.0` or `1.0`, which we can then use to multiple our color values with
+
+```glsl
+// ...
+void main() {
+    // ...
+
+    float cum = (texColor.r + texColor.g + texColor.b) / 3.0;
+    float mult = step(u_threshold, cum);
+    
+    texColor.r = map(texColor.r, u_threshold, 1.0, 0.0, 1.1);
+    texColor.g = map(texColor.g, u_threshold, 1.0, 0.0, 1.1);
+    texColor.b = map(texColor.b, u_threshold, 1.0, 0.0, 1.1);
+    texColor.rgb *= mult;
+    
+    // ...
+}
+```
+
+see [this post](https://medium.com/@banksysan_10088/glsl-converting-ifs-to-steps-b22331231eaa) on the usage of the `step` function and other alternatives to using `if` conditions
+
+see [this post](https://stackoverflow.com/questions/37827216/do-conditional-statements-slow-down-shaders/37837060#37837060) for a more comprehensive on branching in shader code
+
+
+![shader-8.png](../assets/markdown-images/pixel-image-filtering-p5/shader-8.png)
 
 If you want to play around with the code, you can find it here: https://editor.p5js.org/ricoloic/sketches/8xJ1ZF2kwb
