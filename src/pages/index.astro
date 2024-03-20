@@ -1,5 +1,5 @@
 ---
-import { Image } from "astro:assets";
+import {Image} from "astro:assets";
 import SketchCard from "../components/SketchCard.astro";
 import Layout from "../layouts/Layout.astro";
 import selfImage from "../assets/photos/loic.jpg";
@@ -21,6 +21,7 @@ import audioHexagonImage from "../assets/previews/audio-hexagon-preview.png";
 import minesweeperImage from "../assets/previews/minesweeper.png";
 import g2048Image from "../assets/previews/2048.png";
 import codeAnimationToolImage from "../assets/previews/code-animation-tool.png";
+import blankImage from "../assets/previews/blank.png";
 
 const ageDifMs = Date.now() - new Date("2002-09-23").getTime();
 const ageDate = new Date(ageDifMs); // milliseconds from epoch
@@ -28,27 +29,27 @@ const age = Math.abs(ageDate.getUTCFullYear() - 1970);
 ---
 
 <Layout title="Rico Generative Arts">
-        <main class="px-12 py-20 flex flex-col gap-12 overflow-y-auto">
+    <main class="px-12 py-20 flex flex-col gap-12 overflow-y-auto">
         <section
-            id="intro"
-            aria-label="Site Introduction"
-            class="max-w-7xl mx-auto grid grid-cols-1 gap-12 items-center md:grid-cols-12">
+                id="intro"
+                aria-label="Site Introduction"
+                class="max-w-7xl mx-auto grid grid-cols-1 gap-12 items-center md:grid-cols-12">
             <Image
-                id="self-image"
-                class="object-cover select-none rounded-full aspect-square m-auto md:col-span-6 lg:col-span-4"
-                width="350"
-                height="350"
-                src={selfImage}
-                alt="The page creator 'Loïc Rico' in portrait"
+                    id="self-image"
+                    class="object-cover select-none rounded-full aspect-square m-auto md:col-span-6 lg:col-span-4"
+                    width="350"
+                    height="350"
+                    src={selfImage}
+                    alt="The page creator 'Loïc Rico' in portrait"
             />
 
             <div id="hero" class="md:col-span-6 lg:col-span-8">
                 <h2
-                    class="text-3xl xs:text-5xl break-words mb-5 tracking-wider">
+                        class="text-3xl xs:text-5xl break-words mb-5 tracking-wider">
                     Rico Generative Art
                 </h2>
 
-                <hr />
+                <hr/>
 
                 <p id="hero-description" class="ml-5 mt-5 leading-5">
                     Hi, I'm Loïc Rico, a {age} years old canadian web developer.
@@ -61,43 +62,43 @@ const age = Math.abs(ageDate.getUTCFullYear() - 1970);
             <div id="about" class="md:col-span-12">
                 <h2 class="text-2xl mb-3 tracking-wider">About this site</h2>
 
-                <hr />
+                <hr/>
 
                 <p id="about-description" class="ml-5 mt-5 leading-5">
                     This is a personal website of mine where I can display my
                     creations. It was build with
                     <a
-                        href="https://astro.build/"
-                        class="underline hover:decoration-double">
+                            href="https://astro.build/"
+                            class="underline hover:decoration-double">
                         Astro
                     </a>
-                     ,
+                    ,
                     <a
-                        href="https://tailwindcss.com/"
-                        class="underline hover:decoration-double">
+                            href="https://tailwindcss.com/"
+                            class="underline hover:decoration-double">
                         Tailwind
                     </a>
-                     and the <a
+                    and the <a
                         href="https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/"
                         class="underline hover:decoration-double">
-                        Canvas Element with Javascipt
-                    </a>
-                     to render the different sketches. The source code is
+                    Canvas Element with Javascipt
+                </a>
+                    to render the different sketches. The source code is
                     available on the
                     <a
-                        href="https://github.com/ricoloic/personal-webpage-v4/"
-                        class="underline hover:decoration-double">
+                            href="https://github.com/ricoloic/personal-webpage-v4/"
+                            class="underline hover:decoration-double">
                         Github Repo
                     </a>
-                     . I'm currently working on this site on my free time. If
+                    . I'm currently working on this site on my free time. If
                     you would like to report a feature or a bug, feel free to
                     leave an
                     <a
-                        href="https://github.com/ricoloic/personal-webpage-v4/issues/new/"
-                        class="underline hover:decoration-double">
+                            href="https://github.com/ricoloic/personal-webpage-v4/issues/new/"
+                            class="underline hover:decoration-double">
                         Issue
                     </a>
-                     on the project repository. Before I decided to create this
+                    on the project repository. Before I decided to create this
                     site, I was always finding my self searching for a
                     particular project to show to someone. And more often than
                     not I wasn't even able to start the project since the person
@@ -110,169 +111,199 @@ const age = Math.abs(ageDate.getUTCFullYear() - 1970);
         </section>
 
         <section
-            id="sketches"
-            aria-labelledby="sketches-title"
-            class="w-full max-w-7xl mx-auto">
+                id="sketches"
+                aria-labelledby="sketches-title"
+                class="w-full max-w-7xl mx-auto">
             <h2 id="sketches-title" class="text-2xl mb-3 tracking-wider">
                 Sketches
             </h2>
 
-            <hr />
+            <hr/>
 
             <div
-                class="mt-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 mx-auto">
+                    class="mt-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 mx-auto">
                 <SketchCard
-                    image={flowfieldImage}
-                    route="/sketches/flowfield"
-                    title="Flowfield"
-                    alt="The flowfield sketch"
+                        image={flowfieldImage}
+                        route="/sketches/flowfield"
+                        title="Flowfield"
+                        alt="The flowfield sketch"
                 />
                 <SketchCard
-                    image={mouseFollowImage}
-                    route="/sketches/mouse-follow"
-                    title="Mouse Follow"
-                    alt="The mouse follow sketch"
+                        image={mouseFollowImage}
+                        route="/sketches/mouse-follow"
+                        title="Mouse Follow"
+                        alt="The mouse follow sketch"
                 />
                 <SketchCard
-                    image={flockingImage}
-                    route="/sketches/flocking"
-                    title="Flocking"
-                    alt="The flocking sketch"
+                        image={flockingImage}
+                        route="/sketches/flocking"
+                        title="Flocking"
+                        alt="The flocking sketch"
                 />
                 <SketchCard
-                    image={blackHoleImage}
-                    route="/sketches/black-hole"
-                    title="Black Hole"
-                    alt="The black hole sketch"
+                        image={blackHoleImage}
+                        route="/sketches/black-hole"
+                        title="Black Hole"
+                        alt="The black hole sketch"
                 />
                 <SketchCard
-                    image={rayCastingImage}
-                    route="/sketches/ray-casting"
-                    title="Ray Casting"
-                    alt="The ray casting sketch"
+                        image={rayCastingImage}
+                        route="/sketches/ray-casting"
+                        title="Ray Casting"
+                        alt="The ray casting sketch"
                 />
                 <SketchCard
-                    image={timesTableImage}
-                    route="/sketches/times-table"
-                    title="Times Table"
-                    alt="The times table sketch"
+                        image={timesTableImage}
+                        route="/sketches/times-table"
+                        title="Times Table"
+                        alt="The times table sketch"
                 />
                 <SketchCard
-                    image={metaBallsImage}
-                    route="/sketches/meta-balls"
-                    title="Meta Balls"
-                    alt="The meta balls sketch"
+                        image={metaBallsImage}
+                        route="/sketches/meta-balls"
+                        title="Meta Balls"
+                        alt="The meta balls sketch"
                 />
                 <SketchCard
-                    image={quadraticBesierCurveImage}
-                    route="/sketches/quadratic-besier-curve"
-                    title="Quadratic Besier Curve"
-                    alt="The quadratic besier curve sketch"
+                        image={quadraticBesierCurveImage}
+                        route="/sketches/quadratic-besier-curve"
+                        title="Quadratic Besier Curve"
+                        alt="The quadratic besier curve sketch"
                 />
                 <SketchCard
-                    image={cubicBesierCurveImage}
-                    route="/sketches/cubic-besier-curve"
-                    title="Cubic Besier Curve"
-                    alt="The cubic besier curve sketch"
+                        image={cubicBesierCurveImage}
+                        route="/sketches/cubic-besier-curve"
+                        title="Cubic Besier Curve"
+                        alt="The cubic besier curve sketch"
                 />
                 <SketchCard
-                    image={audioSpectrumImage}
-                    route="/sketches/audio-spectrum"
-                    title="Audio Spectrum"
-                    alt="The audio spectrum sketch"
+                        image={audioSpectrumImage}
+                        route="/sketches/audio-spectrum"
+                        title="Audio Spectrum"
+                        alt="The audio spectrum sketch"
                 />
                 <SketchCard
-                    image={lineFollowImage}
-                    route="/sketches/line-follow"
-                    title="Line Follow"
-                    alt="The line follow curve sketch"
+                        image={lineFollowImage}
+                        route="/sketches/line-follow"
+                        title="Line Follow"
+                        alt="The line follow curve sketch"
                 />
                 <SketchCard
-                    image={pointMeshImage}
-                    route="/sketches/point-mesh"
-                    title="Point Mesh"
-                    alt="The point mesh sketch"
+                        image={pointMeshImage}
+                        route="/sketches/point-mesh"
+                        title="Point Mesh"
+                        alt="The point mesh sketch"
                 />
                 <SketchCard
-                    image={maurerRoseImage}
-                    route="/sketches/maurer-rose"
-                    title="Maurer Rose"
-                    alt="The maurer rose sketch"
+                        image={maurerRoseImage}
+                        route="/sketches/maurer-rose"
+                        title="Maurer Rose"
+                        alt="The maurer rose sketch"
                 />
                 <SketchCard
-                    image={audioCirclesImage}
-                    route="/sketches/audio-circles"
-                    title="Audio Circles"
-                    alt="The audio circles sketch"
+                        image={audioCirclesImage}
+                        route="/sketches/audio-circles"
+                        title="Audio Circles"
+                        alt="The audio circles sketch"
                 />
                 <SketchCard
-                    image={audioHexagonImage}
-                    route="/sketches/audio-hexagon"
-                    title="Audio Hexagon"
-                    alt="The audio hexagon sketch"
+                        image={audioHexagonImage}
+                        route="/sketches/audio-hexagon"
+                        title="Audio Hexagon"
+                        alt="The audio hexagon sketch"
                 />
             </div>
         </section>
 
         <section
-            id="games"
-            aria-labelledby="games-title"
-            class="w-full max-w-7xl mx-auto">
+                id="games"
+                aria-labelledby="games-title"
+                class="w-full max-w-7xl mx-auto">
             <h2 id="games-title" class="text-2xl mb-3 tracking-wider">Games</h2>
 
-            <hr />
+            <hr/>
 
             <div
-                class="mt-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 mx-auto">
+                    class="mt-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 mx-auto">
                 <SketchCard
-                    image={minesweeperImage}
-                    route="/games/minesweeper"
-                    title="Minesweeper"
-                    alt="The minesweeper game"
+                        image={minesweeperImage}
+                        route="/games/minesweeper"
+                        title="Minesweeper"
+                        alt="The minesweeper game"
                 />
                 <SketchCard
-                    image={g2048Image}
-                    route="/games/2048"
-                    title="2048"
-                    alt="The 2048 game"
+                        image={g2048Image}
+                        route="/games/2048"
+                        title="2048"
+                        alt="The 2048 game"
                 />
             </div>
         </section>
 
         <section
-            id="tools"
-            aria-labelledby="tools-title"
-            class="w-full max-w-7xl mx-auto">
+                id="tools"
+                aria-labelledby="tools-title"
+                class="w-full max-w-7xl mx-auto">
             <h2 id="tools-title" class="text-2xl mb-3 tracking-wider">Tools</h2>
 
-            <hr />
+            <hr/>
 
             <div
-                class="mt-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 mx-auto">
+                    class="mt-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 mx-auto">
                 <SketchCard
-                    image={codeAnimationToolImage}
-                    route="/tools/code-animation"
-                    title="Code Animation"
-                    alt="The code animation tool"
+                        image={codeAnimationToolImage}
+                        route="/tools/code-animation"
+                        title="Code Animation"
+                        alt="The code animation tool"
                 />
             </div>
         </section>
 
         <section
-            id="links"
-            aria-label="Social Links"
-            class="w-full justify-center flex gap-3 my-10">
+                id="algorithms"
+                aria-labelledby="algorithms-title"
+                class="w-full max-w-7xl mx-auto">
+            <h2 id="algorithms-title" class="text-2xl mb-3 tracking-wider">Algorithms</h2>
+
+            <hr/>
+
+            <div class="mt-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 mx-auto">
+                <SketchCard
+                        image={blankImage}
+                        route="/algorithms/calculating-prime-numbers"
+                        title="Calculating Prime Numbers"
+                        alt="Description of the algorithm to finding prime numbers"
+                />
+                <SketchCard
+                        image={blankImage}
+                        route="/algorithms/pixel-image-filtering-p5"
+                        title="Image filter using p5js"
+                        alt="Description of an algorithm to create an image filter"
+                />
+                <SketchCard
+                        image={blankImage}
+                        route="/algorithms/ordered-tuple-cardinality"
+                        title="Cardinality of Ordered Tuple"
+                        alt="Description of an algorithm that calculate the cadinality of ordered tuple set"
+                />
+            </div>
+        </section>
+
+        <section
+                id="links"
+                aria-label="Social Links"
+                class="w-full justify-center flex gap-3 my-10">
             <a
-                rel="noopener"
-                target="_blank"
-                href="https://github.com/ricoloic/">
+                    rel="noopener"
+                    target="_blank"
+                    href="https://github.com/ricoloic/">
                 <span class="sr-only">Github Button</span>
                 <i class="fa-brands fa-github fa-2xl"></i>
             </a>
             <a
-                rel="noopener"
-                target="_blank"
-                href="https://www.linkedin.com/in/rico-suave/">
+                    rel="noopener"
+                    target="_blank"
+                    href="https://www.linkedin.com/in/rico-suave/">
                 <span class="sr-only">Linkedin Button</span>
                 <i class="fa-brands fa-linkedin fa-2xl"></i>
             </a>
