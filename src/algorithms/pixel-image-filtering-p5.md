@@ -650,9 +650,9 @@ void main() {
     float cum = (texColor.r + texColor.g + texColor.b) / 3.0;
     
     if (cum > u_threshold) {
-        texColor.r = map(texColor.r, u_threshold, 1.0, 0.0, 1.1);
-        texColor.g = map(texColor.g, u_threshold, 1.0, 0.0, 1.1);
-        texColor.b = map(texColor.b, u_threshold, 1.0, 0.0, 1.1);
+        texColor.r = map(texColor.r, u_threshold, 1.0, 0.0, 1.0);
+        texColor.g = map(texColor.g, u_threshold, 1.0, 0.0, 1.0);
+        texColor.b = map(texColor.b, u_threshold, 1.0, 0.0, 1.0);
     } else {
         texColor.rgb *= 0.0;
     }
@@ -675,9 +675,9 @@ void main() {
     float cum = (texColor.r + texColor.g + texColor.b) / 3.0;
     float mult = step(u_threshold, cum);
     
-    texColor.r = map(texColor.r, u_threshold, 1.0, 0.0, 1.1);
-    texColor.g = map(texColor.g, u_threshold, 1.0, 0.0, 1.1);
-    texColor.b = map(texColor.b, u_threshold, 1.0, 0.0, 1.1);
+    texColor.r = map(texColor.r, u_threshold, 1.0, 0.0, 1.0);
+    texColor.g = map(texColor.g, u_threshold, 1.0, 0.0, 1.0);
+    texColor.b = map(texColor.b, u_threshold, 1.0, 0.0, 1.0);
     texColor.rgb *= mult;
     
     // ...
